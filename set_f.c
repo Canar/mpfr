@@ -1,6 +1,6 @@
 /* mpfr_set_f -- set a MPFR number from a GNU MPF number
 
-Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
@@ -28,7 +28,7 @@ mpfr_set_f (mpfr_ptr y, mpf_srcptr x, mp_rnd_t rnd_mode)
   mp_limb_t *my, *mx, *tmp;
   unsigned long cnt, sx, sy;
   int inexact, carry = 0;
-  MPFR_TMP_DECL(marker);
+  TMP_DECL(marker);
 
   sx = ABS(SIZ(x)); /* number of limbs of the mantissa of x */
 
@@ -55,26 +55,26 @@ mpfr_set_f (mpfr_ptr y, mpf_srcptr x, mp_rnd_t rnd_mode)
     {
       unsigned long xprec = sx * BITS_PER_MP_LIMB;
 
-      MPFR_TMP_MARK(marker);
-      tmp = (mp_limb_t*) MPFR_TMP_ALLOC(sx * BYTES_PER_MP_LIMB);
+      TMP_MARK(marker);
+      tmp = (mp_limb_t*) TMP_ALLOC(sx * BYTES_PER_MP_LIMB);
       if (cnt)
-        mpn_lshift (tmp, mx, sx, cnt);
+	mpn_lshift (tmp, mx, sx, cnt);
       else
         /* FIXME: we may avoid the copy here, and directly call mpfr_round_raw
            on mx instead of tmp */
-        MPN_COPY (tmp, mx, sx);
+	MPN_COPY (tmp, mx, sx);
       carry = mpfr_round_raw (my, tmp, xprec, (SIZ(x) < 0), MPFR_PREC(y),
                               rnd_mode, &inexact);
       if (MPFR_UNLIKELY(carry)) /* result is a power of two */
         my[sy - 1] = MPFR_LIMB_HIGHBIT;
-      MPFR_TMP_FREE(marker);
+      TMP_FREE(marker);
     }
   else
     {
       if (cnt)
-        mpn_lshift (my + sy - sx, mx, sx, cnt);
+	mpn_lshift (my + sy - sx, mx, sx, cnt);
       else
-        MPN_COPY (my + sy - sx, mx, sx);
+	MPN_COPY (my + sy - sx, mx, sx);
       MPN_ZERO(my, sy - sx);
       /* no rounding necessary, since y has a larger mantissa */
       inexact = 0;

@@ -1,6 +1,6 @@
 /* Test file for mpfr_set.
 
-Copyright 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 2001, 2002, 2003, 2004 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,7 +46,7 @@ main (void)
 {
   mp_prec_t p, q;
   mpfr_t x, y, z, u;
-  int rnd;
+  mp_rnd_t rnd;
   int inexact, cmp;
   mp_exp_t emax;
 
@@ -59,7 +59,7 @@ main (void)
   inexact = mpfr_init_set_d (u, 1.0, GMP_RNDN);
 
   mpfr_set_nan (x);
-  (mpfr_set) (y, x, GMP_RNDN);
+  mpfr_set (y, x, GMP_RNDN);
   MPFR_ASSERTN(mpfr_nan_p (y));
 
   mpfr_set_inf (x, 1);
@@ -85,16 +85,7 @@ main (void)
   mpfr_set_str_binary (x, "0.111");
   mpfr_set_prec (y, 2);
   mpfr_set (y, x, GMP_RNDU);
-  if (!(MPFR_IS_INF (y) && MPFR_SIGN (y) > 0))
-    {
-      printf ("Error for y=x=0.111 with px=3, py=2 and emax=0\nx=");
-      mpfr_dump (x);
-      printf ("y=");
-      mpfr_dump (y);
-      exit (1);
-    }
-
-  MPFR_ASSERTN (MPFR_IS_INF (y) && MPFR_SIGN (y) > 0);
+  MPFR_ASSERTN(mpfr_inf_p (y) && mpfr_sgn (y) > 0);
   set_emax (emax);
 
   mpfr_set_prec (y, 11);
@@ -113,13 +104,13 @@ main (void)
       mpfr_set_prec (x, p);
       mpfr_random (x);
       if (randlimb () % 2)
-        mpfr_neg (x, x, GMP_RNDN);
+	mpfr_neg (x, x, GMP_RNDN);
       for (q=2; q<2*p; q++)
         {
           mpfr_set_prec (y, q);
           for (rnd = 0; rnd < GMP_RND_MAX; rnd++)
             {
-              inexact = mpfr_set (y, x, (mp_rnd_t) rnd);
+              inexact = mpfr_set (y, x, rnd);
               cmp = mpfr_cmp (y, x);
               if (((inexact == 0) && (cmp != 0)) ||
                   ((inexact > 0) && (cmp <= 0)) ||

@@ -1,6 +1,6 @@
 /* Test file for mpfr_cbrt.
 
-Copyright 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 2002, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -132,17 +132,13 @@ special (void)
   mpfr_clear (y);
 }
 
-#define TEST_FUNCTION mpfr_cbrt
-#include "tgeneric.c"
-
 int
 main (void)
 {
   mpfr_t x;
-  int r;
+  mp_rnd_t r;
   mp_prec_t p;
 
-  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   special ();
@@ -155,21 +151,21 @@ main (void)
       for (r = 0; r < GMP_RND_MAX; r++)
         {
           mpfr_set_ui (x, 1, GMP_RNDN);
-          mpfr_cbrt (x, x, (mp_rnd_t) r);
+          mpfr_cbrt (x, x, r);
           if (mpfr_cmp_ui (x, 1))
             {
               printf ("Error in mpfr_cbrt for x=1, rnd=%s\ngot ",
-                      mpfr_print_rnd_mode ((mp_rnd_t) r));
+                      mpfr_print_rnd_mode (r));
               mpfr_out_str (stdout, 2, 0, x, GMP_RNDN);
               printf ("\n");
               exit (1);
             }
           mpfr_set_si (x, -1, GMP_RNDN);
-          mpfr_cbrt (x, x, (mp_rnd_t) r);
+          mpfr_cbrt (x, x, r);
           if (mpfr_cmp_si (x, -1))
             {
               printf ("Error in mpfr_cbrt for x=-1, rnd=%s\ngot ",
-                      mpfr_print_rnd_mode ((mp_rnd_t) r));
+                      mpfr_print_rnd_mode (r));
               mpfr_out_str (stdout, 2, 0, x, GMP_RNDN);
               printf ("\n");
               exit (1);
@@ -187,7 +183,7 @@ main (void)
                     {
                       printf ("Error in mpfr_cbrt for "
                               "x = 27.0 * 2^(%d), rnd=%s\ngot ",
-                              3*i, mpfr_print_rnd_mode ((mp_rnd_t) r));
+                              3*i, mpfr_print_rnd_mode (r));
                       mpfr_out_str (stdout, 2, 0, x, GMP_RNDN);
                       printf ("\ninstead of 3 * 2^(%d)\n", i);
                       exit (1);
@@ -196,9 +192,8 @@ main (void)
             }
         }
     }
-  mpfr_clear (x);
 
-  test_generic (2, 200, 10);
+  mpfr_clear (x);
 
   tests_end_mpfr ();
   return 0;

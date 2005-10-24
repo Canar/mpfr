@@ -1,6 +1,6 @@
 /* Test file for mpfr_ui_sub.
 
-Copyright 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 2000, 2001, 2002, 2003, 2004 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -129,12 +129,6 @@ special (void)
   else
     MPFR_ASSERTN(mpfr_cmpabs (x, y) == 0 && mpfr_sgn (x) != mpfr_sgn (y));
 
-  mpfr_set_prec (x, 73);
-  mpfr_set_str_binary (x, "0.1101111010101011011011100011010000000101110001011111001011011000101111101E-99");
-  mpfr_ui_sub (x, 1, x, GMP_RNDZ);
-  mpfr_nextabove (x);
-  MPFR_ASSERTN(mpfr_cmp_ui (x, 1) == 0);
-
   mpfr_clear (x);
   mpfr_clear (y);
   mpfr_clear (res);
@@ -227,41 +221,6 @@ check_nans (void)
   mpfr_clear (y);
 }
 
-/* Check mpfr_ui_sub with u = 0 (unsigned). */
-static void check_neg (void)
-{
-  mpfr_t x, yneg, ysub;
-  int i, s;
-  int r;
-
-  mpfr_init2 (x, 64);
-  mpfr_init2 (yneg, 32);
-  mpfr_init2 (ysub, 32);
-
-  for (i = 0; i <= 25; i++)
-    {
-      mpfr_sqrt_ui (x, i, GMP_RNDN);
-      for (s = 0; s <= 1; s++)
-        {
-          RND_LOOP (r)
-            {
-              int tneg, tsub;
-
-              tneg = mpfr_neg (yneg, x, (mp_rnd_t) r);
-              tsub = mpfr_ui_sub (ysub, 0, x, (mp_rnd_t) r);
-              MPFR_ASSERTN (mpfr_equal_p (yneg, ysub));
-              MPFR_ASSERTN (!(MPFR_IS_POS (yneg) ^ MPFR_IS_POS (ysub)));
-              MPFR_ASSERTN (tneg == tsub);
-            }
-          mpfr_neg (x, x, GMP_RNDN);
-        }
-    }
-
-  mpfr_clear (x);
-  mpfr_clear (yneg);
-  mpfr_clear (ysub);
-}
-
 int
 main (int argc, char *argv[])
 {
@@ -277,24 +236,22 @@ main (int argc, char *argv[])
     for (k=0; k<100; k++)
       check_two_sum (p);
 
-  check(1196426492, "1.4218093058435347e-3", GMP_RNDN,
-        "1.1964264919985781e9");
-  check(1092583421, "-1.0880649218158844e9", GMP_RNDN,
-        "2.1806483428158845901e9");
+  check(1196426492, "1.4218093058435347e-3", GMP_RNDN, 
+	"1.1964264919985781e9");
+  check(1092583421, "-1.0880649218158844e9", GMP_RNDN, 
+	"2.1806483428158845901e9");
   check(948002822, "1.22191250737771397120e+20", GMP_RNDN,
-        "-1.2219125073682338611e20");
+	"-1.2219125073682338611e20");
   check(832100416, "4.68311314939691330000e-215", GMP_RNDD,
-        "8.3210041599999988079e8");
+	"8.3210041599999988079e8");
   check(1976245324, "1.25296395864546893357e+232", GMP_RNDZ,
-        "-1.2529639586454686577e232");
+	"-1.2529639586454686577e232");
   check(2128997392, "-1.08496826129284207724e+187", GMP_RNDU,
-        "1.0849682612928422704e187");
-  check(293607738, "-1.9967571564050541e-5", GMP_RNDU,
-        "2.9360773800002003e8");
-  check(354270183, "2.9469161763489528e3", GMP_RNDN,
-        "3.5426723608382362e8");
-
-  check_neg ();
+	"1.0849682612928422704e187");
+  check(293607738, "-1.9967571564050541e-5", GMP_RNDU, 
+	"2.9360773800002003e8");
+  check(354270183, "2.9469161763489528e3", GMP_RNDN, 
+	"3.5426723608382362e8");
 
   tests_end_mpfr ();
   return 0;

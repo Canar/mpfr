@@ -1,6 +1,6 @@
 /* Test file for mpfr_set_str.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,7 +44,7 @@ MA 02110-1301, USA. */
       exit (1); \
     }
 
-static void
+static void 
 check_underflow (void)
 {
   mpfr_t a;
@@ -60,8 +60,8 @@ check_underflow (void)
   if (!MPFR_IS_ZERO (a))
     {
       printf("ERROR for mpfr_set_str (a, \"0.00000000001\", 10, GMP_RNDN)\n"
-             " with emin=-20\n"
-             "res=%d\n", res);
+	     " with emin=-20\n"
+	     "res=%d\n", res);
       mpfr_dump (a);
       exit (1);
     }
@@ -111,12 +111,12 @@ main (int argc, char *argv[])
 
   bd = randlimb () & 8;
 
-  str2 = str = (char*) (*__gmp_allocate_func) (nc * sizeof(char));
+  str2 = str = (*__gmp_allocate_func) (nc * sizeof(char));
 
   if (bd)
     {
       for(k = 1; k <= bd; k++)
-        *(str2++) = (randlimb () & 1) + '0';
+	*(str2++) = (randlimb () & 1) + '0';
     }
   else
     *(str2++) = '0';
@@ -204,20 +204,20 @@ main (int argc, char *argv[])
       logbase = (randlimb () % 5) + 1;
       base = 1 << logbase;
       /* Warning: the number of bits needed to print exactly a number of
-         'prec' bits in base 2^logbase may be greater than ceil(prec/logbase),
-         for example 0.11E-1 in base 2 cannot be written exactly with only
-         one digit in base 4 */
+	 'prec' bits in base 2^logbase may be greater than ceil(prec/logbase),
+	 for example 0.11E-1 in base 2 cannot be written exactly with only
+	 one digit in base 4 */
       if (base == 2)
-        baseprec = prec;
+	baseprec = prec;
       else
-        baseprec = 1 + (prec - 2 + logbase) / logbase;
-      str = mpfr_get_str (NULL, &e, base, baseprec, x, (mp_rnd_t) k);
-      mpfr_set_str (y, str, base, (mp_rnd_t) k);
+	baseprec = 1 + (prec - 2 + logbase) / logbase;
+      str = mpfr_get_str (NULL, &e, base, baseprec, x, k);
+      mpfr_set_str (y, str, base, k);
       MPFR_EXP(y) += logbase * (e - strlen (str));
       if (mpfr_cmp (x, y))
         {
           printf ("mpfr_set_str o mpfr_get_str <> id for rnd_mode=%s\n",
-                  mpfr_print_rnd_mode ((mp_rnd_t) k));
+                  mpfr_print_rnd_mode (k));
           printf ("x=");
           mpfr_print_binary (x);
           puts ("");
@@ -656,7 +656,7 @@ main (int argc, char *argv[])
   CHECK53(y, "5783893e-128", GMP_RNDU, x,
           "0.10011000111100000110011110000101100111110011101110101E-402",
           38);
-
+  
   CHECK53(y, "87575437e-310", GMP_RNDD, x,
           "0.11000000001011100000110011110011010000000010001010110E-1003",
           39);
@@ -743,7 +743,7 @@ main (int argc, char *argv[])
     mpfr_set_prec (x, mp_bits_per_limb); /* x and y have only one limb */
     mpfr_set_prec (y, mp_bits_per_limb);
 
-    str = (char*) (*__gmp_allocate_func) (N + 20);
+    str = (*__gmp_allocate_func) (N + 20);
 
     mpfr_set_ui (x, 1, GMP_RNDN); /* ensures that x is not NaN or Inf */
     for (; nb_digit < N; nb_digit *= 10)
@@ -780,7 +780,7 @@ main (int argc, char *argv[])
                   printf ("return    : ");
                   mpfr_print_binary (y);
                   puts ("");
-                  exit (1);
+		  exit (1);
                 }
             }
 
@@ -827,7 +827,7 @@ main (int argc, char *argv[])
   mpfr_set_prec (y, 135);
   mpfr_set_str (y, "23833565676460972739462619524519814462546", 10, GMP_RNDN);
   MPFR_ASSERTN (mpfr_cmp (x, y) == 0 && ret == 0);
-
+  
   /* coverage test for set_str_binary */
   mpfr_set_str_binary (x, "NaN");
   MPFR_ASSERTN(mpfr_nan_p (x));

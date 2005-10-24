@@ -1,6 +1,6 @@
 /* Test file for mpfr_abs.
 
-Copyright 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,7 +30,7 @@ check_inexact (void)
 {
   mp_prec_t p, q;
   mpfr_t x, y, absx;
-  int rnd;
+  mp_rnd_t rnd;
   int inexact, cmp;
 
   mpfr_init (x);
@@ -43,18 +43,18 @@ check_inexact (void)
       mpfr_set_prec (absx, p);
       mpfr_random (x);
       if (randlimb () % 2)
-        {
-          mpfr_set (absx, x, GMP_RNDN);
-          mpfr_neg (x, x, GMP_RNDN);
-        }
+	{
+	  mpfr_set (absx, x, GMP_RNDN);
+	  mpfr_neg (x, x, GMP_RNDN);
+	}
       else
-        mpfr_set (absx, x, GMP_RNDN);
+	mpfr_set (absx, x, GMP_RNDN);
       for (q=2; q<2*p; q++)
         {
           mpfr_set_prec (y, q);
           for (rnd = 0; rnd < GMP_RND_MAX; rnd++)
             {
-              inexact = mpfr_abs (y, x, (mp_rnd_t) rnd);
+              inexact = mpfr_abs (y, x, rnd);
               cmp = mpfr_cmp (y, absx);
               if (((inexact == 0) && (cmp != 0)) ||
                   ((inexact > 0) && (cmp <= 0)) ||
@@ -85,7 +85,7 @@ check_cmp(int argc, char *argv[])
   mpfr_inits2(53, x, y, NULL);
 
   mpfr_set_ui(x, 1, GMP_RNDN);
-  (mpfr_abs) (x, x, GMP_RNDN);
+  mpfr_abs(x, x, GMP_RNDN);
   if (mpfr_cmp_ui (x, 1))
     {
       printf ("Error in mpfr_abs(1.0)\n");
@@ -138,15 +138,15 @@ check_cmp(int argc, char *argv[])
       mpfr_random(x);
       MPFR_SET_SIGN(x, sign);
       rnd = RND_RAND();
-      mpfr_abs(y, x, (mp_rnd_t) rnd);
+      mpfr_abs(y, x, rnd);
       MPFR_SET_POS(x);
       if (mpfr_cmp(x,y))
         {
-          printf ("Mismatch for sign=%d and x=", sign);
-          mpfr_print_binary(x);
+          printf ("Mismatch for sign=%d and x=", sign); 
+	  mpfr_print_binary(x);
           printf ("\nResults=");
-          mpfr_print_binary(y);
-          putchar ('\n');
+          mpfr_print_binary(y); 
+	  putchar ('\n');
           exit (1);
         }
     }

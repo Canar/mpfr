@@ -1,6 +1,6 @@
 /* Test file for mpfr_out_str.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <float.h>
 #include <stdio.h>
@@ -120,7 +120,7 @@ special (void)
   mpfr_out_str (fout, 10, 0, x, GMP_RNDN);
   mpfr_neg (x, x, GMP_RNDN);
   mpfr_out_str (fout, 10, 0, x, GMP_RNDN);
-
+  
   mpfr_clear (x);
 }
 
@@ -139,7 +139,7 @@ main (int argc, char *argv[])
       fout = fopen ("/dev/null", "w");
       /* If we failed to open this device, try with a dummy file */
       if (fout == NULL)
-        fout = fopen ("mpfrtest.txt", "w");
+	fout = fopen ("mpfrtest.txt", "w");
     }
   else
     {
@@ -188,7 +188,7 @@ main (int argc, char *argv[])
 #endif
       r = RND_RAND ();
       p = 2 + randlimb () % 35;
-      check (d, (mp_rnd_t) r, p);
+      check (d, r, p);
     }
 
   fclose (fout);

@@ -1,6 +1,6 @@
 /* Test file for mpfr_ui_div.
 
-Copyright 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,7 +51,7 @@ check_inexact (void)
   mp_prec_t px, py;
   int inexact, cmp;
   unsigned long int u;
-  int rnd;
+  mp_rnd_t rnd;
 
   mpfr_init (x);
   mpfr_init (y);
@@ -72,8 +72,8 @@ check_inexact (void)
           mpfr_set_prec (z, py + px);
           for (rnd = 0; rnd < GMP_RND_MAX; rnd++)
             {
-              inexact = mpfr_ui_div (y, u, x, (mp_rnd_t) rnd);
-              if (mpfr_mul (z, y, x, (mp_rnd_t) rnd))
+              inexact = mpfr_ui_div (y, u, x, rnd);
+              if (mpfr_mul (z, y, x, rnd))
                 {
                   printf ("z <- y * x should be exact\n");
                   exit (1);
@@ -84,7 +84,7 @@ check_inexact (void)
                   ((inexact < 0) && (cmp >= 0)))
                 {
                   printf ("Wrong inexact flag for u=%lu, rnd=%s\n",
-                          u, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                          u, mpfr_print_rnd_mode (rnd));
                   printf ("expected %d, got %d\n", cmp, inexact);
                   printf ("x="); mpfr_print_binary (x); puts ("");
                   printf ("y="); mpfr_print_binary (y); puts ("");
@@ -167,15 +167,15 @@ main (int argc, char *argv[])
   check_nan ();
   check_inexact ();
   check(948002822, "1.22191250737771397120e+20", GMP_RNDN,
-        "7.758352715731357946e-12");
+	"7.758352715731357946e-12");
   check(1976245324, "1.25296395864546893357e+232", GMP_RNDZ,
-        "1.5772563211925444801e-223");
+	"1.5772563211925444801e-223");
   check(740454110, "2.11496253355831863313e+183", GMP_RNDZ,
-        "3.5010270784996976041e-175");
+	"3.5010270784996976041e-175");
   check(1690540942, "1.28278599852446657468e-276", GMP_RNDU,
-        "1.3178666932321966062e285");
+	"1.3178666932321966062e285");
   check(1476599377, "-2.14191393656148625995e+305", GMP_RNDD,
-        "-6.8938315017943889615e-297");
+	"-6.8938315017943889615e-297");
 
   tests_end_mpfr ();
   return 0;

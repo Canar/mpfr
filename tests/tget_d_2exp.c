@@ -1,6 +1,6 @@
 /* Test mpfr_get_d_2exp.
 
-Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 1999, 2000, 2001, 2002, 2003 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,7 +49,7 @@ check_round (void)
 
           for (neg = 0; neg <= 1; neg++)
             {
-              got = mpfr_get_d_2exp (&got_exp, f, (mp_rnd_t) rnd_mode);
+              got = mpfr_get_d_2exp (&got_exp, f, rnd_mode);
 
               if (neg == 0
                   ? (got < 0.5 || got >= 1.0)

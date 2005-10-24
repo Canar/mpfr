@@ -1,6 +1,6 @@
 /* Test file for mpfr_mul_ui.
 
-Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 1999, 2000, 2001, 2002, 2003, 2004 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,7 +31,7 @@ check_inexact (mp_prec_t p)
   unsigned long u;
   mp_prec_t q;
   int inexact, cmp;
-  int rnd;
+  mp_rnd_t rnd;
 
   mpfr_init2 (x, p);
   mpfr_init (y);
@@ -48,7 +48,7 @@ check_inexact (mp_prec_t p)
     for (rnd = 0; rnd < GMP_RND_MAX; rnd++)
       {
         mpfr_set_prec (y, q);
-        inexact = mpfr_mul_ui (y, x, u, (mp_rnd_t) rnd);
+        inexact = mpfr_mul_ui (y, x, u, rnd);
         cmp = mpfr_cmp (y, z);
         if (((inexact == 0) && (cmp != 0)) ||
             ((inexact < 0) && (cmp >= 0)) ||
@@ -56,7 +56,7 @@ check_inexact (mp_prec_t p)
           {
             printf ("Wrong inexact flag for p=%u, q=%u, rnd=%s\n",
                     (unsigned int) p, (unsigned int) q,
-                    mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                    mpfr_print_rnd_mode (rnd));
             exit (1);
           }
       }
@@ -74,11 +74,6 @@ check_inexact (mp_prec_t p)
   mpfr_clear (z);
 }
 
-#define TEST_FUNCTION mpfr_mul_ui
-#define INTEGER_TYPE  unsigned long
-#define RAND_FUNCTION(x) mpfr_random2(x, MPFR_LIMB_SIZE (x), 1)
-#include "tgeneric_ui.c"
-
 int
 main (int argc, char *argv[])
 {
@@ -87,7 +82,6 @@ main (int argc, char *argv[])
   mp_prec_t p;
   mp_exp_t emax;
 
-  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   for (p=2; p<100; p++)
@@ -152,8 +146,8 @@ main (int argc, char *argv[])
   MPFR_ASSERTN(mpfr_inf_p (x) && MPFR_IS_POS(x));
   set_emax (emax);
 
-  mpfr_set_str (x, /*1.0/3.0*/
-                "0.333333333333333333333333333333333", 10, GMP_RNDZ);
+  mpfr_set_str (x, /*1.0/3.0*/ 
+		"0.333333333333333333333333333333333", 10, GMP_RNDZ);
   mpfr_mul_ui (x, x, 3, GMP_RNDU);
   if (mpfr_cmp_ui (x, 1))
     {
@@ -259,23 +253,7 @@ main (int argc, char *argv[])
       exit (1);
     }
 
-  /* Check regression */
-  mpfr_set_prec (x, 32);
-  mpfr_set_prec (y, 96);
-  mpfr_set_ui (x, 1742175942, GMP_RNDN);
-  mpfr_mul_ui (y, x, 59, GMP_RNDN);
-  if (mpfr_cmp_str (y, "0.10111111011101010101000110111101000100000000000000"
-                    "0000000000000000000000000000000000000000000000E37",
-                    2, GMP_RNDN))
-    {
-      printf ("Regression tested failed for x=1742175942 * 59\n");
-      exit (1);
-    }
-
-  mpfr_clear(x);
-  mpfr_clear(y);
-
-  test_generic_ui (2, 500, 100);
+  mpfr_clear(x); mpfr_clear(y);
 
   tests_end_mpfr ();
   return 0;

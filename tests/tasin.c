@@ -1,6 +1,6 @@
 /* Test file for mpfr_asin.
 
-Copyright 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 2001, 2002, 2003, 2004 Free Software Foundation.
 Original version by Mathieu Dutour.
 
 This file is part of the MPFR Library.
@@ -17,8 +17,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +32,7 @@ static void
 special (void)
 {
   mpfr_t x, y;
-  int r;
+  mp_rnd_t r;
 
   mpfr_init (x);
   mpfr_init (y);
@@ -98,13 +98,13 @@ special (void)
   for (r = 0; r < GMP_RND_MAX; r++)
     {
       mpfr_set_ui (x, 1, GMP_RNDN); /* exact */
-      mpfr_asin (y, x, (mp_rnd_t) r);
-      mpfr_const_pi (x, (mp_rnd_t) r);
+      mpfr_asin (y, x, r);
+      mpfr_const_pi (x, r);
       mpfr_div_2exp (x, x, 1, GMP_RNDN); /* exact */
       if (mpfr_cmp (x, y))
         {
           printf ("Error: asin(1) != Pi/2 for rnd=%s\n",
-                  mpfr_print_rnd_mode ((mp_rnd_t) r));
+                  mpfr_print_rnd_mode (r));
           exit (1);
         }
     }
@@ -113,14 +113,14 @@ special (void)
   for (r = 0; r < GMP_RND_MAX; r++)
     {
       mpfr_set_si (x, -1, GMP_RNDN); /* exact */
-      mpfr_asin (y, x, (mp_rnd_t) r);
-      mpfr_const_pi (x, MPFR_INVERT_RND((mp_rnd_t) r));
+      mpfr_asin (y, x, r);
+      mpfr_const_pi (x, MPFR_INVERT_RND(r));
       mpfr_neg (x, x, GMP_RNDN); /* exact */
       mpfr_div_2exp (x, x, 1, GMP_RNDN); /* exact */
       if (mpfr_cmp (x, y))
         {
           printf ("Error: asin(-1) != -Pi/2 for rnd=%s\n",
-                  mpfr_print_rnd_mode ((mp_rnd_t) r));
+                  mpfr_print_rnd_mode (r));
           exit (1);
         }
     }
@@ -148,20 +148,6 @@ special (void)
       exit (1);
     }
 
-  mpfr_set_prec (x, 9);
-  mpfr_set_prec (y, 19);
-  mpfr_set_str_binary (x, "0.110000000E-6");
-  mpfr_asin (y, x, GMP_RNDD);
-  mpfr_set_prec (x, 19);
-  mpfr_set_str_binary (x, "0.1100000000000001001E-6");
-  if (mpfr_cmp (x, y))
-    {
-      printf ("Error: mpfr_asin (3)\n");
-      mpfr_dump (x);
-      mpfr_dump (y);
-      exit (1);
-    }
-
   mpfr_clear (x);
   mpfr_clear (y);
 }
@@ -178,7 +164,7 @@ special_overflow (void)
   mpfr_set_str_binary (x, "0.101100100000000000110100E0");
   mpfr_asin (y, x, GMP_RNDN);
   if (mpfr_cmp_str (y, "0.110001001101001111110000010110001000111011001000E0",
-                    2, GMP_RNDN))
+		    2, GMP_RNDN))
     {
       printf("Special Overflow error.\n");
       mpfr_dump (y);

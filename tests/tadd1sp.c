@@ -1,6 +1,6 @@
 /* Test file for mpfr_add1sp.
 
-Copyright 2004, 2005 Free Software Foundation.
+Copyright 2004 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -67,7 +67,7 @@ int main(void)
 #define STD_ERROR \
   {\
     printf("ERROR: for %s and p=%lu and i=%d:\nB=",\
-           mpfr_print_rnd_mode ((mp_rnd_t) r), p, i);\
+           mpfr_print_rnd_mode(r), p, i);\
     mpfr_print_binary(b);\
     printf("\nC="); mpfr_print_binary(c);\
     printf("\nadd1  : "); mpfr_print_binary(a1);\
@@ -79,7 +79,7 @@ int main(void)
 #define STD_ERROR2 \
   {\
     printf("ERROR: Wrong inexact flag for %s and p=%lu and i=%d:\nB=",\
-           mpfr_print_rnd_mode ((mp_rnd_t) r), p, i);\
+           mpfr_print_rnd_mode(r), p, i);\
     mpfr_print_binary(b);\
     printf("\nC="); mpfr_print_binary(c);\
     printf("\nA="); mpfr_print_binary(a1);\
@@ -99,7 +99,7 @@ int main(void)
 void check_random(mp_prec_t p)
 {
   mpfr_t a1,b,c,a2;
-  int r;
+  mp_rnd_t r;
   int i, inexact1, inexact2;
 
   mpfr_inits2(p, a1,b,c,a2, NULL);
@@ -115,8 +115,8 @@ void check_random(mp_prec_t p)
           if (MPFR_IS_PURE_FP(b) && MPFR_IS_PURE_FP(c))
             for (r = 0 ; r < GMP_RND_MAX ; r++)
               {
-                inexact1 = mpfr_add1(a1, b, c, (mp_rnd_t) r);
-                inexact2 = mpfr_add1sp(a2, b, c, (mp_rnd_t) r);
+                inexact1 = mpfr_add1(a1, b, c, r);
+                inexact2 = mpfr_add1sp(a2, b, c, r);
                 if (mpfr_cmp(a1, a2))
                   STD_ERROR;
                 if (inexact1 != inexact2)
@@ -131,7 +131,7 @@ void check_random(mp_prec_t p)
 void check_special(void)
 {
   mpfr_t a1,a2,b,c;
-  int r;
+  mp_rnd_t r;
   mpfr_prec_t p;
   int i = -1, inexact1, inexact2;
 
@@ -142,33 +142,20 @@ void check_special(void)
       SET_PREC(53);
       mpfr_set_str1 (b, "1@100");
       mpfr_set_str1 (c, "1@1");
-      inexact1 = mpfr_add1(a1, b, c, (mp_rnd_t) r);
-      inexact2 = mpfr_add1sp(a2, b, c, (mp_rnd_t) r);
+      inexact1 = mpfr_add1(a1, b, c, r);
+      inexact2 = mpfr_add1sp(a2, b, c, r);
       if (mpfr_cmp(a1, a2))
         STD_ERROR;
       if (inexact1 != inexact2)
         STD_ERROR2;
       mpfr_set_str_binary (b, "1E53");
       mpfr_set_str_binary (c, "1E0");
-      inexact1 = mpfr_add1(a1, b, c, (mp_rnd_t) r);
-      inexact2 = mpfr_add1sp(a2, b, c, (mp_rnd_t) r);
+      inexact1 = mpfr_add1(a1, b, c, r);
+      inexact2 = mpfr_add1sp(a2, b, c, r);
       if (mpfr_cmp(a1, a2))
         STD_ERROR;
       if (inexact1 != inexact2)
         STD_ERROR2;
-    }
-
-  mpfr_set_prec (c, 2);
-  mpfr_set_prec (a1, 2);
-  mpfr_set_prec (a2, 2);
-  mpfr_set_str_binary (c, "1.0e1");
-  mpfr_set_str_binary (a2, "1.1e-1");
-  mpfr_set_str_binary (a1, "0.11E2");
-  mpfr_add1sp (a2, c, a2, GMP_RNDN);
-  if (mpfr_cmp (a1, a2))
-    {
-      printf ("Regression reuse test failed!\n");
-      exit (1);
     }
 
   mpfr_clears(a1,a2,b,c,NULL);

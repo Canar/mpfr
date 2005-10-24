@@ -1,6 +1,6 @@
 /* Test file for mpfr_get_str.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,7 +57,7 @@ check_small (void)
 
   mpfr_set_prec (x, 20);
   mpfr_set_ui (x, 2, GMP_RNDN);
-  mpfr_nexttozero (x);
+  mpfr_sub_one_ulp (x, GMP_RNDD);
   s = mpfr_get_str (NULL, &e, 4, 2, x, GMP_RNDU);
   if (strcmp (s, "20") || (e != 1))
     {
@@ -66,7 +66,7 @@ check_small (void)
       exit (1);
     }
   mpfr_free_str (s);
-
+  
   /* check n_digits=0 */
   mpfr_set_prec (x, 5);
   mpfr_set_ui (x, 17, GMP_RNDN);
@@ -74,7 +74,7 @@ check_small (void)
   mpfr_free_str (s);
   s = mpfr_get_str (NULL, &e, 36, 0, x, GMP_RNDN);
   mpfr_free_str (s);
-
+  
   mpfr_set_prec (x, 64);
   mpfr_set_si (x, -1, GMP_RNDN);
   mpfr_div_2exp (x, x, 63, GMP_RNDN); /* x = -2^(-63) */
@@ -96,7 +96,7 @@ check_small (void)
       exit (1);
     }
   mpfr_free_str (s);
-
+  
   /* check corner case ret!=0, j0!=0 in mpfr_get_str_aux */
   mpfr_set_prec (x, 100);
   mpfr_set_str_binary (x, "0.1001011111010001101110010101010101111001010111111101101101100110100011110110000101110110001011110000E-9");
@@ -108,7 +108,7 @@ check_small (void)
       exit (1);
     }
   mpfr_free_str (s);
-
+  
   /* check corner case exact=0 in mpfr_get_str_aux */
   mpfr_set_prec (x, 100);
   mpfr_set_str_binary (x, "0.1001001111101101111000101000110111111010101100000110010001111111011001101011101100001100110000000000E8");
@@ -120,7 +120,7 @@ check_small (void)
       exit (1);
     }
   mpfr_free_str (s);
-
+  
   for (p=4; p<=200; p++)
     {
       mpfr_set_prec (x, p);
@@ -134,8 +134,8 @@ check_small (void)
           exit (1);
         }
       mpfr_free_str (s);
-
-      mpfr_nexttoinf (x);
+  
+      mpfr_add_one_ulp (x, GMP_RNDU);
       s = mpfr_get_str (NULL, &e, 6, 2, x, GMP_RNDN);
       if (strcmp (s, "11") || (e != 2))
         {
@@ -147,7 +147,7 @@ check_small (void)
       mpfr_free_str (s);
 
       mpfr_set_str (x, "6.5", 10, GMP_RNDN);
-      mpfr_nexttozero (x);
+      mpfr_sub_one_ulp (x, GMP_RNDU);
       s = mpfr_get_str (NULL, &e, 6, 2, x, GMP_RNDN);
       if (strcmp (s, "10") || (e != 2))
         {
@@ -407,7 +407,7 @@ check_small (void)
       exit (1);
     }
   mpfr_free_str (s);
-
+  
   mpfr_set_str_binary (x, "11111001010011100101000001111111110001001001110110001E-136");
   s = mpfr_get_str (NULL, &e, 10, 9, x, GMP_RNDN);
   if (strcmp (s, "100693858") || e != -24)
@@ -415,7 +415,7 @@ check_small (void)
       printf ("Error in mpfr_get_str (27): s=%s e=%d\n", s, (int) e);
       exit (1);
     }
-    mpfr_free_str (s);
+    mpfr_free_str (s); 
   mpfr_set_str_binary (x, "10001000001110010110001011111011111011011010000110001E-110");
   s = mpfr_get_str (NULL, &e, 10, 14, x, GMP_RNDN);
   if (strcmp (s, "36923634350619") || e != -17)
@@ -963,7 +963,7 @@ check_special (int b, mp_prec_t p)
   int i, j;
   char s[MAX_DIGITS + 2], s2[MAX_DIGITS + 2], c;
   mp_exp_t e;
-  int r;
+  mp_rnd_t r;
   size_t m;
 
   /* check for invalid base */
@@ -982,7 +982,7 @@ check_special (int b, mp_prec_t p)
       for (r = 0; r < GMP_RND_MAX; r++)
         for (m= (i<3)? 2 : i-1 ; (int) m <= i+1 ; m++)
           {
-            mpfr_get_str (s, &e, b, m, x, (mp_rnd_t) r);
+            mpfr_get_str (s, &e, b, m, x, r);
             /* s should be 1 followed by (m-1) zeros, and e should be i+1 */
             if ((e != i+1) || strncmp (s, s2, m) != 0)
               {
@@ -996,7 +996,7 @@ check_special (int b, mp_prec_t p)
       for (r = 0; r < GMP_RND_MAX; r++)
         if (i >= 2)
           {
-            mpfr_get_str (s, &e, b, i, x, (mp_rnd_t) r);
+            mpfr_get_str (s, &e, b, i, x, r);
             /* should be i times (b-1) */
             c = (b <= 10) ? '0' + b - 1 : 'a' + (b - 11);
             for (j=0; (j < i) && (s[j] == c); j++);
@@ -1087,7 +1087,7 @@ main (int argc, char *argv[])
       mpfr_set_exp (x, (e == -10) ? mpfr_get_emin () :
                     ((e == 10) ? mpfr_get_emax () : e));
       b = 2 + (randlimb () % 35);
-      r = (mp_rnd_t) RND_RAND();
+      r = RND_RAND();
       mpfr_get_str (s, &f, b, m, x, r);
     }
   mpfr_clear (x);

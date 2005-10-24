@@ -1,6 +1,6 @@
 /* Test file for mpfr_set_f.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,7 +47,7 @@ main (void)
   mpfr_set_f (x, y, GMP_RNDN);
 
   mpf_random2 (y, 10, 0);
-  mpfr_set_f (x, y, (mp_rnd_t) RND_RAND());
+  mpfr_set_f (x, y, RND_RAND() );
 
   /* bug found by Jean-Pierre Merlet */
   mpfr_set_prec (x, 256);
@@ -56,21 +56,19 @@ main (void)
   mpfr_set_str (u,
      "7.f10872b020c49ba5e353f7ced916872b020c49ba5e353f7ced916872b020c498@2",
      16, GMP_RNDN);
-  mpf_set_str (y, "2033033E-3", 10); /* avoid 2033.033 which is
-                                        locale-sensitive */
+  mpf_set_str (y, "2033.033", 10);
   mpfr_set_f (x, y, GMP_RNDN);
   if (mpfr_cmp (x, u))
     {
-      printf ("mpfr_set_f failed for y=2033033E-3\n");
+      printf ("mpfr_set_f failed for y=2033.033\n");
       exit (1);
     }
-  mpf_set_str (y, "-2033033E-3", 10); /* avoid -2033.033 which is
-                                         locale-sensitive */
+  mpf_set_str (y, "-2033.033", 10);
   mpfr_set_f (x, y, GMP_RNDN);
   mpfr_neg (u, u, GMP_RNDN);
   if (mpfr_cmp (x, u))
     {
-      printf ("mpfr_set_f failed for y=-2033033E-3\n");
+      printf ("mpfr_set_f failed for y=-2033.033\n");
       exit (1);
     }
 
@@ -95,25 +93,25 @@ main (void)
       mpf_set_prec (z, pr);
       mpf_random2 (z, z->_mp_prec, 0);
       mpfr_set_prec (x, pr);
-      mpfr_set_f (x, z, (mp_rnd_t) 0);
+      mpfr_set_f (x, z, 0);
     }
 
   /* Check for +0 */
   mpfr_set_prec (x, 53);
   mpf_set_prec (y, 53);
   mpf_set_ui (y, 0);
-  for (r = 0 ; r < GMP_RND_MAX ; r++)
+  for(r = 0 ; r < GMP_RND_MAX ; r++)
     {
       int i;
       for (i = -1; i <= 1; i++)
         {
           if (i)
             mpfr_set_si (x, i, GMP_RNDN);
-          inexact = mpfr_set_f (x, y, (mp_rnd_t) r);
+          inexact = mpfr_set_f (x, y, r);
           if (!MPFR_IS_ZERO(x) || !MPFR_IS_POS(x) || inexact)
             {
               printf ("mpfr_set_f(x,0) failed for %s, i = %d\n",
-                      mpfr_print_rnd_mode ((mp_rnd_t) r), i);
+                      mpfr_print_rnd_mode (r), i);
               exit (1);
             }
         }

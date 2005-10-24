@@ -18,8 +18,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
@@ -53,7 +53,7 @@ mpfr_random2 (mpfr_ptr x, mp_size_t size, mp_exp_t exp)
   xp = MPFR_MANT (x);
   if (size > xn)
     size = xn;
-  k = xn - size;
+  k = xn - size;                  
 
   /* k   : # of 0 limbs at the end
      size: # of limbs to fill

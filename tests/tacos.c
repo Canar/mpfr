@@ -1,6 +1,6 @@
 /* Test file for mpfr_acos.
 
-Copyright 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 2001, 2002, 2003, 2004 Free Software Foundation.
 Contributed by Mathieu Dutour.
 
 This file is part of the MPFR Library.
@@ -17,8 +17,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +33,7 @@ special (void)
 {
   mpfr_t x, y;
   int inex1, inex2;
-
+  
   mpfr_init2 (x, 32);
   mpfr_init2 (y, 32);
 
@@ -55,14 +55,14 @@ special (void)
       mpfr_print_binary (y); printf ("\n");
       exit (1);
     }
-
+  
   mpfr_set_prec (x, 2);
   mpfr_set_ui (x, 0, GMP_RNDN);
   inex1 = mpfr_acos (x, x, GMP_RNDN); /* Pi/2 */
   inex2 = mpfr_const_pi (x, GMP_RNDN);
   if (inex1 != inex2)
     {
-      printf ("Error in mpfr_acos (3) for prec=2\n");
+      printf ("Error in mpfr_acos (3) for prec=2\n");  
       exit (1);
     }
 
@@ -98,7 +98,7 @@ int
 main (void)
 {
   mpfr_t x, y;
-  int r;
+  mp_rnd_t r;
 
   tests_start_mpfr ();
 
@@ -145,13 +145,13 @@ main (void)
   for (r = 0; r < GMP_RND_MAX; r++)
     {
       mpfr_set_ui (x, 0, GMP_RNDN); /* exact */
-      mpfr_acos (y, x, (mp_rnd_t) r);
-      mpfr_const_pi (x, (mp_rnd_t) r);
+      mpfr_acos (y, x, r);
+      mpfr_const_pi (x, r);
       mpfr_div_2exp (x, x, 1, GMP_RNDN); /* exact */
       if (mpfr_cmp (x, y))
         {
           printf ("Error: acos(0) != Pi/2 for rnd=%s\n",
-                  mpfr_print_rnd_mode ((mp_rnd_t) r));
+                  mpfr_print_rnd_mode (r));
           exit (1);
         }
     }
@@ -160,12 +160,12 @@ main (void)
   for (r = 0; r < GMP_RND_MAX; r++)
     {
       mpfr_set_si (x, -1, GMP_RNDN); /* exact */
-      mpfr_acos (y, x, (mp_rnd_t) r);
-      mpfr_const_pi (x, (mp_rnd_t) r);
+      mpfr_acos (y, x, r);
+      mpfr_const_pi (x, r);
       if (mpfr_cmp (x, y))
         {
           printf ("Error: acos(1) != Pi for rnd=%s\n",
-                  mpfr_print_rnd_mode ((mp_rnd_t) r));
+                  mpfr_print_rnd_mode (r));
           exit (1);
         }
     }

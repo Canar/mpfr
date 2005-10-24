@@ -1,6 +1,6 @@
 /* Test file for mpfr_eq.
 
-Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,8 +75,8 @@ special (void)
   mpfr_init2 (y, 53);
   mpfr_init2 (z, 53);
 
-  mpfr_set_str (x, "1", 10, (mp_rnd_t) 0);
-  mpfr_set_str (y, "1e-10000", 10, (mp_rnd_t) 0);
+  mpfr_set_str (x, "1", 10, 0);
+  mpfr_set_str (y, "1e-10000", 10, 0);
   mpfr_add (z, x, y, GMP_RNDU);
 
   for (i = 1; i <= 52; i++)
@@ -176,7 +176,7 @@ special (void)
   MPFR_ASSERTN(mpfr_eq (x, y, 2) == 0);
   MPFR_ASSERTN(mpfr_eq (x, y, mp_bits_per_limb) == 0);
   MPFR_ASSERTN(mpfr_eq (x, y, mp_bits_per_limb + 1) == 0);
-
+  
   mpfr_clear (x);
   mpfr_clear (y);
   mpfr_clear (z);

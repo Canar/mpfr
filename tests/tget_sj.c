@@ -1,6 +1,6 @@
 /* Test file for mpfr_get_sj and mpfr_get_uj.
 
-Copyright 2004, 2005 Free Software Foundation, Inc.
+Copyright 2004 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #if HAVE_CONFIG_H
 # include "config.h"       /* for a build within gmp */
@@ -62,7 +62,7 @@ check_sj (intmax_t s, mpfr_ptr x)
 
   for (i = -1; i <= 1; i++)
     {
-      int rnd;
+      mpfr_rnd_t rnd;
 
       mpfr_set_si_2exp (y, i, -2, GMP_RNDN);
       mpfr_add (y, y, x, GMP_RNDN);
@@ -79,12 +79,12 @@ check_sj (intmax_t s, mpfr_ptr x)
           if (rnd == GMP_RNDU && i > 0)
             continue;
           /* rint (y) == x == s */
-          r = mpfr_get_sj (y, (mp_rnd_t) rnd);
+          r = mpfr_get_sj (y, rnd);
           if (r != s)
             {
               printf ("Error in check_sj for y = ");
               mpfr_out_str (stdout, 2, 0, y, GMP_RNDN);
-              printf (" in %s\n", mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+              printf (" in %s\n", mpfr_print_rnd_mode (rnd));
               printf ("Got %jd instead of %jd.\n", r, s);
               exit (1);
             }
@@ -104,7 +104,7 @@ check_uj (uintmax_t u, mpfr_ptr x)
 
   for (i = -1; i <= 1; i++)
     {
-      int rnd;
+      mpfr_rnd_t rnd;
 
       mpfr_set_si_2exp (y, i, -2, GMP_RNDN);
       mpfr_add (y, y, x, GMP_RNDN);
@@ -119,12 +119,12 @@ check_uj (uintmax_t u, mpfr_ptr x)
           if (rnd == GMP_RNDU && i > 0)
             continue;
           /* rint (y) == x == u */
-          r = mpfr_get_uj (y, (mp_rnd_t) rnd);
+          r = mpfr_get_uj (y, rnd);
           if (r != u)
             {
               printf ("Error in check_uj for y = ");
               mpfr_out_str (stdout, 2, 0, y, GMP_RNDN);
-              printf (" in %s\n", mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+              printf (" in %s\n", mpfr_print_rnd_mode (rnd));
               printf ("Got %ju instead of %ju.\n", r, u);
               exit (1);
             }
@@ -142,8 +142,8 @@ check_erange (void)
   intmax_t d;
 
   /* Test for ERANGE flag + correct behaviour if overflow */
-
-  mpfr_init2 (x, 256);
+  
+  mpfr_init2 (x, 256); 
   mpfr_set_uj (x, UINTMAX_MAX, GMP_RNDN);
   mpfr_clear_erangeflag ();
   dl = mpfr_get_uj (x, GMP_RNDN);
@@ -197,7 +197,7 @@ check_erange (void)
       printf ("ERROR for get_sj + ERANGE + INTMAX_MIN (2)\n");
       exit (1);
     }
-
+  
   mpfr_clear (x);
 }
 

@@ -1,6 +1,6 @@
 /* Test file for mpfr_set_z.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,24 +31,23 @@ static void check0(void)
   mpz_t y;
   mpfr_t x;
   int inexact, r;
-
   /* Check for +0 */
-  mpfr_init (x);
-  mpz_init (y);
-  mpz_set_si (y, 0);
-  for(r = 0; r < GMP_RND_MAX; r++)
+  mpfr_init(x);
+  mpz_init(y);
+  mpz_set_si(y, 0);
+  for(r = 0 ; r < GMP_RND_MAX ; r++)
     {
-      inexact = mpfr_set_z (x, y, (mp_rnd_t) r);
+      inexact = mpfr_set_z(x, y, r);
       if (!MPFR_IS_ZERO(x) || !MPFR_IS_POS(x) || inexact)
         {
           printf("mpfr_set_z(x,0) failed for %s\n",
-                 mpfr_print_rnd_mode ((mp_rnd_t) r));
+                 mpfr_print_rnd_mode(r));
           exit(1);
         }
     }
   mpfr_clear(x);
   mpz_clear(y);
-}
+}  
 
 /* FIXME: It'd be better to examine the actual data in an mpfr_t to see that
    it's as expected.  Comparing mpfr_set_z with mpfr_cmp or against
@@ -118,7 +117,6 @@ check_large (void)
   set_emin (emin);
 
   mpz_clear (z);
-
   mpfr_clear (x);
   mpfr_clear (y);
 }
@@ -131,12 +129,11 @@ main (int argc, char *argv[])
   tests_start_mpfr ();
 
   check_large ();
-  check (0, GMP_RNDN);
+  check (0, 0);
   for (j = 0; j < 200000; j++)
-    check (randlimb () & LONG_MAX, (mp_rnd_t) RND_RAND ());
-  check0 ();
+    check (randlimb () & LONG_MAX, RND_RAND () );
+  check0();
 
   tests_end_mpfr ();
-
   return 0;
 }

@@ -1,6 +1,6 @@
 /* Test compatibility mpf-mpfr.
 
-Copyright 2003, 2004, 2005 Free Software Foundation.
+Copyright 2003, 2004 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -21,11 +21,9 @@ MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-
 #include "gmp.h"
-#include "mpfr.h"
 #ifdef MPFR
+#include "mpfr.h"
 #include "mpf2mpfr.h"
 #endif
 
@@ -127,9 +125,7 @@ main ()
   l = mpf_get_si (x);
   u = mpf_get_ui (x);
   s = mpf_get_str (NULL, &exp, 10, 10, x);
-  /* MPF doen't have mpf_free_str */
-  mpfr_free_str (s);
-
+  free (s);
 
   /* Arithmetic Functions */
 

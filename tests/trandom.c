@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,14 +28,14 @@ MA 02110-1301, USA. */
 static void
 test_random (long nbtests, mp_prec_t prec, int verbose)
 {
-  mpfr_t x;
-  int *tab, size_tab, k;
-  double d, av = 0, var = 0, chi2 = 0, th;
+  mpfr_t x; 
+  int *tab, size_tab, k; 
+  double d, av = 0, var = 0, chi2 = 0, th; 
 
-  mpfr_init2(x, prec);
+  mpfr_init2(x, prec); 
 
-  size_tab = (nbtests >= 1000 ? nbtests / 50 : 20);
-  tab = (int *) malloc (size_tab * sizeof(int));
+  size_tab = (nbtests >= 1000 ? nbtests / 50 : 20); 
+  tab = (int *) malloc (size_tab * sizeof(int)); 
   for (k = 0; k < size_tab; ++k)
     tab[k] = 0;
 
@@ -53,14 +53,14 @@ test_random (long nbtests, mp_prec_t prec, int verbose)
       return;
     }
 
-  av /= nbtests;
-  var = (var /nbtests) - av*av;
+  av /= nbtests; 
+  var = (var /nbtests) - av*av; 
 
   th = (double) nbtests / size_tab;
-
-  printf("Average = %.5f\nVariance = %.5f\n", av, var);
-  printf("Repartition for random. Each integer should be close to %d.\n",
-         (int)th);
+  
+  printf("Average = %.5f\nVariance = %.5f\n", av, var); 
+  printf("Repartition for random. Each integer should be close to %d.\n", 
+	 (int)th); 
 
   for (k = 0; k < size_tab; k++)
     {
@@ -71,7 +71,7 @@ test_random (long nbtests, mp_prec_t prec, int verbose)
     }
 
   printf("\nChi2 statistics value (with %d degrees of freedom) : %.5f\n\n",
-         size_tab - 1, chi2);
+	 size_tab - 1, chi2);
 
   printf("\n");
 
@@ -90,8 +90,8 @@ test_random2 (long nbtests, mp_prec_t prec, int verbose)
   xn = 1 + (prec - 1) / mp_bits_per_limb;
   sh = xn * mp_bits_per_limb - prec;
 
-  size_tab = (nbtests >= 1000 ? nbtests / 50 : 20);
-  tab = (int *) malloc (size_tab * sizeof(int));
+  size_tab = (nbtests >= 1000 ? nbtests / 50 : 20); 
+  tab = (int *) malloc (size_tab * sizeof(int)); 
   for (k = 0; k < size_tab; ++k)
     tab[k] = 0;
 
@@ -122,17 +122,13 @@ test_random2 (long nbtests, mp_prec_t prec, int verbose)
   mpfr_random2 (x, 0, 0);
   MPFR_ASSERTN(mpfr_cmp_ui (x, 0) == 0 && MPFR_IS_POS(x));
 
-  /* test size < 0 */
-  mpfr_random2 (x, -1, 0);
-  MPFR_ASSERTN (MPFR_IS_NEG (x) && MPFR_EXP (x) == 0);
-
   mpfr_clear (x);
   if (!verbose)
     {
       free(tab);
       return;
     }
-
+  
   av /= nbtests;
   var = (var /nbtests) - av*av;
 
@@ -149,7 +145,7 @@ test_random2 (long nbtests, mp_prec_t prec, int verbose)
     }
 
   printf("\nChi2 statistics value (with %d degrees of freedom) : %.5f\n\n",
-         size_tab - 1, chi2);
+	 size_tab - 1, chi2);
 
   free(tab);
   return;
@@ -158,9 +154,9 @@ test_random2 (long nbtests, mp_prec_t prec, int verbose)
 static void
 test_urandomb (long nbtests, mp_prec_t prec, int verbose)
 {
-  mpfr_t x;
+  mpfr_t x; 
   int *tab, size_tab, k, sh, xn;
-  gmp_randstate_t state;
+  gmp_randstate_t state; 
   double d, av = 0, var = 0, chi2 = 0, th;
   mp_exp_t emin;
 
@@ -168,8 +164,8 @@ test_urandomb (long nbtests, mp_prec_t prec, int verbose)
   xn = 1 + (prec - 1) / mp_bits_per_limb;
   sh = xn * mp_bits_per_limb - prec;
 
-  size_tab = (nbtests >= 1000 ? nbtests / 50 : 20);
-  tab = (int *) malloc (size_tab * sizeof(int));
+  size_tab = (nbtests >= 1000 ? nbtests / 50 : 20); 
+  tab = (int *) malloc (size_tab * sizeof(int)); 
   for (k = 0; k < size_tab; ++k)
     tab[k] = 0;
 
@@ -217,7 +213,7 @@ test_urandomb (long nbtests, mp_prec_t prec, int verbose)
   th = (double)nbtests / size_tab;
   printf("Average = %.5f\nVariance = %.5f\n", av, var);
   printf("Repartition for urandomb. Each integer should be close to %d.\n",
-         (int)th);
+	 (int)th);
 
   for (k = 0; k < size_tab; k++)
     {
@@ -228,7 +224,7 @@ test_urandomb (long nbtests, mp_prec_t prec, int verbose)
     }
 
   printf("\nChi2 statistics value (with %d degrees of freedom) : %.5f\n\n",
-         size_tab - 1, chi2);
+	 size_tab - 1, chi2);
 
   free(tab);
   return;
@@ -238,9 +234,9 @@ int
 main (int argc, char *argv[])
 {
   long nbtests;
-  mp_prec_t prec;
-  int verbose = 0;
-
+  mp_prec_t prec; 
+  int verbose = 0; 
+  
   MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
@@ -261,7 +257,7 @@ main (int argc, char *argv[])
     prec = atol(argv[2]);
 
   test_random (nbtests, prec, verbose);
-  test_random2 (nbtests, prec, verbose);
+  test_random2 (nbtests, prec, verbose); 
   test_urandomb (nbtests, prec, verbose);
 
   if (argc == 1)  /* check also small precision */

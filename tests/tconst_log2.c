@@ -1,6 +1,6 @@
 /* Test file for mpfr_const_log2.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,7 +31,6 @@ check (mp_prec_t p0, mp_prec_t p1)
 {
   mpfr_t x, y, z;
   mp_rnd_t rnd;
-  int dif;
 
   mpfr_init (x);
   mpfr_init (y);
@@ -44,17 +43,19 @@ check (mp_prec_t p0, mp_prec_t p1)
       mpfr_set_prec (x, p0);
       mpfr_set_prec (y, p0);
         {
-          rnd = (mp_rnd_t) RND_RAND ();
+          rnd = RND_RAND ();
           mpfr_const_log2 (x, rnd);
           mpfr_set (y, z, rnd);
-          if ((dif = mpfr_cmp (x, y))
-              && mpfr_can_round (z, mpfr_get_prec(z), GMP_RNDN,
+          if (mpfr_cmp (x, y) && mpfr_can_round (z, mpfr_get_prec(z), GMP_RNDN,
                                                  rnd, p0))
             {
-              printf ("mpfr_const_log2 fails for prec=%u, rnd=%s Diff=%d\n",
-                      (unsigned int) p0, mpfr_print_rnd_mode (rnd), dif);
-              printf ("expected "), mpfr_dump (y);
-              printf ("got      "), mpfr_dump (x);
+              printf ("mpfr_const_log2 fails for prec=%u, rnd=%s\n",
+                      (unsigned int) p0, mpfr_print_rnd_mode (rnd));
+              printf ("expected ");
+              mpfr_out_str (stdout, 2, 0, y, GMP_RNDN);
+              printf ("\ngot      ");
+              mpfr_out_str (stdout, 2, 0, x, GMP_RNDN);
+              printf ("\n");
               exit (1);
             }
         }
@@ -71,20 +72,20 @@ check_large (void)
   mpfr_t x, y;
   mpfr_init2 (x, 25000);
   mpfr_init2 (y, 26000);
-  (mpfr_const_log2) (x, GMP_RNDN); /* First one ! */
-  (mpfr_const_log2) (y, GMP_RNDN); /* Then the other - cache - */
+  mpfr_const_log2 (x, GMP_RNDN); /* First one ! */
+  mpfr_const_log2 (y, GMP_RNDN); /* Then the other - cache - */
   mpfr_prec_round (y, 25000, GMP_RNDN);
   if (mpfr_cmp (x, y))
     {
-      printf ("const_log2: error for large prec\n");
+      printf ("const_pi: error for large prec\n");
       exit (1);
     }
 
-  /* worst-case with 15 successive ones after last bit,
+  /* worst-case with 15 successive ones after last bit, 
      to exercise can_round loop */
   mpfr_set_prec (x, 26249);
   mpfr_const_log2 (x, GMP_RNDZ);
-
+  
   mpfr_clears (x, y, NULL);
 }
 
@@ -134,7 +135,7 @@ main (int argc, char *argv[])
   tests_start_mpfr ();
 
   p = (argc>1) ? atoi(argv[1]) : 53;
-  rnd = (argc>2) ? (mp_rnd_t) atoi(argv[2]) : GMP_RNDZ;
+  rnd = (argc>2) ? atoi(argv[2]) : GMP_RNDZ;
 
   mpfr_init (x);
 

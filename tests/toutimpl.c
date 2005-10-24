@@ -1,7 +1,7 @@
 /* Test file for internal debugging-out functions:
    mpfr_dump, mpfr_print_binary, mpfr_print_rnd_mode.
 
-Copyright 2004, 2005 Free Software Foundation, Inc.
+Copyright 2004 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -17,8 +17,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -30,7 +30,7 @@ MA 02110-1301, USA. */
    We can't use tmpname since it is insecure */
 #define FILE_NAME "dummy.tmp"
 
-static const char Buffer[] =
+static const char Buffer[] = 
 "@NaN@\n"
 "-@Inf@\n"
 "-0\n"
@@ -65,14 +65,14 @@ int main()
       printf ("Error for printing GMP_RNDZ\n");
       exit (1);
     }
-  if (mpfr_print_rnd_mode ((mp_rnd_t) -1) != NULL ||
+  if (mpfr_print_rnd_mode (-1) != NULL ||
       mpfr_print_rnd_mode (GMP_RND_MAX) != NULL)
     {
       printf ("Error for illegal rounding mode values.\n");
       exit (1);
     }
 
-  /* Reopen stdout to a file. All errors will be put to stderr
+  /* Reopen stdout to a file. All errors will be put to stderr 
      Can't use tmpname since it is unsecure */
   if (freopen (FILE_NAME, "w", stdout) == NULL)
     {
@@ -89,7 +89,7 @@ int main()
   mpfr_set_str_binary (x, "0.101010101010111110010001100011000100001E32");
   mpfr_dump (x);
   mpfr_print_mant_binary ("x=",MPFR_MANT(x), MPFR_PREC(x));
-
+  
 
   mpfr_clear (x);
   fclose (stdout);
@@ -103,16 +103,16 @@ int main()
   for(i = 0 ; i < sizeof(Buffer)-1 ; i++)
     {
       if (feof (f))
-        {
-          fprintf (stderr, "Error EOF\n");
-          exit (1);
-        }
+	{
+	  fprintf (stderr, "Error EOF\n");
+	  exit (1);
+	}
       if (Buffer[i] != fgetc (f))
-        {
-          fprintf (stderr, "Character mismatch for i=%d / %lu\n",
-                  i, (unsigned long) sizeof(Buffer));
+	{
+	  fprintf (stderr, "Character mismatch for i=%d / %lu\n",
+		  i, (unsigned long) sizeof(Buffer));
           exit (1);
-        }
+	}      
     }
   fclose (f);
 

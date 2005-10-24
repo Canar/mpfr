@@ -1,6 +1,6 @@
 /* mpfr_ui_sub -- subtract a floating-point number from an integer
 
-Copyright 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
@@ -28,29 +28,26 @@ mpfr_ui_sub (mpfr_ptr y, unsigned long int u, mpfr_srcptr x, mp_rnd_t rnd_mode)
   mpfr_t uu;
   mp_limb_t up[1];
   unsigned long cnt;
-
-  if (MPFR_UNLIKELY (u == 0))
-    return mpfr_neg (y, x, rnd_mode);
-
+  
   if (MPFR_UNLIKELY(MPFR_IS_SINGULAR(x)))
     {
       if (MPFR_IS_NAN(x))
-        {
-          MPFR_SET_NAN(y);
-          MPFR_RET_NAN;
-        }
+	{
+	  MPFR_SET_NAN(y);
+	  MPFR_RET_NAN;
+	}
       else if (MPFR_IS_INF(x))
-        {
-          /*  u - Inf = -Inf and u - -Inf = +Inf  */
-          MPFR_SET_INF(y);
-          MPFR_SET_OPPOSITE_SIGN(y,x);
-          MPFR_RET(0); /* +/-infinity is exact */
-        }
+	{
+	  /*  u - Inf = -Inf and u - -Inf = +Inf  */
+	  MPFR_SET_INF(y);
+	  MPFR_SET_OPPOSITE_SIGN(y,x);
+	  MPFR_RET(0); /* +/-infinity is exact */
+	}
       else /* x is zero */
-        /* u - 0 = u */
-        return mpfr_set_ui(y, u, rnd_mode);
+	/* u - 0 = u */
+	return mpfr_set_ui(y, u, rnd_mode);
     }
-  else
+  else if (MPFR_LIKELY(u))
     {
       MPFR_TMP_INIT1 (up, uu, BITS_PER_MP_LIMB);
       MPFR_ASSERTN(u == (mp_limb_t) u);
@@ -59,4 +56,7 @@ mpfr_ui_sub (mpfr_ptr y, unsigned long int u, mpfr_srcptr x, mp_rnd_t rnd_mode)
       MPFR_SET_EXP (uu, BITS_PER_MP_LIMB - cnt);
       return mpfr_sub (y, uu, x, rnd_mode);
     }
+  else
+    /* u == 0 BUT x != 0 */
+    return mpfr_neg (y, x, rnd_mode); /* if u=0, then set y to -x */
 }

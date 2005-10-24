@@ -1,6 +1,6 @@
 /* Test file for mpfr_out_str.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,15 +16,18 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
+#include "mpfr-impl.h"
 #include "mpfr-test.h"
 
 FILE *fout;
@@ -58,7 +61,7 @@ check_large (void)
 
   /* checks rounding of negative numbers */
   mpfr_set_prec (x, 7);
-  mpfr_set_str (x, "-11.5", 10, GMP_RNDN);
+  mpfr_set_d (x, -11.5, GMP_RNDN);
   s = mpfr_get_str (NULL, &e, 10, 2, x, GMP_RNDD);
   if (strcmp (s, "-12"))
     {
@@ -100,30 +103,6 @@ check_large (void)
   mpfr_clear (x);
 }
 
-static void
-special (void)
-{
-  mpfr_t x;
-
-  mpfr_init (x);
-
-  mpfr_set_nan (x);
-  mpfr_out_str (fout, 10, 0, x, GMP_RNDN);
-
-  mpfr_set_inf (x, 1);
-  mpfr_out_str (fout, 10, 0, x, GMP_RNDN);
-
-  mpfr_set_inf (x, -1);
-  mpfr_out_str (fout, 10, 0, x, GMP_RNDN);
-
-  mpfr_set_ui (x, 0, GMP_RNDN);
-  mpfr_out_str (fout, 10, 0, x, GMP_RNDN);
-  mpfr_neg (x, x, GMP_RNDN);
-  mpfr_out_str (fout, 10, 0, x, GMP_RNDN);
-
-  mpfr_clear (x);
-}
-
 int
 main (int argc, char *argv[])
 {
@@ -132,31 +111,16 @@ main (int argc, char *argv[])
 
   tests_start_mpfr ();
 
+  check_large ();
   /* with no argument: prints to /dev/null,
      tout_str N: prints N tests to stdout */
-  if (argc == 1)
-    {
-      fout = fopen ("/dev/null", "w");
-      /* If we failed to open this device, try with a dummy file */
-      if (fout == NULL)
-        fout = fopen ("mpfrtest.txt", "w");
-    }
+  if (argc==1)
+    fout = fopen ("/dev/null", "w");
   else
     {
       fout = stdout;
       N = atoi (argv[1]);
     }
-
-  if (fout == NULL)
-    {
-      printf ("Can't open /dev/null or stdout\n");
-      exit (1);
-    }
-
-  special ();
-
-  check_large ();
-
   check (-1.37247529013405550000e+15, GMP_RNDN, 7);
   check (-1.5674376729569697500e+15, GMP_RNDN, 19);
   check (-5.71262771772792640000e-79, GMP_RNDU, 16);
@@ -186,9 +150,9 @@ main (int argc, char *argv[])
 #else
       while (ABS(d) < DBL_MIN);
 #endif
-      r = RND_RAND ();
+      r = randlimb () % 4;
       p = 2 + randlimb () % 35;
-      check (d, (mp_rnd_t) r, p);
+      check (d, r, p);
     }
 
   fclose (fout);

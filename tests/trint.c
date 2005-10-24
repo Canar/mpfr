@@ -1,6 +1,6 @@
 /* Test file for mpfr_rint, mpfr_trunc, mpfr_floor, mpfr_ceil, mpfr_round.
 
-Copyright 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 2002, 2003 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -16,142 +16,19 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
+#include "mpfr-impl.h"
 #include "mpfr-test.h"
 
-#if __MPFR_STDC (199901L)
-# include <math.h>
-#endif
-
-static void
-special (void)
-{
-  mpfr_t x, y;
-  mp_exp_t emax;
-
-  mpfr_init (x);
-  mpfr_init (y);
-
-  mpfr_set_nan (x);
-  mpfr_rint (y, x, GMP_RNDN);
-  MPFR_ASSERTN(mpfr_nan_p (y));
-
-  mpfr_set_inf (x, 1);
-  mpfr_rint (y, x, GMP_RNDN);
-  MPFR_ASSERTN(mpfr_inf_p (y) && mpfr_sgn (y) > 0);
-
-  mpfr_set_inf (x, -1);
-  mpfr_rint (y, x, GMP_RNDN);
-  MPFR_ASSERTN(mpfr_inf_p (y) && mpfr_sgn (y) < 0);
-
-  mpfr_set_ui (x, 0, GMP_RNDN);
-  mpfr_rint (y, x, GMP_RNDN);
-  MPFR_ASSERTN(mpfr_cmp_ui (y, 0) == 0 && MPFR_IS_POS(y));
-
-  mpfr_set_ui (x, 0, GMP_RNDN);
-  mpfr_neg (x, x, GMP_RNDN);
-  mpfr_rint (y, x, GMP_RNDN);
-  MPFR_ASSERTN(mpfr_cmp_ui (y, 0) == 0 && MPFR_IS_NEG(y));
-
-  /* coverage test */
-  mpfr_set_prec (x, 2);
-  mpfr_set_ui (x, 1, GMP_RNDN);
-  mpfr_mul_2exp (x, x, mp_bits_per_limb, GMP_RNDN);
-  mpfr_rint (y, x, GMP_RNDN);
-  MPFR_ASSERTN(mpfr_cmp (y, x) == 0);
-
-  /* another coverage test */
-  emax = mpfr_get_emax ();
-  set_emax (1);
-  mpfr_set_prec (x, 3);
-  mpfr_set_str_binary (x, "1.11E0");
-  mpfr_set_prec (y, 2);
-  mpfr_rint (y, x, GMP_RNDU); /* x rounds to 1.0E1=0.1E2 which overflows */
-  MPFR_ASSERTN(mpfr_inf_p (y) && mpfr_sgn (y) > 0);
-  set_emax (emax);
-
-  /* yet another */
-  mpfr_set_prec (x, 97);
-  mpfr_set_prec (y, 96);
-  mpfr_set_str_binary (x, "-0.1011111001101111000111011100011100000110110110110000000111010001000101001111101010101011010111100E97");
-  mpfr_rint (y, x, GMP_RNDN);
-  MPFR_ASSERTN(mpfr_cmp (y, x) == 0);
-
-  mpfr_set_prec (x, 53);
-  mpfr_set_prec (y, 53);
-  mpfr_set_str_binary (x, "0.10101100000000101001010101111111000000011111010000010E-1");
-  mpfr_rint (y, x, GMP_RNDU);
-  MPFR_ASSERTN(mpfr_cmp_ui (y, 1) == 0);
-  mpfr_rint (y, x, GMP_RNDD);
-  MPFR_ASSERTN(mpfr_cmp_ui (y, 0) == 0 && MPFR_IS_POS(y));
-
-  mpfr_set_prec (x, 36);
-  mpfr_set_prec (y, 2);
-  mpfr_set_str_binary (x, "-11000110101010111111110111001.0000100");
-  mpfr_rint (y, x, GMP_RNDN);
-  mpfr_set_str_binary (x, "-11E27");
-  MPFR_ASSERTN(mpfr_cmp (y, x) == 0);
-
-  mpfr_set_prec (x, 39);
-  mpfr_set_prec (y, 29);
-  mpfr_set_str_binary (x, "-0.100010110100011010001111001001001100111E39");
-  mpfr_rint (y, x, GMP_RNDN);
-  mpfr_set_str_binary (x, "-0.10001011010001101000111100101E39");
-  MPFR_ASSERTN(mpfr_cmp (y, x) == 0);
-
-  mpfr_set_prec (x, 46);
-  mpfr_set_prec (y, 32);
-  mpfr_set_str_binary (x, "-0.1011100110100101000001011111101011001001101001E32");
-  mpfr_rint (y, x, GMP_RNDN);
-  mpfr_set_str_binary (x, "-0.10111001101001010000010111111011E32");
-  MPFR_ASSERTN(mpfr_cmp (y, x) == 0);
-
-  /* coverage test for mpfr_round */
-  mpfr_set_prec (x, 3);
-  mpfr_set_str_binary (x, "1.01E1"); /* 2.5 */
-  mpfr_set_prec (y, 2);
-  mpfr_round (y, x);
-  /* since mpfr_round breaks ties away, should give 3 and not 2 as with
-     the "round to even" rule */
-  MPFR_ASSERTN(mpfr_cmp_ui (y, 3) == 0);
-  /* same test for the function */
-  (mpfr_round) (y, x);
-  MPFR_ASSERTN(mpfr_cmp_ui (y, 3) == 0);
-
-  mpfr_set_prec (x, 6);
-  mpfr_set_prec (y, 3);
-  mpfr_set_str_binary (x, "110.111");
-  mpfr_round (y, x);
-  if (mpfr_cmp_ui (y, 7))
-    {
-      printf ("Error in round(110.111)\n");
-      exit (1);
-    }
-
-  /* Bug found by  Mark J Watkins */
-  mpfr_set_prec (x, 84);
-  mpfr_set_str_binary (x,
-   "0.110011010010001000000111101101001111111100101110010000000000000" \
-                       "000000000000000000000E32");
-  mpfr_round (x, x);
-  if (mpfr_cmp_str (x, "0.1100110100100010000001111011010100000000000000" \
-                    "00000000000000000000000000000000000000E32", 2, GMP_RNDN))
-    {
-      printf ("Rounding error when dest=src\n");
-      exit (1);
-    }
-
-  mpfr_clear (x);
-  mpfr_clear (y);
-}
-
-#if __MPFR_STDC (199901L)
+#if __STDC_VERSION__ >= 199901L
 
 static void
 test_fct (double (*f)(double), int (*g)(), char *s, mp_rnd_t r)
@@ -188,25 +65,15 @@ test_fct (double (*f)(double), int (*g)(), char *s, mp_rnd_t r)
 static void
 test_against_libc (void)
 {
-  mp_rnd_t r = GMP_RNDN;
+  int r = 0;
 
-#if HAVE_ROUND
   TEST_FCT (round);
-#endif
-#if HAVE_TRUNC
   TEST_FCT (trunc);
-#endif
-#if HAVE_FLOOR
   TEST_FCT (floor);
-#endif
-#if HAVE_CEIL
   TEST_FCT (ceil);
-#endif
-#if HAVE_NEARBYINT
-  for (r = 0; r < GMP_RND_MAX ; r++)
+  for (r = 0; r < 4; r++)
     if (mpfr_set_machine_rnd_mode (r) == 0)
       test_fct (&nearbyint, &mpfr_rint, "rint", r);
-#endif
 }
 
 #endif
@@ -232,7 +99,7 @@ main (int argc, char *argv[])
   mpz_t z;
   mp_prec_t p;
   mpfr_t x, y, t, u, v;
-  int r;
+  mp_rnd_t r;
   int inexact, sign_t;
 
   tests_start_mpfr ();
@@ -269,31 +136,27 @@ main (int argc, char *argv[])
           int trint;
           mpfr_set_prec (y, p);
           mpfr_set_prec (v, p);
-          for (r = 0; r < GMP_RND_MAX ; r++)
-            for (trint = 0; trint < 3; trint++)
+          for (r = 0; r < 4; r++)
+            for (trint = 0; trint < 2; trint++)
               {
-                if (trint == 2)
-                  inexact = mpfr_rint (y, x, (mp_rnd_t) r);
+                if (trint)
+                  inexact = mpfr_rint (y, x, r);
                 else if (r == GMP_RNDN)
                   inexact = mpfr_round (y, x);
                 else if (r == GMP_RNDZ)
-                  inexact = (trint ? mpfr_trunc (y, x) :
-                             mpfr_rint_trunc (y, x, GMP_RNDZ));
+                  inexact = mpfr_trunc (y, x);
                 else if (r == GMP_RNDU)
-                  inexact = (trint ? mpfr_ceil (y, x) :
-                             mpfr_rint_ceil (y, x, GMP_RNDU));
+                  inexact = mpfr_ceil (y, x);
                 else /* r = GMP_RNDD */
-                  inexact = (trint ? mpfr_floor (y, x) :
-                             mpfr_rint_floor (y, x, GMP_RNDD));
+                  inexact = mpfr_floor (y, x);
                 if (mpfr_sub (t, y, x, GMP_RNDN))
                   err ("subtraction 1 should be exact",
-                       s, x, y, p, (mp_rnd_t) r, trint, inexact);
+                       s, x, y, p, r, trint, inexact);
                 sign_t = mpfr_cmp_ui (t, 0);
-                if (trint != 0 &&
-                    (((inexact == 0) && (sign_t != 0)) ||
-                     ((inexact < 0) && (sign_t >= 0)) ||
-                     ((inexact > 0) && (sign_t <= 0))))
-                  err ("wrong inexact flag", s, x, y, p, (mp_rnd_t) r, trint, inexact);
+                if (((inexact == 0) && (sign_t != 0)) ||
+                    ((inexact < 0) && (sign_t >= 0)) ||
+                    ((inexact > 0) && (sign_t <= 0)))
+                  err ("wrong inexact flag", s, x, y, p, r, trint, inexact);
                 if (inexact == 0)
                   continue; /* end of the test for exact results */
 
@@ -302,43 +165,43 @@ main (int argc, char *argv[])
                     ((r == GMP_RNDU || (r == GMP_RNDZ && MPFR_SIGN (x) < 0))
                      && inexact < 0))
                   err ("wrong rounding direction",
-                       s, x, y, p, (mp_rnd_t) r, trint, inexact);
+                       s, x, y, p, r, trint, inexact);
                 if (inexact < 0)
                   {
                     mpfr_add_ui (v, y, 1, GMP_RNDU);
                     if (mpfr_cmp (v, x) <= 0)
                       err ("representable integer between x and its "
-                           "rounded value", s, x, y, p, (mp_rnd_t) r, trint, inexact);
+                           "rounded value", s, x, y, p, r, trint, inexact);
                   }
                 else
                   {
                     mpfr_sub_ui (v, y, 1, GMP_RNDD);
                     if (mpfr_cmp (v, x) >= 0)
                       err ("representable integer between x and its "
-                           "rounded value", s, x, y, p, (mp_rnd_t) r, trint, inexact);
+                           "rounded value", s, x, y, p, r, trint, inexact);
                   }
                 if (r == GMP_RNDN)
                   {
                     int cmp;
                     if (mpfr_sub (u, v, x, GMP_RNDN))
                       err ("subtraction 2 should be exact",
-                           s, x, y, p, (mp_rnd_t) r, trint, inexact);
+                           s, x, y, p, r, trint, inexact);
                     cmp = mpfr_cmp_abs (t, u);
                     if (cmp > 0)
                       err ("faithful rounding, but not the nearest integer",
-                           s, x, y, p, (mp_rnd_t) r, trint, inexact);
+                           s, x, y, p, r, trint, inexact);
                     if (cmp < 0)
                       continue;
                     /* |t| = |u|: x is the middle of two consecutive
                        representable integers. */
-                    if (trint == 2)
+                    if (trint)
                       {
                         /* halfway case for mpfr_rint in GMP_RNDN rounding
                            mode: round to an even integer or mantissa. */
                         mpfr_div_2ui (y, y, 1, GMP_RNDZ);
                         if (!mpfr_integer_p (y))
                           err ("halfway case for mpfr_rint, result isn't an"
-                               " even integer", s, x, y, p, (mp_rnd_t) r, trint, inexact);
+                               " even integer", s, x, y, p, r, trint, inexact);
                         /* If floor(x) and ceil(x) aren't both representable
                            integers, the mantissa must be even. */
                         mpfr_sub (v, v, y, GMP_RNDN);
@@ -349,7 +212,7 @@ main (int argc, char *argv[])
                                           + 1, GMP_RNDN);
                             if (!mpfr_integer_p (y))
                               err ("halfway case for mpfr_rint, mantissa isn't"
-                                   " even", s, x, y, p, (mp_rnd_t) r, trint, inexact);
+                                   " even", s, x, y, p, r, trint, inexact);
                           }
                       }
                     else
@@ -358,7 +221,7 @@ main (int argc, char *argv[])
                         if ((MPFR_SIGN (x) > 0 && inexact < 0) ||
                             (MPFR_SIGN (x) < 0 && inexact > 0))
                           err ("halfway case for mpfr_round, bad rounding"
-                               " direction", s, x, y, p, (mp_rnd_t) r, trint, inexact);
+                               " direction", s, x, y, p, r, trint, inexact);
                       }
                   }
               }
@@ -371,9 +234,8 @@ main (int argc, char *argv[])
   mpfr_clear (u);
   mpfr_clear (v);
 
-  special ();
-
-#if __MPFR_STDC (199901L)
+  /* TODO: add hardcoded tests */
+#if __STDC_VERSION__ >= 199901L
   if (argc > 1 && strcmp (argv[1], "-s") == 0)
     test_against_libc ();
 #endif

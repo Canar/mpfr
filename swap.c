@@ -1,6 +1,6 @@
 /* mpfr_swap (U, V) -- Swap U and V.
 
-Copyright 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+Copyright 2000, 2001, 2002, 2003 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,40 +16,27 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <string.h>
+#include "gmp.h"
+#include "mpfr.h"
 
-#include "mpfr-impl.h"
-
-/* Using memcpy is a few slower than swapping by hand. */
+/*
+ * We now use memcpy instead of copying the structure field by field.
+ * Thus we avoid copying values that may have trap representations,
+ * and if we change the structure in the future, this will still be
+ * valid. Also, there should not be any noticeable speed change in
+ * practice.
+ */
 
 void
 mpfr_swap (mpfr_ptr u, mpfr_ptr v)
 {
-  mpfr_prec_t p1, p2;
-  mpfr_sign_t s1, s2;
-  mp_exp_t e1, e2;
-  mp_limb_t *m1, *m2;
+  mpfr_t tmp;
 
-  p1 = MPFR_PREC(u);
-  p2 = MPFR_PREC(v);
-  MPFR_PREC(v) = p1;
-  MPFR_PREC(u) = p2;
-
-  s1 = MPFR_SIGN(u);
-  s2 = MPFR_SIGN(v);
-  MPFR_SIGN(v) = s1;
-  MPFR_SIGN(u) = s2;
-
-  e1 = MPFR_EXP(u);
-  e2 = MPFR_EXP(v);
-  MPFR_EXP(v) = e1;
-  MPFR_EXP(u) = e2;
-
-  m1 = MPFR_MANT(u);
-  m2 = MPFR_MANT(v);
-  MPFR_MANT(v) = m1;
-  MPFR_MANT(u) = m2;
+  memcpy (tmp, u, sizeof (mpfr_t));
+  memcpy (u, v, sizeof (mpfr_t));
+  memcpy (v, tmp, sizeof (mpfr_t));
 }

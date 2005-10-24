@@ -16,39 +16,49 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <time.h>
+#include "gmp.h"
+#include "mpfr.h"
 #include "mpfr-test.h"
 
+int maxulp=0;
+
 static void
-check (unsigned long a, mp_rnd_t rnd_mode, const char *qs)
+check (unsigned long a, mp_rnd_t rnd_mode, double Q)
 {
   mpfr_t q;
+  double Q2;
+  int u;
 
   mpfr_init2 (q, 53);
   mpfr_sqrt_ui (q, a, rnd_mode);
-  if (mpfr_cmp_str1 (q, qs))
+  Q2 = mpfr_get_d1 (q);
+  if (Q != Q2 && !(Isnan(Q) && Isnan(Q2)))
     {
+      u = ulp (Q2,Q);
       printf ("mpfr_sqrt_ui failed for a=%lu, rnd_mode=%s\n",
               a, mpfr_print_rnd_mode (rnd_mode));
-      printf ("sqrt gives %s, mpfr_sqrt_ui gives ", qs);
-      mpfr_out_str(stdout, 10, 0, q, GMP_RNDN);
+      printf ("sqrt gives %1.20e, mpfr_sqrt_ui gives %1.20e (%d ulp)\n",
+              Q, Q2, u);
       exit (1);
     }
   mpfr_clear (q);
 }
+
+double five = 5.0;
 
 int
 main (void)
 {
   tests_start_mpfr ();
 
-  check (0, GMP_RNDN, "0.0");
-  check (2116118, GMP_RNDU, "1.45468828276026215e3");
+  check (0, GMP_RNDN, 0.0);
+  check (2116118, GMP_RNDU, 1.45468828276026215e3);
 
   tests_end_mpfr ();
   return 0;

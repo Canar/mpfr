@@ -1,6 +1,6 @@
 /* Test file for mpfr_tan.
 
-Copyright 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,12 +16,14 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "gmp.h"
+#include "mpfr.h"
+#include "mpfr-impl.h"
 #include "mpfr-test.h"
 
 #define TEST_FUNCTION mpfr_tan
@@ -59,28 +61,6 @@ check_nans (void)
       exit (1);
     }
 
-  /* exercise recomputation */
-  mpfr_set_prec (x, 14);
-  mpfr_set_str_binary (x, "0.10100000101010E0");
-  mpfr_set_prec (y, 24);
-  mpfr_tan (y, x, GMP_RNDU);
-  mpfr_set_prec (x, 24);
-  mpfr_set_str_binary (x, "101110011011001100100001E-24");
-  MPFR_ASSERTN(mpfr_cmp (x, y) == 0);
-
-  /* Compute ~Pi/2 to check overflow */
-  /* TOO SLOW! Disable this test.
-  mpfr_set_prec (x, 20000);
-  mpfr_const_pi (x, GMP_RNDD); mpfr_div_2ui (x, x, 1, GMP_RNDN);
-  mpfr_set_prec (y, 24);
-  mpfr_tan (y, x, GMP_RNDN);
-  if (mpfr_cmp_str (y, "0.100011101101011000100011E20001", 2, GMP_RNDN))
-    {
-      printf("Error computing tan(~Pi/2)\n");
-      mpfr_dump (y);
-      exit (1);
-      } */
-
   mpfr_clear (x);
   mpfr_clear (y);
 }
@@ -100,14 +80,12 @@ main(int argc, char *argv[])
   mpfr_init (x);
 
   mpfr_set_prec (x, 2);
-  mpfr_set_str (x, "0.5", 10, GMP_RNDN);
+  mpfr_set_d (x, 0.5, GMP_RNDN);
   mpfr_tan (x, x, GMP_RNDD);
-  if (mpfr_cmp_ui_2exp(x, 1, -1))
+  if (mpfr_get_d1 (x) != 0.5)
     {
       printf ("mpfr_tan(0.5, GMP_RNDD) failed\n"
-              "expected 0.5, got");
-      mpfr_print_binary(x);
-      putchar('\n');
+              "expected 0.5, got %f\n", mpfr_get_d1 (x));
       exit (1);
     }
 

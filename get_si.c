@@ -1,6 +1,6 @@
 /* mpfr_get_si -- convert a floating-point number to a signed long.
 
-Copyright 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 2003 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,10 +16,12 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-#include <limits.h>
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
 long
@@ -28,40 +30,28 @@ mpfr_get_si (mpfr_srcptr f, mp_rnd_t rnd)
   mp_prec_t prec;
   long s;
   mpfr_t x;
+  mp_size_t n;
+  mp_exp_t exp;
 
-  if (MPFR_UNLIKELY (!mpfr_fits_slong_p (f, rnd)))
-    {
-      MPFR_SET_ERANGE ();
-      return MPFR_IS_NEG (f) ? LONG_MIN : LONG_MAX;
-    }
-
-  else if (MPFR_UNLIKELY (MPFR_IS_ZERO (f)))
-     return (long) 0;
+  if (!mpfr_fits_slong_p (f, rnd) || MPFR_IS_ZERO(f))
+    return (long) 0;
 
   /* determine prec of long */
   for (s = LONG_MIN, prec = 0; s != 0; s /= 2, prec ++);
 
   /* first round to prec bits */
   mpfr_init2 (x, prec);
-  mpfr_rint (x, f, rnd);
+  mpfr_set (x, f, rnd);
 
-  /* warning: if x=0, taking its exponent is illegal */
-  if (MPFR_UNLIKELY (MPFR_IS_ZERO(x)))
-    s = 0;
-  else
-    {
-      mp_limb_t a;
-      mp_size_t n;
-      mp_exp_t exp;
+  ASSERT(GMP_NAIL_BITS == 0); /* otherwise we may have to consider two or
+				 more limbs */
 
-      /* now the result is in the most significant limb of x */
-      exp = MPFR_GET_EXP (x); /* since |x| >= 1, exp >= 1 */
-      n = MPFR_LIMB_SIZE(x);
-      a = MPFR_MANT(x)[n - 1] >> (BITS_PER_MP_LIMB - exp);
-      s = MPFR_SIGN(f) > 0 ? a : a <= LONG_MAX ? - (long) a : LONG_MIN;
-    }
+  /* now the result is in the most significant limb of x */
+  exp = MPFR_GET_EXP (x); /* since |x| >= 1, exp >= 1 */
+  n = MPFR_ESIZE(x);
+  s = MPFR_MANT(x)[n - 1] >> (GMP_NUMB_BITS - exp);
 
   mpfr_clear (x);
 
-  return s;
+  return MPFR_SIGN(f) * s;
 }

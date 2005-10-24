@@ -1,6 +1,6 @@
 /* Test file for mpfr_nextabove, mpfr_nextbelow, mpfr_nexttoward.
 
-Copyright 2003, 2004, 2005 Free Software Foundation.
+Copyright 2003 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -16,12 +16,15 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
+#include "mpfr-impl.h"
 #include "mpfr-test.h"
 
 /* Generic tests for mpfr_nextabove and mpfr_nextbelow */
@@ -39,26 +42,6 @@ generic_abovebelow (void)
       prec = (randlimb () % 300) + MPFR_PREC_MIN;
       mpfr_inits2 (prec, x, y, z, (void *) 0);
       mpfr_init2 (t, 3);
-
-      /* special tests (executed once is enough) */
-      if (i == 0)
-        {
-          mpfr_set_nan (x);
-          mpfr_nextabove (x);
-          MPFR_ASSERTN(mpfr_nan_p (x));
-          mpfr_nextbelow (x);
-          MPFR_ASSERTN(mpfr_nan_p (x));
-          mpfr_nexttoward (x, y);
-          MPFR_ASSERTN(mpfr_nan_p (x));
-          mpfr_set_ui (y, 1, GMP_RNDN);
-          mpfr_nexttoward (y, x);
-          MPFR_ASSERTN(mpfr_nan_p (y));
-          mpfr_set_ui (x, 1, GMP_RNDN);
-          mpfr_set_ui (y, 1, GMP_RNDN);
-          mpfr_nexttoward (x, y);
-          MPFR_ASSERTN(mpfr_cmp_ui (x, 1) == 0);
-        }
-
       do
         mpfr_random (x);
       while (mpfr_cmp_ui (x, 0) == 0);
@@ -72,7 +55,7 @@ generic_abovebelow (void)
       else
         mpfr_nextabove (y);
       mpfr_set_si (t, below ? -5 : 5, GMP_RNDN);
-      mpfr_mul_2si (t, t, (mpfr_get_exp) (x) - prec - 3, GMP_RNDN);
+      mpfr_mul_2si (t, t, mpfr_get_exp (x) - prec - 3, GMP_RNDN);
       /* t = (1/2 + 1/8) ulp(x) */
       mpfr_add (z, x, t, GMP_RNDN);
       if (!mpfr_number_p (y) || mpfr_cmp (y, z) != 0)
@@ -98,7 +81,7 @@ inverse_test (void)
   int i, neg, below;
   mp_prec_t prec;
 
-  for (i = 0; i < (int) (sizeof(tests) / sizeof(tests[0])); i++)
+  for (i = 0; i < sizeof(tests) / sizeof(tests[0]); i++)
     for (neg = 0; neg <= 1; neg++)
       for (below = 0; below <= 1; below++)
         for (prec = MPFR_PREC_MIN; prec < 200; prec += 3)

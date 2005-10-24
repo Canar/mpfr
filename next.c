@@ -1,7 +1,7 @@
 /* mpfr_nextabove, mpfr_nextbelow, mpfr_nexttoward -- next representable
 floating-point number
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 1999, 2001, 2002, 2003 Free Software Foundation.
 Contributed by the Spaces project, INRIA Lorraine.
 
 This file is part of the MPFR Library.
@@ -18,21 +18,25 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
-void
+static void
 mpfr_nexttozero (mpfr_ptr x)
 {
-  if (MPFR_UNLIKELY(MPFR_IS_INF(x)))
+  if (MPFR_IS_INF(x))
     {
       MPFR_CLEAR_FLAGS(x);
       mpfr_setmax (x, __gmpfr_emax);
       return;
     }
-  else if (MPFR_UNLIKELY( MPFR_IS_ZERO(x) ))
+
+  if (MPFR_IS_ZERO(x))
     {
       MPFR_CHANGE_SIGN(x);
       mpfr_setmin (x, __gmpfr_emin);
@@ -43,14 +47,14 @@ mpfr_nexttozero (mpfr_ptr x)
       int sh;
       mp_limb_t *xp;
 
-      xn = MPFR_LIMB_SIZE (x);
-      MPFR_UNSIGNED_MINUS_MODULO (sh, MPFR_PREC(x));
+      xn = 1 + (MPFR_PREC(x) - 1) / BITS_PER_MP_LIMB;
+      sh = (mp_prec_t) xn * BITS_PER_MP_LIMB - MPFR_PREC(x);
       xp = MPFR_MANT(x);
-      mpn_sub_1 (xp, xp, xn, MPFR_LIMB_ONE << sh);
-      if (MPFR_UNLIKELY( MPFR_LIMB_MSB(xp[xn-1]) == 0) )
+      mpn_sub_1 (xp, xp, xn, MP_LIMB_T_ONE << sh);
+      if (xp[xn-1] >> (BITS_PER_MP_LIMB - 1) == 0)
         { /* was an exact power of two: not normalized any more */
           mp_exp_t exp = MPFR_EXP (x);
-          if (MPFR_UNLIKELY(exp == __gmpfr_emin))
+          if (exp == __gmpfr_emin)
             MPFR_SET_ZERO(x);
           else
             {
@@ -64,12 +68,13 @@ mpfr_nexttozero (mpfr_ptr x)
     }
 }
 
-void
+static void
 mpfr_nexttoinf (mpfr_ptr x)
 {
-  if (MPFR_UNLIKELY(MPFR_IS_INF(x)))
+  if (MPFR_IS_INF(x))
     return;
-  else if (MPFR_UNLIKELY(MPFR_IS_ZERO(x)))
+
+  if (MPFR_IS_ZERO(x))
     mpfr_setmin (x, __gmpfr_emin);
   else
     {
@@ -77,14 +82,13 @@ mpfr_nexttoinf (mpfr_ptr x)
       int sh;
       mp_limb_t *xp;
 
-      xn = MPFR_LIMB_SIZE (x);
-      MPFR_UNSIGNED_MINUS_MODULO (sh, MPFR_PREC(x));
+      xn = 1 + (MPFR_PREC(x) - 1) / BITS_PER_MP_LIMB;
+      sh = (mp_prec_t) xn * BITS_PER_MP_LIMB - MPFR_PREC(x);
       xp = MPFR_MANT(x);
-      if (MPFR_UNLIKELY( mpn_add_1 (xp, xp, xn, MPFR_LIMB_ONE << sh)) )
-        /* got 1.0000... */
+      if (mpn_add_1 (xp, xp, xn, MP_LIMB_T_ONE << sh)) /* got 1.0000... */
         {
           mp_exp_t exp = MPFR_EXP (x);
-          if (MPFR_UNLIKELY(exp == __gmpfr_emax))
+          if (exp == __gmpfr_emax)
             MPFR_SET_INF(x);
           else
             {
@@ -98,12 +102,13 @@ mpfr_nexttoinf (mpfr_ptr x)
 void
 mpfr_nextabove (mpfr_ptr x)
 {
-  if (MPFR_UNLIKELY(MPFR_IS_NAN(x)))
+  if (MPFR_IS_NAN(x))
     {
       __gmpfr_flags |= MPFR_FLAGS_NAN;
       return;
     }
-  if (MPFR_IS_NEG(x))
+
+  if (MPFR_SIGN(x) < 0)
     mpfr_nexttozero (x);
   else
     mpfr_nexttoinf (x);
@@ -112,13 +117,13 @@ mpfr_nextabove (mpfr_ptr x)
 void
 mpfr_nextbelow (mpfr_ptr x)
 {
-  if (MPFR_UNLIKELY(MPFR_IS_NAN(x)))
+  if (MPFR_IS_NAN(x))
     {
       __gmpfr_flags |= MPFR_FLAGS_NAN;
       return;
     }
 
-  if (MPFR_IS_NEG(x))
+  if (MPFR_SIGN(x) < 0)
     mpfr_nexttoinf (x);
   else
     mpfr_nexttozero (x);
@@ -129,14 +134,8 @@ mpfr_nexttoward (mpfr_ptr x, mpfr_srcptr y)
 {
   int s;
 
-  if (MPFR_UNLIKELY(MPFR_IS_NAN(x)))
+  if (MPFR_IS_NAN(x) || MPFR_IS_NAN(y))
     {
-      __gmpfr_flags |= MPFR_FLAGS_NAN;
-      return;
-    }
-  else if (MPFR_UNLIKELY(MPFR_IS_NAN(x) || MPFR_IS_NAN(y)))
-    {
-      MPFR_SET_NAN(x);
       __gmpfr_flags |= MPFR_FLAGS_NAN;
       return;
     }
@@ -144,7 +143,7 @@ mpfr_nexttoward (mpfr_ptr x, mpfr_srcptr y)
   s = mpfr_cmp (x, y);
   if (s == 0)
     return;
-  else if (s < 0)
+  if (s < 0)
     mpfr_nextabove (x);
   else
     mpfr_nextbelow (x);

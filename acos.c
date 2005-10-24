@@ -1,6 +1,6 @@
 /* mpfr_acos -- arc-cosinus of a floating-point number
 
-Copyright 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 2001, 2002, 2003 Free Software Foundation.
 
 This file is part of the MPFR Library, and was contributed by Mathieu Dutour.
 
@@ -16,92 +16,90 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
 int
 mpfr_acos (mpfr_ptr acos, mpfr_srcptr x, mp_rnd_t rnd_mode)
 {
-  mpfr_t xp, arcc, tmp;
-  mp_exp_t supplement;
-  mp_prec_t prec;
-  int sign, compared, inexact;
-  MPFR_SAVE_EXPO_DECL (expo);
-  MPFR_ZIV_DECL (loop);
+  mpfr_t xp;
+  mpfr_t arcc;
 
-  MPFR_LOG_FUNC (("x[%#R]=%R rnd=%d", x, x, rnd_mode),
-                 ("acos[%#R]=%R inexact=%d", acos, acos, inexact));
+  int signe, supplement;
 
-  /* Singular cases */
-  if (MPFR_UNLIKELY (MPFR_IS_SINGULAR (x)))
+  mpfr_t tmp;
+  int Prec;
+  int prec_acos;
+  int good = 0;
+  int realprec;
+  int compared;
+  int inexact = 0;
+
+  /* Trivial cases */
+  if (MPFR_IS_NAN(x) || MPFR_IS_INF(x))
     {
-      if (MPFR_IS_NAN (x) || MPFR_IS_INF (x))
-        {
-          MPFR_SET_NAN (acos);
-          MPFR_RET_NAN;
-        }
-      else /* necessarily x=0 */
-        {
-          MPFR_ASSERTD(MPFR_IS_ZERO(x));
-          /* acos(0)=Pi/2 */
-          inexact = mpfr_const_pi (acos, rnd_mode);
-          mpfr_div_2ui (acos, acos, 1, rnd_mode); /* exact */
-          MPFR_RET (inexact);
-        }
+      MPFR_SET_NAN(acos);
+      MPFR_RET_NAN;
     }
 
   /* Set x_p=|x| */
-  sign = MPFR_SIGN (x);
-  mpfr_init2 (xp, MPFR_PREC (x));
-  mpfr_abs (xp, x, GMP_RNDN); /* Exact */
+  signe = MPFR_SIGN(x);
+  mpfr_init2 (xp, MPFR_PREC(x));
+  mpfr_abs (xp, x, rnd_mode);
 
   compared = mpfr_cmp_ui (xp, 1);
 
-  if (MPFR_UNLIKELY (compared >= 0))
+  if (compared > 0) /* acos(x) = NaN for x > 1 */
     {
       mpfr_clear (xp);
-      if (compared > 0) /* acos(x) = NaN for x > 1 */
+      MPFR_SET_NAN(acos);
+      MPFR_RET_NAN;
+    }
+
+  if (compared == 0)
+    {
+      mpfr_clear (xp);
+      if (signe > 0) /* acos(+1) = 0 */
+	return mpfr_set_ui (acos, 0, rnd_mode);
+      else /* acos(-1) = Pi */
         {
-          MPFR_SET_NAN(acos);
-          MPFR_RET_NAN;
-        }
-      else
-        {
-          if (MPFR_IS_POS_SIGN (sign)) /* acos(+1) = 0 */
-            return mpfr_set_ui (acos, 0, rnd_mode);
-          else /* acos(-1) = Pi */
-            return mpfr_const_pi (acos, rnd_mode);
+          mpfr_const_pi (acos, rnd_mode);
+          return 1; /* inexact */
         }
     }
 
-  MPFR_SAVE_EXPO_MARK (expo);
+  if (MPFR_IS_ZERO(x)) /* acos(0)=Pi/2 */
+    {
+      mpfr_clear (xp);
+      mpfr_const_pi (acos, rnd_mode);
+      MPFR_SET_EXP (acos, MPFR_GET_EXP (acos) - 1);
+      return 1; /* inexact */
+    }
 
-  /* Compute the supplement */
+  prec_acos = MPFR_PREC(acos);
   mpfr_ui_sub (xp, 1, xp, GMP_RNDD);
-  if (MPFR_IS_POS_SIGN (sign))
+
+  if (signe > 0)
     supplement = 2 - 2 * MPFR_GET_EXP (xp);
   else
-    supplement = 2 - MPFR_GET_EXP (xp);
-  mpfr_clear (xp);
+    supplement = 2 - MPFR_GET_EXP(xp);
 
-  prec = MPFR_PREC (acos) + 10 + supplement;
+  realprec = prec_acos + 10;
 
-  /* If x ~ 2^-N, acos(x) ~ PI/2 - x - x^3/6
-     If Prec < 2*N, we can't round since x^3/6 won't be counted. */
-  if (MPFR_PREC (acos) >= MPFR_PREC (x)
-      && (mp_exp_t) prec <= -2*MPFR_GET_EXP (x) + 5)
-    prec = (mpfr_uexp_t) (-2*MPFR_GET_EXP (x)) + 5;
-
-  mpfr_init2 (tmp, prec);
-  mpfr_init2 (arcc, prec);
-
-  MPFR_ZIV_INIT (loop, prec);
-  for (;;)
+  while (!good)
     {
-      /* acos(x) = Pi/2 - asin(x) = Pi/2 - atan(x/sqrt(1-x^2)) */
-      mpfr_sqr (tmp, x, GMP_RNDN);
+      Prec = realprec + supplement;
+
+      /* Initialisation    */
+      mpfr_init2 (tmp, Prec);
+      mpfr_init2 (arcc, Prec);
+
+      mpfr_mul (tmp, x, x, GMP_RNDN);
       mpfr_ui_sub (tmp, 1, tmp, GMP_RNDN);
       mpfr_sqrt (tmp, tmp, GMP_RNDN);
       mpfr_div (tmp, x, tmp, GMP_RNDN);
@@ -110,19 +108,19 @@ mpfr_acos (mpfr_ptr acos, mpfr_srcptr x, mp_rnd_t rnd_mode)
       mpfr_div_2ui (tmp, tmp, 1, GMP_RNDN);
       mpfr_sub (arcc, tmp, arcc, GMP_RNDN);
 
-      if (MPFR_LIKELY (MPFR_CAN_ROUND (arcc, prec-supplement,
-                                       MPFR_PREC (acos), rnd_mode)))
-        break;
-      MPFR_ZIV_NEXT (loop, prec);
-      mpfr_set_prec (tmp, prec);
-      mpfr_set_prec (arcc, prec);
-    }
-  MPFR_ZIV_FREE (loop);
+      if (mpfr_can_round (arcc, realprec, GMP_RNDN, GMP_RNDZ,
+                          MPFR_PREC(acos) + (rnd_mode == GMP_RNDN)))
+        {
+          inexact = mpfr_set (acos, arcc, rnd_mode);
+          good = 1;
+        }
+      else
+        realprec += __gmpfr_ceil_log2 ((double) realprec);
 
-  inexact = mpfr_set (acos, arcc, rnd_mode);
-  mpfr_clear (tmp);
-  mpfr_clear (arcc);
+    mpfr_clear (tmp);
+    mpfr_clear (arcc);
+  }
 
-  MPFR_SAVE_EXPO_FREE (expo);
-  return mpfr_check_range (acos, inexact, rnd_mode);
+  mpfr_clear (xp);
+  return inexact;
 }

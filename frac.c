@@ -16,11 +16,13 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-
-#define MPFR_NEED_LONGLONG_H
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "longlong.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
 /* Optimization note: it is not a good idea to call mpfr_integer_p,
@@ -37,13 +39,13 @@ mpfr_frac (mpfr_ptr r, mpfr_srcptr u, mp_rnd_t rnd_mode)
   mpfr_t tmp;
   mpfr_ptr t;
 
-  /* Special cases */
-  if (MPFR_UNLIKELY(MPFR_IS_NAN(u)))
+  if (MPFR_IS_NAN(u))
     {
       MPFR_SET_NAN(r);
       MPFR_RET_NAN;
     }
-  else if (MPFR_UNLIKELY(MPFR_IS_INF(u) || mpfr_integer_p (u)))
+
+  if (MPFR_IS_INF(u) || mpfr_integer_p (u))
     {
       MPFR_CLEAR_FLAGS(r);
       MPFR_SET_SAME_SIGN(r, u);
@@ -95,8 +97,7 @@ mpfr_frac (mpfr_ptr r, mpfr_srcptr u, mp_rnd_t rnd_mode)
   fq = uq - ue;  /* number of bits of the fractional part of u */
 
   /* Temporary fix */
-  t = /* fq > MPFR_PREC(r) */
-    (mp_size_t) (MPFR_PREC(r) - 1) / BITS_PER_MP_LIMB < un ?
+  t = /* fq > MPFR_PREC(r) */ (MPFR_PREC(r) - 1) / BITS_PER_MP_LIMB < un ?
     (mpfr_init2 (tmp, (un + 1) * BITS_PER_MP_LIMB), tmp) : r;
   /* t has enough precision to contain the fractional part of u */
   /* If we use a temporary variable, we take the non-significant bits

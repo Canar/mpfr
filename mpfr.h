@@ -24,9 +24,9 @@ MA 02110-1301, USA. */
 
 /* Define MPFR version number */
 #define MPFR_VERSION_MAJOR 2
-#define MPFR_VERSION_MINOR 3
+#define MPFR_VERSION_MINOR 2
 #define MPFR_VERSION_PATCHLEVEL 0
-#define MPFR_VERSION_STRING "2.3.0"
+#define MPFR_VERSION_STRING "2.2.0"
 
 /* Macros dealing with MPFR VERSION */
 #define MPFR_VERSION_NUM(a,b,c) (((a) << 16L) | ((b) << 8) | (c))
@@ -507,7 +507,6 @@ __MPFR_DECLSPEC int mpfr_root _MPFR_PROTO ((mpfr_ptr,mpfr_srcptr,unsigned long,m
 __MPFR_DECLSPEC int mpfr_gamma _MPFR_PROTO((mpfr_ptr,mpfr_srcptr,mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_lngamma _MPFR_PROTO((mpfr_ptr,mpfr_srcptr,mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_zeta _MPFR_PROTO ((mpfr_ptr,mpfr_srcptr,mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_zeta_ui _MPFR_PROTO ((mpfr_ptr,unsigned long,mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_fac_ui _MPFR_PROTO ((mpfr_ptr, unsigned long int,
                                               mpfr_rnd_t));
 

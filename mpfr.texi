@@ -2,8 +2,8 @@
 @c %**start of header
 @setfilename mpfr.info
 @documentencoding ISO-8859-1
-@set VERSION 2.3.0
-@set UPDATED-MONTH August 2005
+@set VERSION 2.2.0
+@set UPDATED-MONTH September 2005
 @settitle MPFR @value{VERSION}
 @synindex tp fn
 @iftex
@@ -1370,7 +1370,6 @@ When @var{op} is a negative integer, NaN is returned.
 @end deftypefun
 
 @deftypefun int mpfr_zeta (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
-@deftypefunx int mpfr_zeta_ui (mpfr_t @var{rop}, unsigned long @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the value of the Riemann Zeta function on @var{op},
 rounded in the direction @var{rnd}.
 @end deftypefun

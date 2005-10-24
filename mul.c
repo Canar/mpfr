@@ -350,9 +350,7 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode)
     }
   else
 #endif
-    /* Mulder mulhigh. Disable if squaring, since it is not tuned for
-       such a case */
-    if (MPFR_UNLIKELY (bn > MPFR_MUL_THRESHOLD && b != c))
+    if (MPFR_UNLIKELY (bn > MPFR_MUL_THRESHOLD))
       {
         mp_limb_t *bp, *cp;
         mp_size_t n;

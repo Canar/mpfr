@@ -247,7 +247,7 @@ special_overflow (void)
       printf ("got      "); mpfr_dump (y);
       exit (1);
     }
-  
+
   /* another tests from Kenneth Wilder, 31 Aug 2005 */
   set_emax (200);
   set_emin (-200);
@@ -302,7 +302,7 @@ special_overflow (void)
   mpfr_set_prec (x, 171);
   mpfr_set_prec (y, 38);
   mpfr_set_str (x, "-2993155353253689176481146537402947624254601559176535", 10,
-		GMP_RNDN);
+                GMP_RNDN);
   mpfr_div_2exp (x, x, 170, GMP_RNDN);
   mpfr_gamma (y, x, GMP_RNDN);
   mpfr_set_prec (x, 38);
@@ -320,7 +320,7 @@ special_overflow (void)
   mpfr_set_prec (x, 337);
   mpfr_set_prec (y, 38);
   mpfr_set_str (x, "-30000.000000000000000000000000000000000000000000001", 10,
-		GMP_RNDN);
+                GMP_RNDN);
   mpfr_gamma (y, x, GMP_RNDN);
   mpfr_set_prec (x, 38);
   mpfr_set_str (x, "-3.623795987425E-121243", 10, GMP_RNDN);

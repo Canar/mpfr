@@ -24,9 +24,9 @@ MA 02110-1301, USA. */
 
 /* Define MPFR version number */
 #define MPFR_VERSION_MAJOR 2
-#define MPFR_VERSION_MINOR 3
+#define MPFR_VERSION_MINOR 2
 #define MPFR_VERSION_PATCHLEVEL 0
-#define MPFR_VERSION_STRING "2.3.0"
+#define MPFR_VERSION_STRING "2.2.0"
 
 /* Macros dealing with MPFR VERSION */
 #define MPFR_VERSION_NUM(a,b,c) (((a) << 16L) | ((b) << 8) | (c))
@@ -507,7 +507,6 @@ __MPFR_DECLSPEC int mpfr_root _MPFR_PROTO ((mpfr_ptr,mpfr_srcptr,unsigned long,m
 __MPFR_DECLSPEC int mpfr_gamma _MPFR_PROTO((mpfr_ptr,mpfr_srcptr,mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_lngamma _MPFR_PROTO((mpfr_ptr,mpfr_srcptr,mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_zeta _MPFR_PROTO ((mpfr_ptr,mpfr_srcptr,mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_zeta_ui _MPFR_PROTO ((mpfr_ptr,unsigned long,mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_fac_ui _MPFR_PROTO ((mpfr_ptr, unsigned long int,
                                               mpfr_rnd_t));
 
@@ -631,17 +630,12 @@ __MPFR_DECLSPEC int    mpfr_custom_get_kind   _MPFR_PROTO ((mpfr_srcptr));
  (__builtin_constant_p (_s) && (_s) >= 0 ? \
    mpfr_cmp_ui ((_f), (_s)) :              \
    mpfr_cmp_si_2exp ((_f), (_s), 0))
-#if __GNUC__ > 2 || __GNUC_MINOR__ >= 95
 #undef mpfr_set_ui
 #define mpfr_set_ui(_f,_u,_r)              \
  (__builtin_constant_p (_u) && (_u) == 0 ? \
-   __extension__ ({                        \
-     mpfr_ptr _p = (_f);                   \
-     _p->_mpfr_sign = 1;                   \
-     _p->_mpfr_exp = __MPFR_EXP_ZERO;      \
-     (void) (_r); 0; }) :                  \
-   mpfr_set_ui (_f,_u,_r))
-#endif
+   ((_f)->_mpfr_sign = 1,                  \
+    (_f)->_mpfr_exp = __MPFR_EXP_ZERO, 0): \
+    mpfr_set_ui (_f,_u,_r))
 #undef mpfr_set_si
 #define mpfr_set_si(_f,_s,_r)              \
  (__builtin_constant_p (_s) && (_s) >= 0 ? \

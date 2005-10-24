@@ -1,6 +1,6 @@
 /* Test mpfr_get_d_2exp.
 
-Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 1999, 2000, 2001, 2002, 2003 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -16,13 +16,16 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
-
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
+#include "mpfr-impl.h"
 #include "mpfr-test.h"
 
 
@@ -39,9 +42,9 @@ check_round (void)
 
   mpfr_init2 (f, 1024L);
 
-  for (rnd_mode = 0; rnd_mode < GMP_RND_MAX ; rnd_mode++)
+  for (rnd_mode = 0; rnd_mode < 4; rnd_mode++)
     {
-      for (i = 0; i < (int) numberof (data); i++)
+      for (i = 0; i < numberof (data); i++)
         {
           mpfr_set_ui (f, 1L, GMP_RNDZ);
           mpfr_mul_2exp (f, f, data[i], GMP_RNDZ);
@@ -49,7 +52,7 @@ check_round (void)
 
           for (neg = 0; neg <= 1; neg++)
             {
-              got = mpfr_get_d_2exp (&got_exp, f, (mp_rnd_t) rnd_mode);
+              got = mpfr_get_d_2exp (&got_exp, f, rnd_mode);
 
               if (neg == 0
                   ? (got < 0.5 || got >= 1.0)
@@ -64,7 +67,7 @@ check_round (void)
                   printf  ("\n");
                   d_trace ("   got  ", got);
                   printf  ("   got exp  %ld\n", got_exp);
-                  exit(1);
+                  abort();
                 }
 
               mpfr_neg (f, f, GMP_RNDZ);

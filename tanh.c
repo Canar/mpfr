@@ -1,6 +1,6 @@
 /* mpfr_tanh -- hyperbolic tangent
 
-Copyright 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 2001, 2002, 2003 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -16,131 +16,138 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-#define MPFR_NEED_LONGLONG_H
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
+ /* The computation of cosh is done by
+
+    tanh= [e^(x)^2-1]/+[e^(x)^2+1]
+ */
+
 int
-mpfr_tanh (mpfr_ptr y, mpfr_srcptr xt , mp_rnd_t rnd_mode)
+#if __STDC__
+mpfr_tanh (mpfr_ptr y, mpfr_srcptr xt , mp_rnd_t rnd_mode) 
+#else
+mpfr_tanh (y, xt, rnd_mode)
+     mpfr_ptr y;
+     mpfr_srcptr xt;
+     mp_rnd_t rnd_mode;
+#endif
 {
-  /****** Declaration ******/
-  mpfr_t x;
-  int inexact;
-  MPFR_SAVE_EXPO_DECL (expo);
 
-  MPFR_LOG_FUNC (("x[%#R]=%R rnd=%d", xt, xt, rnd_mode),
-                 ("y[%#R]=%R inexact=%d", y, y, inexact));
+    /****** Declaration ******/
+    mpfr_t x;
+    mp_prec_t Nxt = MPFR_PREC(xt);
+    int flag_neg=0, inexact=0;
+    
+    /* Special value checking */
 
-  /* Special value checking */
-  if (MPFR_UNLIKELY (MPFR_IS_SINGULAR (xt)))
-    {
-      if (MPFR_IS_NAN (xt))
-        {
-          MPFR_SET_NAN (y);
-          MPFR_RET_NAN;
-        }
-      else if (MPFR_IS_INF (xt))
-        {
-          /* tanh(inf) = 1 && tanh(-inf) = -1 */
-          return mpfr_set_si (y, MPFR_INT_SIGN (xt), rnd_mode);
-        }
-      else /* tanh (0) = 0 and xt is zero */
-        {
-          MPFR_ASSERTD (MPFR_IS_ZERO(xt));
-          MPFR_SET_ZERO (y);
-          MPFR_SET_SAME_SIGN (y, xt);
-          MPFR_RET (0);
-        }
-    }
-
-  /* tanh(x) = x - x^3/3 + ... so the error is < 2^(3*EXP(x)-1) */
-  MPFR_FAST_COMPUTE_IF_SMALL_INPUT (y, xt, -2*MPFR_GET_EXP(xt)+1,0,rnd_mode, );
-
-  MPFR_TMP_INIT_ABS (x, xt);
-
-  MPFR_SAVE_EXPO_MARK (expo);
-
-  /* General case */
-  {
-    /* Declaration of the intermediary variable */
-    mpfr_t t, te;
-    mp_exp_t d;
-
-    /* Declaration of the size variable */
-    mp_prec_t Ny = MPFR_PREC(y);   /* target precision */
-    mp_prec_t Nt;                  /* working precision */
-    long int err;                  /* error */
-    int sign = MPFR_SIGN (xt);
-    MPFR_ZIV_DECL (loop);
-    MPFR_GROUP_DECL (group);
-
-    /* First check for BIG overflow of exp(2*x):
-       For x > 0, exp(2*x) > 2^(2*x)
-       If 2 ^(2*x) > 2^emax or x>emax/2, there is an overflow */
-    if (MPFR_UNLIKELY (mpfr_cmp_si (x, __gmpfr_emax/2) >= 0)) {
-      /* initialise of intermediary variables
-         since 'set_one' label assumes the variables have been
-         initialize */
-      MPFR_GROUP_INIT_2 (group, MPFR_PREC_MIN, t, te);
-      goto set_one;
-    }
-
-    /* Compute the precision of intermediary variable */
-    /* The optimal number of bits: see algorithms.tex */
-    Nt = Ny + MPFR_INT_CEIL_LOG2 (Ny) + 4;
-    Nt += ABS (MPFR_GET_EXP (x));
-
-    /* initialise of intermediary variable */
-    MPFR_GROUP_INIT_2 (group, Nt, t, te);
-
-    MPFR_ZIV_INIT (loop, Nt);
-    for (;;) {
-      /* tanh = (exp(2x)-1)/(exp(2x)+1) */
-      mpfr_mul_2ui (te, x, 1, GMP_RNDN);  /* 2x */
-      /* since x > 0, we can only have an overflow */
-      mpfr_exp (te, te, GMP_RNDN);        /* exp(2x) */
-      if (MPFR_UNLIKELY (MPFR_IS_INF (te))) {
-      set_one:
-        inexact = MPFR_FROM_SIGN_TO_INT (sign);
-        mpfr_set4 (y, __gmpfr_one, GMP_RNDN, sign);
-        if (MPFR_IS_LIKE_RNDZ (rnd_mode, MPFR_IS_NEG_SIGN (sign)))
-          {
-            inexact = -inexact;
-            mpfr_nexttozero (y);
-          }
-        break;
+    if (MPFR_IS_NAN(xt)) 
+      {
+        MPFR_SET_NAN(y); 
+        MPFR_RET_NAN;
       }
-      d = MPFR_GET_EXP (te);              /* For Error calculation */
-      mpfr_add_ui (t, te, 1, GMP_RNDD);   /* exp(2x) + 1*/
-      mpfr_sub_ui (te, te, 1, GMP_RNDU);  /* exp(2x) - 1*/
-      mpfr_div (t, te, t, GMP_RNDN);      /* (exp(2x)-1)/(exp(2x)+1)*/
+    MPFR_CLEAR_NAN(y);
 
-      /* Calculation of the error*/
-      d = d - MPFR_GET_EXP (t);
-      err = Nt - (MAX(d + 1, 3) + 1);
+    if (MPFR_IS_INF(xt))
+      {
+        if (MPFR_SIGN(xt) > 0)
+          return mpfr_set_si(y,1,rnd_mode); /* tanh(inf) = 1 */
+        else
+          return mpfr_set_si(y,-1,rnd_mode); /* tanh(-inf) = -1 */
+      }
+    MPFR_CLEAR_INF(y);
 
-      if (MPFR_LIKELY (MPFR_CAN_ROUND (t, err, Ny, rnd_mode)))
+    /* tanh(0) = 0 */
+    if (MPFR_IS_ZERO(xt))
+      {              
+        MPFR_SET_ZERO(y);
+        MPFR_SET_SAME_SIGN(y,xt);
+        MPFR_RET(0);
+      }
+
+    mpfr_init2(x,Nxt);
+    mpfr_set(x,xt,GMP_RNDN);
+
+    if (MPFR_SIGN(x) < 0)
+      {
+        MPFR_CHANGE_SIGN(x);
+        flag_neg=1;
+      }
+
+    /* General case */
+    {
+      /* Declaration of the intermediary variable */
+      mpfr_t t, te, ta,tb;       
+      int d;
+
+      /* Declaration of the size variable */
+      mp_prec_t Nx = Nxt;   /* Precision of input variable */
+      mp_prec_t Ny = MPFR_PREC(y);   /* Precision of input variable */
+
+      mp_prec_t Nt;   /* Precision of the intermediary variable */
+      long int err;  /* Precision of error */
+      
+      /* compute the precision of intermediary variable */
+      Nt=MAX(Nx,Ny);
+      /* the optimal number of bits : see algorithms.ps */
+      Nt = Nt+__gmpfr_ceil_log2(9)+__gmpfr_ceil_log2(Nt);
+
+      /* initialise of intermediary	variable */
+      mpfr_init(t); 
+      mpfr_init(te);             
+      mpfr_init(ta);             
+      mpfr_init(tb);                    
+
+
+      /* First computation of cosh */
+      do
         {
-          inexact = mpfr_set4 (y, t, rnd_mode, sign);
-          break;
+
+          /* reactualisation of the precision */
+          mpfr_set_prec (t, Nt);
+          mpfr_set_prec (te, Nt);
+          mpfr_set_prec (ta, Nt);
+          mpfr_set_prec (tb, Nt);
+
+          /* compute tanh */
+          mpfr_mul_2ui (te, x, 1, GMP_RNDN);  /* 2x */
+          mpfr_exp (te, te, GMP_RNDN);       /* exp(2x) */
+          mpfr_add_ui (ta, te, 1, GMP_RNDD);  /* exp(2x) + 1*/
+          mpfr_sub_ui (tb, te, 1, GMP_RNDU);  /* exp(2x) - 1*/
+          mpfr_div (t, tb, ta, GMP_RNDN);     /* (exp(2x)-1)/(exp(2x)+1)*/
+
+
+          /* calculation of the error*/
+          d = MPFR_GET_EXP (te) - MPFR_GET_EXP (t);
+
+          /* estimation of the error */
+          /*err = Nt-(__gmpfr_ceil_log2(7+pow(2,d+1)));*/
+          err = Nt - (MAX(d + 1, 3) + 1);
+
+          /* actualisation of the precision */
+          Nt += 10; 
+
         }
-
-      /* if t=1, we still can round since |sinh(x)| < 1 */
-      if (MPFR_GET_EXP (t) == 1)
-        goto set_one;
-
-      /* Actualisation of the precision */
-      MPFR_ZIV_NEXT (loop, Nt);
-      MPFR_GROUP_REPREC_2 (group, Nt, t, te);
+      while ((err < 0) || !mpfr_can_round (t, err, GMP_RNDN, GMP_RNDZ,
+                                           Ny + (rnd_mode == GMP_RNDN)));
+ 
+      if (flag_neg==1)
+        MPFR_CHANGE_SIGN(t);
+ 
+      inexact = mpfr_set (y, t, rnd_mode);
+      mpfr_clear (t);
+      mpfr_clear (te);
+      mpfr_clear (ta);
+      mpfr_clear (tb);
     }
-    MPFR_ZIV_FREE (loop);
-    MPFR_GROUP_CLEAR (group);
-  }
-  MPFR_SAVE_EXPO_FREE (expo);
-  inexact = mpfr_check_range (y, inexact, rnd_mode);
+    mpfr_clear (x);
 
-  return inexact;
+    return inexact;
 }
 

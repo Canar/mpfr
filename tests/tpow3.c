@@ -1,6 +1,6 @@
 /* Test file for mpfr_pow.
 
-Copyright 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 2001, 2002, 2003 Free Software Foundation.
 Adapted from tarctan.c.
 
 This file is part of the MPFR Library.
@@ -17,13 +17,16 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <limits.h>
 #include <stdlib.h>
-
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
+#include "mpfr-impl.h"
 #include "mpfr-test.h"
 
 
@@ -38,8 +41,9 @@ main (int argc, char *argv[])
   int inexact, compare, compare2;
   unsigned int n, err;
 
-  mp_prec_t p0=2, p1=100;
-  unsigned int N=25;
+  int p0=2;
+  int p1=100;
+  int N=25;
 
   tests_start_mpfr ();
 
@@ -65,20 +69,20 @@ main (int argc, char *argv[])
           mpfr_random (s);
           if (randlimb () % 2)
             mpfr_neg (s, s, GMP_RNDN);
-          rnd = (mp_rnd_t) RND_RAND ();
+          rnd = randlimb () % 4;
           mpfr_set_prec (y, yprec);
           compare = mpfr_pow (y, x, s, rnd);
           err = (rnd == GMP_RNDN) ? yprec + 1 : yprec;
           if (mpfr_can_round (y, err, rnd, rnd, prec))
             {
               mpfr_set (t, y, rnd);
-              inexact = mpfr_pow (z, x, s, rnd);
+              inexact = mpfr_pow (z,x, s, rnd);
               if (mpfr_cmp (t, z))
                 {
-                  printf ("results differ for x^y with x=");
+                  printf ("results differ for x=");
                   mpfr_out_str (stdout, 2, prec, x, GMP_RNDN);
-                  printf (" y=");
-                  mpfr_out_str (stdout, 2, 0, s, GMP_RNDN);
+                  printf (" values of the exponential=");
+                  mpfr_out_str (stdout, 2, prec, s, GMP_RNDN);
                   printf (" prec=%u rnd_mode=%s\n", (unsigned int) prec,
                           mpfr_print_rnd_mode (rnd));
                   printf ("got      ");

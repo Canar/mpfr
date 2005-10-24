@@ -1,6 +1,6 @@
 /* Test compatibility mpf-mpfr.
 
-Copyright 2003, 2004, 2005 Free Software Foundation.
+Copyright 2003 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -21,11 +21,9 @@ MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-
 #include "gmp.h"
-#include "mpfr.h"
 #ifdef MPFR
+#include "mpfr.h"
 #include "mpf2mpfr.h"
 #endif
 
@@ -63,8 +61,6 @@ main ()
   if (prec2 < prec)
     {
       printf ("Error in get_prec: %lu < %lu\n", prec2, prec);
-      mpf_clear (y);
-      mpf_clear (x);
       exit (1);
     }
 
@@ -73,8 +69,6 @@ main ()
   if (prec2 < 2 * prec)
     {
       printf ("Error in set_prec: %lu < %lu\n", prec2, 2 * prec);
-      mpf_clear (y);
-      mpf_clear (x);
       exit (1);
     }
 
@@ -83,8 +77,6 @@ main ()
   if (prec2 < prec)
     {
       printf ("Error in set_prec_raw: %lu < %lu\n", prec2, prec);
-      mpf_clear (y);
-      mpf_clear (x);
       exit (1);
     }
 
@@ -127,9 +119,7 @@ main ()
   l = mpf_get_si (x);
   u = mpf_get_ui (x);
   s = mpf_get_str (NULL, &exp, 10, 10, x);
-  /* MPF doen't have mpf_free_str */
-  mpfr_free_str (s);
-
+  free (s);
 
   /* Arithmetic Functions */
 
@@ -164,28 +154,12 @@ main ()
   /* Input and Output Functions */
 
   f = fopen ("/dev/null", "w");
-  if (f != NULL)
-    {
-      mpf_out_str (f, 10, 10, x);
-      fclose (f);
-    }
+  mpf_out_str (f, 10, 10, x);
+  fclose (f);
 
-  mpf_set_prec (x, 15);
-  mpf_set_prec (y, 15);
-  /* We may use src_fopen instead of fopen, but it is defined
-     in mpfr-test, and not in mpfr.h and gmp.h, and we want
-     to test theses includes files. */
-  f = fopen ("inp_str.data", "r");
-  if (f != NULL)
-    {
-      i = mpf_inp_str (x, f, 10);
-      if ((i == 0) || mpf_cmp_ui (x, 31415))
-        {
-          printf ("Error in reading 1st line from file inp_str.data\n");
-          exit (1);
-        }
-      fclose (f);
-    }
+  f = fopen ("/dev/null", "r");
+  mpf_inp_str (x, f, 10);
+  fclose (f);
 
   /* Miscellaneous Functions */
 
@@ -209,6 +183,7 @@ main ()
   mpf_random2 (x, 17, 17);
 
   /* clear all variables */
+
   mpf_clear (y);
   mpf_clear (x);
 

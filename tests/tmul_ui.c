@@ -1,6 +1,6 @@
 /* Test file for mpfr_mul_ui.
 
-Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 1999, 2000, 2001, 2002, 2003 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -16,12 +16,15 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
+#include "mpfr-impl.h"
 #include "mpfr-test.h"
 
 static void
@@ -31,7 +34,7 @@ check_inexact (mp_prec_t p)
   unsigned long u;
   mp_prec_t q;
   int inexact, cmp;
-  int rnd;
+  mp_rnd_t rnd;
 
   mpfr_init2 (x, p);
   mpfr_init (y);
@@ -44,11 +47,11 @@ check_inexact (mp_prec_t p)
       exit (1);
     }
 
-  for (q = 2; q <= p; q++)
-    for (rnd = 0; rnd < GMP_RND_MAX; rnd++)
+  for (q=2; q<=p; q++)
+    for (rnd=0; rnd<4; rnd++)
       {
         mpfr_set_prec (y, q);
-        inexact = mpfr_mul_ui (y, x, u, (mp_rnd_t) rnd);
+        inexact = mpfr_mul_ui (y, x, u, rnd);
         cmp = mpfr_cmp (y, z);
         if (((inexact == 0) && (cmp != 0)) ||
             ((inexact < 0) && (cmp >= 0)) ||
@@ -56,7 +59,7 @@ check_inexact (mp_prec_t p)
           {
             printf ("Wrong inexact flag for p=%u, q=%u, rnd=%s\n",
                     (unsigned int) p, (unsigned int) q,
-                    mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                    mpfr_print_rnd_mode (rnd));
             exit (1);
           }
       }
@@ -74,20 +77,13 @@ check_inexact (mp_prec_t p)
   mpfr_clear (z);
 }
 
-#define TEST_FUNCTION mpfr_mul_ui
-#define INTEGER_TYPE  unsigned long
-#define RAND_FUNCTION(x) mpfr_random2(x, MPFR_LIMB_SIZE (x), 1)
-#include "tgeneric_ui.c"
-
 int
 main (int argc, char *argv[])
 {
   mpfr_t x, y;
   unsigned int xprec, yprec, i;
   mp_prec_t p;
-  mp_exp_t emax;
 
-  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   for (p=2; p<100; p++)
@@ -98,7 +94,7 @@ main (int argc, char *argv[])
   mpfr_init2 (y, 53);
 
   /* checks that result is normalized */
-  mpfr_set_str (y, "6.93147180559945286227e-01", 10, GMP_RNDZ);
+  mpfr_set_d (y, 6.93147180559945286227e-01, GMP_RNDZ);
   mpfr_mul_ui (x, y, 1, GMP_RNDZ);
   if (MPFR_MANT(x)[MPFR_PREC(x)/mp_bits_per_limb] >> (mp_bits_per_limb-1) == 0)
     {
@@ -137,33 +133,17 @@ main (int argc, char *argv[])
       exit (1);
     }
 
-  mpfr_set_inf (x, 1);
-  mpfr_mul_ui (x, x, 0, GMP_RNDU);
-  MPFR_ASSERTN(mpfr_nan_p (x));
-
-  mpfr_set_ui (x, 1, GMP_RNDU);
-  mpfr_mul_ui (x, x, 0, GMP_RNDU);
-  MPFR_ASSERTN(mpfr_cmp_ui (x, 0) == 0 && MPFR_IS_POS(x));
-
-  emax = mpfr_get_emax ();
-  set_emax (0);
-  mpfr_set_str_binary (x, "0.1E0");
-  mpfr_mul_ui (x, x, 2, GMP_RNDN);
-  MPFR_ASSERTN(mpfr_inf_p (x) && MPFR_IS_POS(x));
-  set_emax (emax);
-
-  mpfr_set_str (x, /*1.0/3.0*/
-                "0.333333333333333333333333333333333", 10, GMP_RNDZ);
+  mpfr_set_d (x, 1.0/3.0, GMP_RNDZ);
   mpfr_mul_ui (x, x, 3, GMP_RNDU);
-  if (mpfr_cmp_ui (x, 1))
+  if (mpfr_get_d1 (x) != 1.0)
     {
       printf ("Error in mpfr_mul_ui: U(Z(1/3)*3) does not give 1\n");
       exit (1);
     }
 
   /* checks sign is correct */
-  mpfr_set_si (x, -2, GMP_RNDZ);
-  mpfr_set_si (y, 3, GMP_RNDZ);
+  mpfr_set_d(x, -2.0, GMP_RNDZ);
+  mpfr_set_d(y, 3.0, GMP_RNDZ);
   mpfr_mul_ui(x, y, 4, GMP_RNDZ);
   if (mpfr_cmp_ui(x, 0) <= 0)
     {
@@ -216,7 +196,7 @@ main (int argc, char *argv[])
 
   mpfr_set_prec (x, 68);
   mpfr_set_prec (y, 64);
-  mpfr_set_str (x, "2143861251406875.0", 10, GMP_RNDN);
+  mpfr_set_d (x, 2143861251406875.0, GMP_RNDN);
   mpfr_mul_ui (y, x, 23, GMP_RNDN);
   mpfr_set_str_binary (x, "10101111001011100001100110101111110001010010011001101101.0");
   if (mpfr_cmp (x, y))
@@ -236,7 +216,7 @@ main (int argc, char *argv[])
         {
           mpfr_set_prec (y, yprec);
           mpfr_mul_ui (y, x, 1, GMP_RNDN);
-          if (mpfr_cmp(x,y))
+          if (mpfr_get_d1 (x) != mpfr_get_d1 (y))
             {
               printf ("multiplication by 1.0 fails for xprec=%u, yprec=%u\n",
                       xprec, yprec);
@@ -259,23 +239,7 @@ main (int argc, char *argv[])
       exit (1);
     }
 
-  /* Check regression */
-  mpfr_set_prec (x, 32);
-  mpfr_set_prec (y, 96);
-  mpfr_set_ui (x, 1742175942, GMP_RNDN);
-  mpfr_mul_ui (y, x, 59, GMP_RNDN);
-  if (mpfr_cmp_str (y, "0.10111111011101010101000110111101000100000000000000"
-                    "0000000000000000000000000000000000000000000000E37",
-                    2, GMP_RNDN))
-    {
-      printf ("Regression tested failed for x=1742175942 * 59\n");
-      exit (1);
-    }
-
-  mpfr_clear(x);
-  mpfr_clear(y);
-
-  test_generic_ui (2, 500, 100);
+  mpfr_clear(x); mpfr_clear(y);
 
   tests_end_mpfr ();
   return 0;

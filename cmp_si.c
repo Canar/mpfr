@@ -1,7 +1,7 @@
 /* mpfr_cmp_si_2exp -- compare a floating-point number with a signed
 machine integer multiplied by a power of 2
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -17,10 +17,13 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-#define MPFR_NEED_LONGLONG_H
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "longlong.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
 /* returns a positive value if b > i*2^f,
@@ -29,24 +32,21 @@ MA 02110-1301, USA. */
    b must not be NaN.
 */
 
-int
+int 
 mpfr_cmp_si_2exp (mpfr_srcptr b, long int i, mp_exp_t f)
 {
   int si;
 
+  MPFR_ASSERTN(!MPFR_IS_NAN(b));
+
   si = i < 0 ? -1 : 1; /* sign of i */
-  if (MPFR_UNLIKELY (MPFR_IS_SINGULAR (b)))
-    {
-      if (MPFR_IS_INF(b))
-        return MPFR_INT_SIGN(b);
-      else if (MPFR_IS_ZERO(b))
-        return i != 0 ? -si : 0;
-      /* NAN */
-      MPFR_SET_ERANGE ();
-      return 0;
-    }
-  else if (MPFR_SIGN(b) != si || i == 0)
-    return MPFR_INT_SIGN (b);
+  if (MPFR_IS_INF(b) || (MPFR_NOTZERO(b) && MPFR_SIGN(b) != si))
+    return MPFR_SIGN(b);
+  /* both signs differ or b = 0 */
+  else if (MPFR_IS_ZERO(b))
+    return i != 0 ? -si : 0;
+  else if (i == 0)
+    return MPFR_SIGN(b);
   else /* b and i are of same sign si */
     {
       mp_exp_t e;
@@ -90,11 +90,4 @@ mpfr_cmp_si_2exp (mpfr_srcptr b, long int i, mp_exp_t f)
           return si;
       return 0;
     }
-}
-
-#undef mpfr_cmp_si
-int
-mpfr_cmp_si (mpfr_srcptr b, long int i)
-{
-  return mpfr_cmp_si_2exp (b, i, 0);
 }

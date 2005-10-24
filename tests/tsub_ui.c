@@ -1,6 +1,6 @@
 /* Test file for mpfr_sub_ui
 
-Copyright 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 2000, 2001, 2002, 2003 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -16,33 +16,45 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
-
+#include <time.h>
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
+#include "mpfr-impl.h"
 #include "mpfr-test.h"
 
-/* checks that x-y gives the right results with 53 bits of precision */
+#define check(x,y,r) check3(x,y,r,0.0)
+
+/* checks that x+y gives the same results in double
+   and with mpfr with 53 bits of precision */
 static void
-check3 (const char *xs, unsigned long y, mp_rnd_t rnd_mode, const char *zs)
+check3 (double x, unsigned long y, mp_rnd_t rnd_mode, double z1)
 {
+  double z2;
   mpfr_t xx,zz;
 
-  mpfr_inits2 (53, xx, zz, NULL);
-  mpfr_set_str1 (xx, xs);
+  mpfr_init (xx);
+  mpfr_init (zz);
+  mpfr_set_prec (xx, 53);
+  mpfr_set_prec (zz, 53);
+  mpfr_set_d (xx, x, rnd_mode);
   mpfr_sub_ui (zz, xx, y, rnd_mode);
-  if (mpfr_cmp_str1(zz, zs))
+  z2 = mpfr_get_d1 (zz);
+  if (z1!=z2 && !(Isnan(z1) && Isnan(z2)))
     {
-      printf ("expected sum is %s, got ", zs);
-      mpfr_print_binary(zz);
-      printf ("\nmpfr_sub_ui failed for x=%s y=%lu with rnd_mode=%s\n",
-              xs, y, mpfr_print_rnd_mode (rnd_mode));
+      printf ("expected sum is %1.20e, got %1.20e\n",z1,z2);
+      printf ("mpfr_sub_ui failed for x=%1.20e y=%lu with rnd_mode=%s\n",
+              x, y, mpfr_print_rnd_mode (rnd_mode));
       exit (1);
     }
-  mpfr_clears (xx, zz, NULL);
+  mpfr_clear (xx);
+  mpfr_clear (zz);
 }
 
 /* FastTwoSum: if EXP(x) >= EXP(y), u = o(x+y), v = o(u-x), w = o(y-v),
@@ -56,17 +68,21 @@ check_two_sum (mp_prec_t p)
   mp_rnd_t rnd;
   int inexact;
 
-  mpfr_inits2 (p, y, u, v, w, NULL);
+  mpfr_init2 (y, p);
+  mpfr_init2 (u, p);
+  mpfr_init2 (v, p);
+  mpfr_init2 (w, p);
   do
     {
       x = randlimb ();
     }
   while (x < 1);
   mpfr_random (y);
+  rnd = randlimb () % 4;
   rnd = GMP_RNDN;
-  inexact = mpfr_sub_ui (u, y, x, rnd);
-  mpfr_add_ui (v, u, x, rnd);
-  mpfr_sub (w, v, y, rnd);
+  inexact = mpfr_sub_ui (u, y, x, GMP_RNDN);
+  mpfr_add_ui (v, u, x, GMP_RNDN);
+  mpfr_sub (w, v, y, GMP_RNDN);
   /* as u - (y-x) = w, we should have inexact and w of same sign */
   if (((inexact == 0) && mpfr_cmp_ui (w, 0)) ||
       ((inexact > 0) && (mpfr_cmp_ui (w, 0) <= 0)) ||
@@ -82,7 +98,10 @@ check_two_sum (mp_prec_t p)
       printf ("inexact = %d\n", inexact);
       exit (1);
     }
-  mpfr_clears (y, u, v, w, NULL);
+  mpfr_clear (y);
+  mpfr_clear (u);
+  mpfr_clear (v);
+  mpfr_clear (w);
 }
 
 static void
@@ -96,28 +115,23 @@ check_nans (void)
   /* nan - 1 == nan */
   mpfr_set_nan (x);
   mpfr_sub_ui (y, x, 1L, GMP_RNDN);
-  MPFR_ASSERTN (mpfr_nan_p (y));
+  ASSERT_ALWAYS (mpfr_nan_p (y));
 
   /* +inf - 1 == +inf */
   mpfr_set_inf (x, 1);
   mpfr_sub_ui (y, x, 1L, GMP_RNDN);
-  MPFR_ASSERTN (mpfr_inf_p (y));
-  MPFR_ASSERTN (mpfr_sgn (y) > 0);
+  ASSERT_ALWAYS (mpfr_inf_p (y));
+  ASSERT_ALWAYS (mpfr_sgn (y) > 0);
 
   /* -inf - 1 == -inf */
   mpfr_set_inf (x, -1);
   mpfr_sub_ui (y, x, 1L, GMP_RNDN);
-  MPFR_ASSERTN (mpfr_inf_p (y));
-  MPFR_ASSERTN (mpfr_sgn (y) < 0);
+  ASSERT_ALWAYS (mpfr_inf_p (y));
+  ASSERT_ALWAYS (mpfr_sgn (y) < 0);
 
   mpfr_clear (x);
   mpfr_clear (y);
 }
-
-#define TEST_FUNCTION mpfr_sub_ui
-#define INTEGER_TYPE  unsigned long
-#define RAND_FUNCTION(x) mpfr_random2(x, MPFR_LIMB_SIZE (x), 1)
-#include "tgeneric_ui.c"
 
 int
 main (int argc, char *argv[])
@@ -125,7 +139,6 @@ main (int argc, char *argv[])
   mp_prec_t p;
   int k;
 
-  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   check_nans ();
@@ -134,10 +147,7 @@ main (int argc, char *argv[])
     for (k=0; k<200; k++)
       check_two_sum (p);
 
-  check3 ("0.9999999999", 1, GMP_RNDN,
-          "-10000000827403709990903735160827636718750e-50");
-
-  test_generic_ui (2, 1000, 100);
+  check3 (0.9999999999, 1, GMP_RNDN, -56295.0 / 562949953421312.0);
 
   tests_end_mpfr ();
   return 0;

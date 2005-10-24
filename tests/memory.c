@@ -4,10 +4,6 @@ Copyright 2001, 2002, 2003 Free Software Foundation, Inc.
 
 This file is part of the GNU MP Library.
 
-ChangeLog:
- tests_memory_valid has been commented out since it is not used
- tests_memory_list is declared as static
-
 The GNU MP Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation; either version 2.1 of the License, or (at your
@@ -20,14 +16,16 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the GNU MP Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>  /* for abort */
-#include <limits.h>
-
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
 #include "mpfr-test.h"
+
 
 /* Each block allocated is a separate malloc, for the benefit of a redzoning
    malloc debugger during development or when bug hunting.
@@ -39,13 +37,14 @@ MA 02110-1301, USA. */
    when tests_memory_end() is called.  Test programs must be sure to have
    "clear"s for all temporary variables used.  */
 
+
 struct header {
   void           *ptr;
   size_t         size;
   struct header  *next;
 };
 
-static struct header  *tests_memory_list = NULL;
+struct header  *tests_memory_list = NULL;
 
 /* Return a pointer to a pointer to the found block (so it can be updated
    when unlinking). */
@@ -61,13 +60,11 @@ tests_memory_find (void *ptr)
   return NULL;
 }
 
-/*
 static int
 tests_memory_valid (void *ptr)
 {
   return (tests_memory_find (ptr) != NULL);
 }
-*/
 
 static void *
 tests_allocate (size_t size)

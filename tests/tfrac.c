@@ -1,6 +1,6 @@
 /* Test file for mpfr_frac.
 
-Copyright 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 2002, 2003 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -16,12 +16,13 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "gmp.h"
+#include "mpfr.h"
 #include "mpfr-test.h"
 
 #define PIP 70
@@ -113,62 +114,19 @@ check0 (mpfr_ptr ip, mpfr_ptr fp, mp_prec_t prec, mp_rnd_t rnd)
 static void
 check1 (mpfr_ptr ip, mpfr_ptr fp)
 {
-  int rnd;
+  mp_rnd_t rnd;
 
-  for (rnd = 0; rnd < GMP_RND_MAX ; rnd++)
+  for (rnd = 0; rnd < 4; rnd++)
     {
-      check0 (ip, fp, PMAX, (mp_rnd_t) rnd);
-      check0 (ip, fp, 70, (mp_rnd_t) rnd);
+      check0 (ip, fp, PMAX, rnd);
+      check0 (ip, fp, 70, rnd);
       mpfr_neg (fp, fp, GMP_RNDN);
       mpfr_neg (ip, ip, GMP_RNDN);
-      check0 (ip, fp, PMAX, (mp_rnd_t) rnd);
-      check0 (ip, fp, 70, (mp_rnd_t) rnd);
+      check0 (ip, fp, PMAX, rnd);
+      check0 (ip, fp, 70, rnd);
       mpfr_neg (fp, fp, GMP_RNDN);
       mpfr_neg (ip, ip, GMP_RNDN);
     }
-}
-
-static void
-special (void)
-{
-  mpfr_t z, t;
-
-  mpfr_init (z);
-  mpfr_init (t);
-
-  mpfr_set_nan (z);
-  mpfr_frac (t, z, GMP_RNDN);
-  if (!mpfr_nan_p (t))
-    {
-      printf ("Error for frac(NaN)\n");
-      exit (1);
-    }
-
-  mpfr_set_prec (z, 6);
-  mpfr_set_prec (t, 3);
-
-  mpfr_set_str_binary (z, "0.101101E3");
-  mpfr_frac (t, z, GMP_RNDN);
-  mpfr_set_str_binary (z, "0.101");
-  if (mpfr_cmp (t, z))
-    {
-      printf ("Error in frac(0.101101E3)\n");
-      exit (1);
-    }
-
-  mpfr_set_prec (z, 34);
-  mpfr_set_prec (t, 26);
-  mpfr_set_str_binary (z, "0.101101010000010011110011001101E9");
-  mpfr_frac (t, z, GMP_RNDN);
-  mpfr_set_str_binary (z, "0.000010011110011001101");
-  if (mpfr_cmp (t, z))
-    {
-      printf ("Error in frac(0.101101010000010011110011001101E9)\n");
-      exit (1);
-    }
-
-  mpfr_clear (z);
-  mpfr_clear (t);
 }
 
 int
@@ -178,8 +136,6 @@ main (void)
   int ni, nf1, nf2;
 
   tests_start_mpfr ();
-
-  special ();
 
   mpfr_init2 (ip, PIP);
   mpfr_init2 (fp, PFP);

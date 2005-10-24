@@ -1,6 +1,6 @@
 /* Test file for mpfr_set_si and mpfr_set_ui.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,109 +16,36 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <limits.h>
-
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
+#include "mpfr-impl.h"
 #include "mpfr-test.h"
 
-#define ERROR(str) {printf("Error for "str"\n"); exit(1);}
-
-static void
-test_2exp (void)
-{
-  mpfr_t x;
-  int res;
-
-  mpfr_init2 (x, 32);
-
-  mpfr_set_ui_2exp (x, 1, 0, GMP_RNDN);
-  if (mpfr_cmp_ui(x, 1))
-    ERROR("(1U,0)");
-
-  mpfr_set_ui_2exp (x, 1024, -10, GMP_RNDN);
-  if (mpfr_cmp_ui(x, 1))
-    ERROR("(1024U,-10)");
-
-  mpfr_set_ui_2exp (x, 1024, 10, GMP_RNDN);
-  if (mpfr_cmp_ui(x, 1024*1024))
-    ERROR("(1024U,+10)");
-
-  mpfr_set_si_2exp (x, -1024*1024, -10, GMP_RNDN);
-  if (mpfr_cmp_si(x, -1024))
-    ERROR("(1M,-10)");
-
-  mpfr_set_ui_2exp (x, 0x92345678, 16, GMP_RNDN);
-  if (mpfr_cmp_str (x, "92345678@4", 16, GMP_RNDN))
-    ERROR("(x92345678U,+16)");
-
-  mpfr_set_si_2exp (x, -0x1ABCDEF0, -256, GMP_RNDN);
-  if (mpfr_cmp_str (x, "-1ABCDEF0@-64", 16, GMP_RNDN))
-    ERROR("(-x1ABCDEF0,-256)");
-
-  mpfr_set_prec (x, 2);
-  res = mpfr_set_si_2exp (x, 7, 10, GMP_RNDU);
-  if (mpfr_cmp_ui (x, 1<<13) || res <= 0)
-    ERROR ("Prec 2 + si_2exp");
-
-  res = mpfr_set_ui_2exp (x, 7, 10, GMP_RNDU);
-  if (mpfr_cmp_ui (x, 1<<13) || res <= 0)
-    ERROR ("Prec 2 + ui_2exp");
-
-  mpfr_clear (x);
-}
-
-static void
-test_macros (void)
-{
-  mpfr_t x[3];
-  mpfr_ptr p;
-  mpfr_rnd_t r;
-
-  mpfr_inits (x[0], x[1], x[2], NULL);
-  p = x[0];
-  r = 0;
-  mpfr_set_ui (p++, 0, r++);
-  if (p != x[1] || r != 1)
-    {
-      printf ("Error in mpfr_set_ui macro: p - x[0] = %d (expecting 1), "
-              "r = %d (expecting 1)\n", (int) (p - x[0]), r);
-      exit (1);
-    }
-  p = x[0];
-  r = 0;
-  mpfr_set_si (p++, 0, r++);
-  if (p != x[1] || r != 1)
-    {
-      printf ("Error in mpfr_set_si macro: p - x[0] = %d (expecting 1), "
-              "r = %d (expecting 1)\n", (int) (p - x[0]), r);
-      exit (1);
-    }
-  mpfr_clears (x[0], x[1], x[2], NULL);
-}
 
 /* FIXME: Comparing against mpfr_get_si/ui is not ideal, it'd be better to
    have all tests examine the bits in mpfr_t for what should come out.  */
+
 
 int
 main (int argc, char *argv[])
 {
   mpfr_t x;
-  long k, z, d, N;
-  unsigned long zl, dl;
+  long k, z, d;
+  unsigned long zl, dl, N;
   int inex;
-  int r;
-  mp_exp_t emax;
 
   tests_start_mpfr ();
 
   mpfr_init2 (x, 100);
 
-  N = (argc==1) ? 100000 : atol (argv[1]);
+  N = (argc==1) ? 200000 : atoi (argv[1]);
 
   for (k = 1; k <= N; k++)
     {
@@ -206,40 +133,32 @@ main (int argc, char *argv[])
       exit (1);
     }
 
-  for (r = 0 ; r < GMP_RND_MAX ; r++)
+  mpfr_set_si (x, -1, GMP_RNDN);
+  mpfr_set_ui (x, 0, GMP_RNDN);
+  if (MPFR_SIGN (x) < 0)
     {
-      mpfr_set_si (x, -1, (mp_rnd_t) r);
-      mpfr_set_ui (x, 0, (mp_rnd_t) r);
-      if (MPFR_IS_NEG (x) || mpfr_get_ui (x, (mp_rnd_t) r) != 0)
-        {
-          printf ("mpfr_set_ui (x, 0) gives -0 for %s\n",
-                  mpfr_print_rnd_mode ((mp_rnd_t) r));
-          exit (1);
-        }
+      printf ("mpfr_set_ui (x, 0) gives -0\n");
+      exit (1);
+    }
 
-      mpfr_set_si (x, -1, (mp_rnd_t) r);
-      mpfr_set_si (x, 0, (mp_rnd_t) r);
-      if (MPFR_IS_NEG (x) || mpfr_get_si (x, (mp_rnd_t) r) != 0)
-        {
-          printf ("mpfr_set_si (x, 0) gives -0 for %s\n",
-                  mpfr_print_rnd_mode ((mp_rnd_t) r));
-          exit (1);
-        }
+  mpfr_set_si (x, -1, GMP_RNDN);
+  mpfr_set_si (x, 0, GMP_RNDN);
+  if (MPFR_SIGN (x) < 0)
+    {
+      printf ("mpfr_set_si (x, 0) gives -0\n");
+      exit (1);
     }
 
   /* check potential bug in case mp_limb_t is unsigned */
-  emax = mpfr_get_emax ();
-  set_emax (0);
+  mpfr_set_emax (0);
   mpfr_set_si (x, -1, GMP_RNDN);
   if (mpfr_sgn (x) >= 0)
     {
       printf ("mpfr_set_si (x, -1) fails\n");
       exit (1);
     }
-  set_emax (emax);
 
-  emax = mpfr_get_emax ();
-  set_emax (5);
+  mpfr_set_emax (5);
   mpfr_set_prec (x, 2);
   mpfr_set_si (x, -31, GMP_RNDN);
   if (mpfr_sgn (x) >= 0)
@@ -247,113 +166,9 @@ main (int argc, char *argv[])
       printf ("mpfr_set_si (x, -31) fails\n");
       exit (1);
     }
-  set_emax (emax);
-
-  /* test for get_ui */
-  mpfr_set_ui (x, 0, GMP_RNDN);
-  MPFR_ASSERTN(mpfr_get_ui (x, GMP_RNDN) == 0);
-  mpfr_set_ui (x, ULONG_MAX, GMP_RNDU);
-  mpfr_nextabove (x);
-  mpfr_get_ui (x, GMP_RNDU);
-
-  /* another test for get_ui */
-  mpfr_set_prec (x, 10);
-  mpfr_set_str_binary (x, "10.101");
-  dl = mpfr_get_ui (x, GMP_RNDN);
-  MPFR_ASSERTN (dl == 3);
-
-  mpfr_set_str_binary (x, "-1.0");
-  mpfr_get_ui (x, GMP_RNDN);
-
-  mpfr_set_str_binary (x, "0.1");
-  dl = mpfr_get_ui (x, GMP_RNDN);
-  MPFR_ASSERTN (dl == 0);
-  dl = mpfr_get_ui (x, GMP_RNDZ);
-  MPFR_ASSERTN (dl == 0);
-  dl = mpfr_get_ui (x, GMP_RNDD);
-  MPFR_ASSERTN (dl == 0);
-  dl = mpfr_get_ui (x, GMP_RNDU);
-  MPFR_ASSERTN (dl == 1);
-
-  /* coverage tests */
-  mpfr_set_prec (x, 2);
-  mpfr_set_si (x, -7, GMP_RNDD);
-  MPFR_ASSERTN(mpfr_cmp_si (x, -8) == 0);
-  mpfr_set_prec (x, 2);
-  mpfr_set_ui (x, 7, GMP_RNDU);
-  MPFR_ASSERTN(mpfr_cmp_ui (x, 8) == 0);
-  emax = mpfr_get_emax ();
-  set_emax (3);
-  mpfr_set_ui (x, 7, GMP_RNDU);
-  MPFR_ASSERTN(mpfr_inf_p (x) && mpfr_sgn (x) > 0);
-  set_emax (1);
-  MPFR_ASSERTN( mpfr_set_ui (x, 7, GMP_RNDU) );
-  MPFR_ASSERTN(mpfr_inf_p (x) && mpfr_sgn (x) > 0);
-  set_emax (emax);
-  mpfr_set_ui_2exp (x, 17, -50, GMP_RNDN);
-  MPFR_ASSERTN (mpfr_get_ui (x, GMP_RNDD) == 0);
-  MPFR_ASSERTN (mpfr_get_si (x, GMP_RNDD) == 0);
-
-  /* Test for ERANGE flag + correct behaviour if overflow */
-  mpfr_set_prec (x, 256);
-  mpfr_set_ui (x, ULONG_MAX, GMP_RNDN);
-  mpfr_clear_erangeflag ();
-  dl = mpfr_get_ui (x, GMP_RNDN);
-  if (dl != ULONG_MAX || mpfr_erangeflag_p ())
-    {
-      printf ("ERROR for get_ui + ERANGE + ULONG_MAX (1)\n");
-      exit (1);
-    }
-  mpfr_add_ui (x, x, 1, GMP_RNDN);
-  dl = mpfr_get_ui (x, GMP_RNDN);
-  if (dl != ULONG_MAX || !mpfr_erangeflag_p ())
-    {
-      printf ("ERROR for get_ui + ERANGE + ULONG_MAX (2)\n");
-      exit (1);
-    }
-  mpfr_set_si (x, -1, GMP_RNDN);
-  mpfr_clear_erangeflag ();
-  dl = mpfr_get_ui (x, GMP_RNDN);
-  if (dl != 0 || !mpfr_erangeflag_p ())
-    {
-      printf ("ERROR for get_ui + ERANGE + -1 \n");
-      exit (1);
-    }
-  mpfr_set_si (x, LONG_MAX, GMP_RNDN);
-  mpfr_clear_erangeflag ();
-  d = mpfr_get_si (x, GMP_RNDN);
-  if (d != LONG_MAX || mpfr_erangeflag_p ())
-    {
-      printf ("ERROR for get_si + ERANGE + LONG_MAX (1): %ld\n", d);
-      exit (1);
-    }
-  mpfr_add_ui (x, x, 1, GMP_RNDN);
-  d = mpfr_get_si (x, GMP_RNDN);
-  if (d != LONG_MAX || !mpfr_erangeflag_p ())
-    {
-      printf ("ERROR for get_si + ERANGE + LONG_MAX (2)\n");
-      exit (1);
-    }
-  mpfr_set_si (x, LONG_MIN, GMP_RNDN);
-  mpfr_clear_erangeflag ();
-  d = mpfr_get_si (x, GMP_RNDN);
-  if (d != LONG_MIN || mpfr_erangeflag_p ())
-    {
-      printf ("ERROR for get_si + ERANGE + LONG_MIN (1)\n");
-      exit (1);
-    }
-  mpfr_sub_ui (x, x, 1, GMP_RNDN);
-  d = mpfr_get_si (x, GMP_RNDN);
-  if (d != LONG_MIN || !mpfr_erangeflag_p ())
-    {
-      printf ("ERROR for get_si + ERANGE + LONG_MIN (2)\n");
-      exit (1);
-    }
 
   mpfr_clear (x);
 
-  test_2exp ();
-  test_macros ();
   tests_end_mpfr ();
   return 0;
 }

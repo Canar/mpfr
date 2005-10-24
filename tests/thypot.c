@@ -1,6 +1,6 @@
 /* Test file for mpfr_hypot.
 
-Copyright 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 2001, 2002, 2003 Free Software Foundation.
 Adapted from tarctan.c.
 
 This file is part of the MPFR Library.
@@ -17,49 +17,19 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <limits.h>
 #include <stdlib.h>
-
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
+#include "mpfr-impl.h"
 #include "mpfr-test.h"
 
 #define TEST_FUNCTION mpfr_hypot
-
-static void
-special (void)
-{
-  mpfr_t x, y, z;
-
-  mpfr_init (x);
-  mpfr_init (y);
-  mpfr_init (z);
-
-  mpfr_set_nan (x);
-  mpfr_hypot (z, x, y, GMP_RNDN);
-  MPFR_ASSERTN(mpfr_nan_p (z));
-
-  mpfr_set_inf (x, 1);
-  mpfr_set_inf (y, -1);
-  mpfr_hypot (z, x, y, GMP_RNDN);
-  MPFR_ASSERTN(mpfr_inf_p (z) && mpfr_sgn (z) > 0);
-
-  mpfr_set_inf (x, -1);
-  mpfr_set_nan (y);
-  mpfr_hypot (z, x, y, GMP_RNDN);
-  MPFR_ASSERTN(mpfr_inf_p (z) && mpfr_sgn (z) > 0);
-
-  mpfr_set_nan (x);
-  mpfr_set_inf (y, -1);
-  mpfr_hypot (z, x, y, GMP_RNDN);
-  MPFR_ASSERTN(mpfr_inf_p (z) && mpfr_sgn (z) > 0);
-
-  mpfr_clear (x);
-  mpfr_clear (y);
-  mpfr_clear (z);
-}
 
 static void
 test_large (void)
@@ -97,47 +67,10 @@ test_large (void)
   mpfr_set_str_binary (t, "0.11111001010011000001110110001101011100001000010010100E-1021");
   mpfr_hypot (y, x, t, GMP_RNDN);
 
-  mpfr_set_prec (x, 240);
-  mpfr_set_prec (y, 22);
-  mpfr_set_prec (t, 2);
-  mpfr_set_str_binary (x, "0.100111011010010010110100000100000001100010011100110101101111111101011110111011011101010110100101111000111100010100110000100101011110111011100110100110100101110101101100011000001100000001111101110100100100011011011010110111100110010101000111e-7");
-  mpfr_set_str_binary (y, "0.1111000010000011000111e-10");
-  mpfr_hypot (t, x, y, GMP_RNDN);
-  mpfr_set_str_binary (y, "0.11E-7");
-  if (mpfr_cmp (t, y))
-    {
-      printf ("Error in mpfr_hypot (1)\n");
-      exit (1);
-    }
-
   mpfr_clear (x);
   mpfr_clear (y);
   mpfr_clear (z);
   mpfr_clear (t);
-}
-
-static void
-test_large_small (void)
-{
-  mpfr_t x, y, z;
-  int inexact;
-
-  mpfr_init2 (x, 3);
-  mpfr_init2 (y, 2);
-  mpfr_init2 (z, 2);
-
-  mpfr_set_ui_2exp (x, 1, mpfr_get_emax () / 2, GMP_RNDN);
-  mpfr_set_ui_2exp (y, 1, -1, GMP_RNDN);
-  inexact = mpfr_hypot (z, x, y, GMP_RNDN);
-  if (inexact >= 0 || mpfr_cmp (x, z))
-    {
-      printf ("Error in test_large_small\n");
-      exit (1);
-    }
-
-  mpfr_clear (x);
-  mpfr_clear (y);
-  mpfr_clear (z);
 }
 
 int
@@ -149,8 +82,6 @@ main (int argc, char *argv[])
   int inexact, compare, compare2;
 
   tests_start_mpfr ();
-
-  special ();
 
   mpfr_init (x1);
   mpfr_init (x2);
@@ -181,7 +112,7 @@ main (int argc, char *argv[])
             mpfr_neg (x1, x1, GMP_RNDN);
           if (randlimb () % 2)
             mpfr_neg (x2, x2, GMP_RNDN);
-          rnd = (mp_rnd_t) RND_RAND ();
+          rnd = randlimb () % 4;
           mpfr_set_prec (y, yprec);
 
           compare =TEST_FUNCTION (y, x1,x2, rnd);
@@ -238,7 +169,6 @@ main (int argc, char *argv[])
   mpfr_clear (t);
 
   test_large ();
-  test_large_small ();
 
   tests_end_mpfr ();
   return 0;

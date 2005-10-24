@@ -16,14 +16,13 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
 #include <time.h>
-#include <limits.h>
 #if WITH_FPU_CONTROL
 #include <fpu_control.h>
 #endif
@@ -101,7 +100,6 @@ test_small (void)
   mpfr_init2 (y, 64);
   mpfr_init2 (z, 64);
 
-  /* x = 11906603631607553907/2^(16381+64) */
   mpfr_set_str (x, "0.1010010100111100110000001110101101000111010110000001111101110011E-16381", 2, GMP_RNDN);
   d = mpfr_get_ld (x, GMP_RNDN);  /* infinite loop? */
   mpfr_set_ld (y, d, GMP_RNDN);
@@ -114,12 +112,12 @@ test_small (void)
                  mpfr_erangeflag_p ()))
     {
       printf ("Error with x = ");
-      mpfr_out_str (NULL, 10, 21, x, GMP_RNDN);
+      mpfr_out_str (NULL, 10, 20, x, GMP_RNDN);
       printf (" = ");
       mpfr_out_str (NULL, 16, 0, x, GMP_RNDN);
-      printf ("\n        -> d = %.21Lg", d);
+      printf ("\n        -> d = %.20Lg", d);
       printf ("\n        -> y = ");
-      mpfr_out_str (NULL, 10, 21, y, GMP_RNDN);
+      mpfr_out_str (NULL, 10, 20, y, GMP_RNDN);
       printf (" = ");
       mpfr_out_str (NULL, 16, 0, y, GMP_RNDN);
       printf ("\n        -> |x-y| = ");
@@ -155,6 +153,7 @@ main (int argc, char *argv[])
 
   tests_start_mpfr ();
   mpfr_test_init ();
+  tests_machine_prec_long_double ();
 
   mpfr_init2 (x, MPFR_LDBL_MANT_DIG);
 

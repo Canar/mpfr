@@ -17,8 +17,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <limits.h>
@@ -42,16 +42,6 @@ special (void)
   MPFR_ASSERTN(mpfr_nan_p (z));
 
   mpfr_set_inf (x, 1);
-  mpfr_set_inf (y, -1);
-  mpfr_hypot (z, x, y, GMP_RNDN);
-  MPFR_ASSERTN(mpfr_inf_p (z) && mpfr_sgn (z) > 0);
-
-  mpfr_set_inf (x, -1);
-  mpfr_set_nan (y);
-  mpfr_hypot (z, x, y, GMP_RNDN);
-  MPFR_ASSERTN(mpfr_inf_p (z) && mpfr_sgn (z) > 0);
-
-  mpfr_set_nan (x);
   mpfr_set_inf (y, -1);
   mpfr_hypot (z, x, y, GMP_RNDN);
   MPFR_ASSERTN(mpfr_inf_p (z) && mpfr_sgn (z) > 0);
@@ -131,7 +121,24 @@ test_large_small (void)
   inexact = mpfr_hypot (z, x, y, GMP_RNDN);
   if (inexact >= 0 || mpfr_cmp (x, z))
     {
-      printf ("Error in test_large_small\n");
+      printf ("Error 1 in test_large_small\n");
+      exit (1);
+    }
+
+  mpfr_mul_ui (x, x, 5, GMP_RNDN);
+  inexact = mpfr_hypot (z, x, y, GMP_RNDN);
+  if (mpfr_cmp (x, z) >= 0)
+    {
+      printf ("Error 2 in test_large_small\n");
+      printf ("x = ");
+      mpfr_out_str (stdout, 2, 0, x, GMP_RNDN);
+      printf ("\n");
+      printf ("y = ");
+      mpfr_out_str (stdout, 2, 0, y, GMP_RNDN);
+      printf ("\n");
+      printf ("z = ");
+      mpfr_out_str (stdout, 2, 0, z, GMP_RNDN);
+      printf (" (in precision 2)\n");
       exit (1);
     }
 

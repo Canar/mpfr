@@ -16,8 +16,8 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,21 +56,19 @@ main (void)
   mpfr_set_str (u,
      "7.f10872b020c49ba5e353f7ced916872b020c49ba5e353f7ced916872b020c498@2",
      16, GMP_RNDN);
-  mpf_set_str (y, "2033033E-3", 10); /* avoid 2033.033 which is
-                                        locale-sensitive */
+  mpf_set_str (y, "2033.033", 10);
   mpfr_set_f (x, y, GMP_RNDN);
   if (mpfr_cmp (x, u))
     {
-      printf ("mpfr_set_f failed for y=2033033E-3\n");
+      printf ("mpfr_set_f failed for y=2033.033\n");
       exit (1);
     }
-  mpf_set_str (y, "-2033033E-3", 10); /* avoid -2033.033 which is
-                                         locale-sensitive */
+  mpf_set_str (y, "-2033.033", 10);
   mpfr_set_f (x, y, GMP_RNDN);
   mpfr_neg (u, u, GMP_RNDN);
   if (mpfr_cmp (x, u))
     {
-      printf ("mpfr_set_f failed for y=-2033033E-3\n");
+      printf ("mpfr_set_f failed for y=-2033.033\n");
       exit (1);
     }
 

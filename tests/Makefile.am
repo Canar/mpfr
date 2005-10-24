@@ -1,17 +1,12 @@
-AUTOMAKE_OPTIONS = gnu $(top_builddir)/ansi2knr
+check_PROGRAMS= reuse tabs tadd tagm tcan_round tcmp tcmp2 tcmp_ui tdiv tdiv_ui tdump teq texp tget_str tlog tconst_log2 tmul tmul_2exp tmul_ui tout_str tconst_pi tpow trandom tround_prec tset_d tset_f tset_q tset_si tset_str tset_z tsqrt tsqrt_ui tui_div tui_sub tswap ttrunc trint tisnan tget_d tatan tcosh tsinh ttanh tacosh tasinh tatanh thyperbolic texp2 tfactorial tsub tasin tconst_euler tcos tsin ttan tsub_ui tset tlog1p texpm1 tlog2 tlog10 tui_pow tpow3 tadd_ui texceptions tfma thypot tacos
+EXTRA_DIST= tgeneric.c
 
-check_PROGRAMS = tversion tinits tsgn tcheck tisnan texceptions tset_exp tset tabs tset_d tset_f tset_q tset_si tset_str tset_z tset_ld tset_sj tswap tcopysign tcmp tcmp2 tcmpabs tcmp_d tcmp_ld tcomparisons teq tadd tsub tmul tdiv tsub1sp tadd1sp tadd_ui tsub_ui tcmp_ui tdiv_ui tmul_ui tsqrt_ui tui_div tui_sub tgmpop tsi_op tmul_2exp tfma tsum tdim tminmax tnext tfits tget_d tget_d_2exp tget_z tget_str tget_sj tout_str tinp_str toutimpl tcan_round tround_prec tsqrt tconst_log2 tconst_pi tconst_euler trandom ttrunc trint tfrac texp texp2 texpm1 tlog tlog2 tlog10 tlog1p tpow tui_pow tpow3 tcosh tsinh ttanh tacosh tasinh tatanh thyperbolic tasin tacos tcos tatan tsin ttan tsin_cos tagm thypot tfactorial tgamma terf tcbrt tzeta mpf_compat mpfr_compat reuse tsqr tstrtofr tpow_z tget_f tconst_catalan troot tsec tcsc tcot teint tcoth tcsch tsech tstckintc tsubnormal tlngamma tzeta_ui
+LDADD= $(top_builddir)/libmpfr.a  @LDADD@
+INCLUDES=-I$(top_srcdir) @INCLUDES@
 
-EXTRA_DIST = tgeneric.c tgeneric_ui.c mpf_compat.h inp_str.data
+../libmpfr.a:
+	cd $(top_srcdir); make libmpfr.a  
 
-LDADD = libfrtests.la $(MPFR_LIBM) $(top_builddir)/libmpfr.la
-INCLUDES = -I$(top_srcdir) -I$(top_builddir)
-LOADLIBES=$(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(top_builddir)/tests/.libs/libfrtests.a $(top_builddir)/.libs/libmpfr.a $(LIBS) $(MPFR_LIBM)
+check: 	all
+	for i in $(check_PROGRAMS); do echo Testing $$i ; ./$$i || echo "### $$i failed ###"; done
 
-check_LTLIBRARIES = libfrtests.la
-libfrtests_la_SOURCES = memory.c rnd_mode.c tests.c cmp_str.c
-
-$(top_builddir)/libmpfr.la:
-	cd $(top_builddir); make libmpfr.la
-
-TESTS = $(check_PROGRAMS)

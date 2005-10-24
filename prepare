@@ -1,7 +1,5 @@
 #!/bin/sh --
 
-# This script is inspired by the prepare script distributed with Mutt.
-
 if test x"$1" = x"-dev" ; then
   include_deps=
   shift
@@ -9,14 +7,14 @@ else
   include_deps="-i"
 fi
 
-if libtoolize --automake --copy && aclocal && automake $include_deps --copy --add-missing && autoconf && ./configure $@
+if aclocal \
+  && automake --gnu Makefile $include_deps \
+  && automake --gnu tests/Makefile $include_deps \
+  && autoconf && ./configure $@
 then
   echo
   echo "The MPFR source code was successfully prepared."
-  echo "Type 'make' to build MPFR."
-  echo
-  echo "Note: if you want to reconfigure MPFR, you can now use the 'configure'"
-  echo "script directly; you do not need the 'prepare' script any longer."
+  echo "Type make to build MPFR."
   echo
 else
   echo

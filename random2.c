@@ -1,8 +1,9 @@
-/* mpfr_random2 -- Generate a positive random mpfr_t of specified size, with
+/* mpf_random2 -- Generate a positive random mpf_t of specified size, with
    long runs of consecutive ones and zeros in the binary representation.
-   Intended for testing.
+   Intended for testing of other MP routines.
 
-Copyright 1999, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+Copyright 1999, 2001 Free Software Foundation, Inc.
+(Copied from the GNU MP Library.)
 
 This file is part of the MPFR Library.
 
@@ -18,69 +19,45 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-#define MPFR_NEED_LONGLONG_H
+#include <stdio.h>
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "longlong.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
 void
 mpfr_random2 (mpfr_ptr x, mp_size_t size, mp_exp_t exp)
 {
-  mp_size_t xn, k;
-  unsigned long sh;
-  mp_ptr xp;
-  mp_limb_t elimb;
+  mp_size_t xn;
+  unsigned long cnt;
+  mp_ptr xp = MPFR_MANT(x), yp[1];
+  mp_size_t prec = (MPFR_PREC(x) - 1)/BITS_PER_MP_LIMB; 
 
-  MPFR_CLEAR_FLAGS (x);
+  MPFR_CLEAR_FLAGS(x);
+  xn = ABS (size);
+  if (xn != 0)
+    {
+      if (xn > prec + 1)
+	xn = prec + 1;
 
-  if (MPFR_UNLIKELY(size == 0))
-    {
-      MPFR_SET_ZERO(x);
-      return ;
-    }
-  else if (size > 0)
-    {
-      MPFR_SET_POS (x);
-    }
-  else
-    {
-      MPFR_SET_NEG (x);
-      size = -size;
+      mpn_random2 (xp, xn);
     }
 
-  xn = MPFR_LIMB_SIZE (x);
-  xp = MPFR_MANT (x);
-  if (size > xn)
-    size = xn;
-  k = xn - size;
+  if (exp != 0) {
+    /* use mpn_random instead of random since that function is not
+       available on all platforms (for example HPUX, DEC OSF, ...) */
+    mpn_random ((mp_limb_t*) yp, 1);
+    exp = (mp_exp_t) yp[0] % (2 * exp) - exp;
+  }
 
-  /* k   : # of 0 limbs at the end
-     size: # of limbs to fill
-     xn  : Size of mantissa */
-
-  /* Generate random mantissa.  */
-  mpn_random2 (xp+k, size);
-
-  /* Set mandatory most significant bit.  */
-  xp[xn - 1] |= MPFR_LIMB_HIGHBIT;
-
-  if (k != 0)
-    {
-      /* Clear last limbs */
-      MPN_ZERO (xp, k);
-    }
-  else
-    {
-      /* Mask off non significant bits in the low limb.  */
-      MPFR_UNSIGNED_MINUS_MODULO (sh, MPFR_PREC (x));
-      xp[0] &= ~MPFR_LIMB_MASK (sh);
-    }
-
-  /* Generate random exponent.  */
-  _gmp_rand (&elimb, RANDS, BITS_PER_MP_LIMB);
-  exp = ABS (exp);
-  MPFR_SET_EXP (x, elimb % (2 * exp + 1) - exp);
-
-  return ;
+  count_leading_zeros(cnt, xp[xn - 1]); 
+  if (cnt) mpn_lshift(xp, xp, xn, cnt); 
+  MPFR_EXP(x) = exp-cnt; 
+  cnt = xn*BITS_PER_MP_LIMB - prec; 
+  /* cnt is the number of non significant bits in the low limb */
+  xp[0] &= ~((MP_LIMB_T_ONE << cnt) - MP_LIMB_T_ONE);
 }

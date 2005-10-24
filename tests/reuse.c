@@ -1,6 +1,6 @@
 /* Test file for in-place operations.
 
-Copyright 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 2000, 2001, 2002 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -16,79 +16,37 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "gmp.h"
+#include "mpfr.h"
+#include "mpfr-impl.h"
 
-#include "mpfr-test.h"
+typedef void (*fct_t)();
+fct_t testfunc;
 
-#define DISP(s, t) {printf(s); mpfr_out_str(stdout, 10, 0, t, GMP_RNDN); }
-#define DISP2(s,t) {DISP(s,t); putchar('\n');}
+void test3 _PROTO ((char *, mp_prec_t, mp_rnd_t));
+void test4 _PROTO ((char *, mp_prec_t, mp_rnd_t));
+void test3a _PROTO ((char *, mp_prec_t, mp_rnd_t));
+void test2ui _PROTO ((char *, mp_prec_t, mp_rnd_t));
+void testui2 _PROTO ((char *, mp_prec_t, mp_rnd_t));
+void test2 _PROTO ((char *, mp_prec_t, mp_rnd_t));
+void test2a _PROTO ((char *, mp_prec_t));
+int mpfr_compare _PROTO ((mpfr_t, mpfr_t));
 
-#define SPECIAL_MAX 12
-
-static void
-set_special (mpfr_ptr x, unsigned int select)
-{
-  MPFR_ASSERTN (select < SPECIAL_MAX);
-  switch (select)
-    {
-    case 0:
-      MPFR_SET_NAN (x);
-      break;
-    case 1:
-      MPFR_SET_INF (x);
-      MPFR_SET_POS (x);
-      break;
-    case 2:
-      MPFR_SET_INF (x);
-      MPFR_SET_NEG (x);
-      break;
-    case 3:
-      MPFR_SET_ZERO (x);
-      MPFR_SET_POS  (x);
-      break;
-    case 4:
-      MPFR_SET_ZERO (x);
-      MPFR_SET_NEG  (x);
-      break;
-    case 5:
-      mpfr_set_str_binary (x, "1");
-      break;
-    case 6:
-      mpfr_set_str_binary (x, "-1");
-      break;
-    case 7:
-      mpfr_set_str_binary (x, "1e-1");
-      break;
-    case 8:
-      mpfr_set_str_binary (x, "1e+1");
-      break;
-    case 9:
-      mpfr_const_pi (x, GMP_RNDN);
-      break;
-    case 10:
-      mpfr_const_pi (x, GMP_RNDN);
-      MPFR_SET_EXP (x, MPFR_GET_EXP (x)-1);
-      break;
-    default:
-      mpfr_random (x);
-      break;
-    }
-}
 /* same than mpfr_cmp, but returns 0 for both NaN's */
-static int
-mpfr_compare (mpfr_srcptr a, mpfr_srcptr b)
+int
+mpfr_compare (mpfr_t a, mpfr_t b)
 {
-  return (MPFR_IS_NAN(a)) ? !MPFR_IS_NAN(b) :
+  return (MPFR_IS_NAN(a)) ? !MPFR_IS_NAN(b) : 
     (MPFR_IS_NAN(b) || mpfr_cmp(a, b));
 }
 
-static void
-test3 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t),
-       char *foo, mp_prec_t prec, mp_rnd_t rnd)
+void
+test3 (char *foo, mp_prec_t prec, mp_rnd_t rnd)
 {
   mpfr_t ref1, ref2, ref3;
   mpfr_t res1;
@@ -104,36 +62,46 @@ test3 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t),
 
   /* for each variable, consider each of the following 6 possibilities:
      NaN, +Infinity, -Infinity, +0, -0 or a random number */
-  for (i=0; i < SPECIAL_MAX*SPECIAL_MAX ; i++) {
-    set_special (ref2, i%SPECIAL_MAX);
-    set_special (ref3, i/SPECIAL_MAX);
+  for (i=0; i<36; i++) {
+    if (i%6==0) mpfr_set_nan (ref2);
+    if (i%6==1) mpfr_set_inf (ref2, 1);
+    if (i%6==2) mpfr_set_inf (ref2, -1);
+    if (i%6==3) mpfr_set_d (ref2, 0.0, GMP_RNDN);
+    if (i%6==4) mpfr_set_d (ref2, -0.0, GMP_RNDN);
+    if (i%6==5) mpfr_random (ref2);
+
+    if (i/6==0) mpfr_set_nan (ref3);
+    if (i/6==1) mpfr_set_inf (ref3, 1);
+    if (i/6==2) mpfr_set_inf (ref3, -1);
+    if (i/6==3) mpfr_set_d (ref3, 0.0, GMP_RNDN);
+    if (i/6==4) mpfr_set_d (ref3, -0.0, GMP_RNDN);
+    if (i/6==5) mpfr_random (ref3);
 
     /* reference call: foo(a, b, c) */
     testfunc (ref1, ref2, ref3, rnd);
-
+ 
     /* foo(a, a, c) */
     mpfr_set (res1, ref2, rnd); /* exact operation */
     testfunc (res1, res1, ref3, rnd);
-
-    if (mpfr_compare (res1, ref1))
-      {
-        printf ("Error for %s(a, a, c) for ", foo);
-        DISP("a=",ref2); DISP2(", c=",ref3);
-        printf ("expected "); mpfr_print_binary (ref1); puts ("");
-        printf ("got      "); mpfr_print_binary (res1); puts ("");
-        exit (1);
-      }
+ 
+    if (mpfr_compare (res1, ref1)) {
+      fprintf (stderr, "Error for %s(a, a, c) for a=%e, c=%e\n", foo,
+	       mpfr_get_d1 (ref2), mpfr_get_d1 (ref3));
+      fprintf (stderr, "expected %e, got %e\n", mpfr_get_d1 (ref1),
+	       mpfr_get_d1 (res1));
+      exit (1);
+    }
 
     /* foo(a, b, a) */
     mpfr_set (res1, ref3, rnd);
     testfunc (res1, ref2, res1, rnd);
-    if (mpfr_compare (res1, ref1))
-      {
-        printf ("Error for %s(a, b, a) for ", foo);
-        DISP("b=",ref2); DISP2(", a=", ref3);
-        DISP("expected ", ref1); DISP2(", got ",res1);
-        exit (1);
-      }
+    if (mpfr_compare (res1, ref1)) {
+      fprintf (stderr, "Error for %s(a, b, a) for b=%e, a=%e\n", foo,
+	       mpfr_get_d1 (ref2), mpfr_get_d1 (ref3));
+      fprintf (stderr, "expected %e, got %e\n", mpfr_get_d1 (ref1),
+	       mpfr_get_d1 (res1));
+      exit (1);
+    }
 
     /* foo(a, a, a) */
     mpfr_set (ref3, ref2, rnd);
@@ -141,13 +109,13 @@ test3 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t),
     mpfr_set (res1, ref2, rnd);
     testfunc (res1, res1, res1, rnd);
 
-    if (mpfr_compare (res1, ref1))
-      {
-        printf ("Error for %s(a, a, a) for ", foo);
-        DISP2("a=",ref2);
-        DISP("expected ", ref1); DISP2(", got", res1);
-        exit (1);
-      }
+   if (mpfr_compare (res1, ref1)) {
+      fprintf (stderr, "Error for %s(a, a, a) for a=%e\n", foo,
+	       mpfr_get_d1 (ref2));
+      fprintf (stderr, "expected %e, got %e\n", mpfr_get_d1 (ref1),
+	       mpfr_get_d1 (res1));
+      exit (1);
+    }
   }
 
   mpfr_clear (ref1);
@@ -156,10 +124,8 @@ test3 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t),
   mpfr_clear (res1);
 }
 
-static void
-test4 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_srcptr,
-                       mp_rnd_t),
-       char *foo, mp_prec_t prec, mp_rnd_t rnd)
+void
+test4 (char *foo, mp_prec_t prec, mp_rnd_t rnd)
 {
   mpfr_t ref, op1, op2, op3;
   mpfr_t res;
@@ -177,102 +143,145 @@ test4 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_srcptr,
   /* for each variable, consider each of the following 6 possibilities:
      NaN, +Infinity, -Infinity, +0, -0 or a random number */
 
-  for (i=0; i<SPECIAL_MAX; i++)
+  for (i=0; i<6; i++) 
     {
-      set_special (op1, i);
-      for (j=0; j<SPECIAL_MAX; j++)
+
+      MPFR_CLEAR_FLAGS(op1);
+      if (i==0) mpfr_set_nan (op1);
+      if (i==1) mpfr_set_inf (op1, 1);
+      if (i==2) mpfr_set_inf (op1, -1);
+      if (i==3) mpfr_set_d (op1, 0.0, GMP_RNDN);
+      if (i==4) mpfr_set_d (op1, -0.0, GMP_RNDN);
+      if (i==5) mpfr_random (op1);
+      
+      for (j=0; j<6; j++) 
         {
-          set_special (op2, j);
-          for (k=0; k<SPECIAL_MAX; k++)
+
+          MPFR_CLEAR_FLAGS(op2);
+          if (j==0) mpfr_set_nan (op2);
+          if (j==1) mpfr_set_inf (op2, 1);
+          if (j==2) mpfr_set_inf (op2, -1);
+          if (j==3) mpfr_set_d (op2, 0.0, GMP_RNDN);
+          if (j==4) mpfr_set_d (op2, -0.0, GMP_RNDN);
+          if (j==5) mpfr_random (op2);
+
+          for (k=0; k<6; k++) 
             {
-              set_special (op3, k);
+
+              MPFR_CLEAR_FLAGS(op3);
+              if (k==0) mpfr_set_nan (op3);
+              if (k==1) mpfr_set_inf (op3, 1);
+              if (k==2) mpfr_set_inf (op3, -1);
+              if (k==3) mpfr_set_d (op3, 0.0, GMP_RNDN);
+              if (k==4) mpfr_set_d (op3, -0.0, GMP_RNDN);
+              if (k==5) mpfr_random (op3);
 
               /* reference call: foo(s, a, b, c) */
               testfunc (ref, op1, op2, op3, rnd);
-
+ 
               /* foo(a, a, b, c) */
               mpfr_set (res, op1, rnd); /* exact operation */
               testfunc (res, res, op2, op3, rnd);
-
-              if (mpfr_compare (res, ref))
-                {
-                  printf ("Error for %s(a, a, b, c) for ", foo);
-                  DISP("a=", op1); DISP(", b=", op2); DISP2(", c=", op3);
-                  DISP("expected ", ref); DISP2(", got", res);
-                  exit (1);
-                }
+ 
+              if (mpfr_compare (res, ref)) 
+              {
+                fprintf (stderr, 
+                         "Error for %s(a, a, b, c) for a=%e, b=%e, c=%e\n", 
+                         foo,
+                         mpfr_get_d1 (op1), mpfr_get_d1 (op2), mpfr_get_d1 (op3));
+                fprintf (stderr, "expected %e, got %e\n", mpfr_get_d1 (ref),
+                         mpfr_get_d1 (res));
+                exit (1);
+              }
 
               /* foo(b, a, b, c) */
               mpfr_set (res, op2, rnd);
               testfunc (res, op1, res, op3, rnd);
 
-              if (mpfr_compare (res, ref))
-                {
-                  printf ("Error for %s(a, a, b, c) for ", foo);
-                  DISP("a=", op1); DISP(", b=", op2); DISP2(", c=", op3);
-                  DISP("expected ", ref); DISP2(", got", res);
-                  exit (1);
-                }
+             if (mpfr_compare (res, ref)) 
+              {
+                fprintf (stderr, 
+                         "Error for %s(b, a, b, c) for a=%e, b=%e, c=%e\n", 
+                         foo,
+                         mpfr_get_d1 (op1), mpfr_get_d1 (op2), mpfr_get_d1 (op3));
+                fprintf (stderr, "expected %e, got %e\n", mpfr_get_d1 (ref),
+                         mpfr_get_d1 (res));
+                exit (1);
+              }
 
               /* foo(c, a, b, c) */
               mpfr_set (res, op3, rnd);
               testfunc (res, op1, op2, res, rnd);
 
-              if (mpfr_compare (res, ref))
-                {
-                  printf ("Error for %s(a, a, b, c) for ", foo);
-                  DISP("a=", op1); DISP(", b=", op2); DISP2(", c=", op3);
-                  DISP("expected ", ref); DISP2(", got", res);
-                  exit (1);
-                }
+             if (mpfr_compare (res, ref)) 
+              {
+                fprintf (stderr, 
+                         "Error for %s(c, a, b, c) for a=%e, b=%e, c=%e\n",
+                         foo,
+                         mpfr_get_d1 (op1), mpfr_get_d1 (op2), mpfr_get_d1 (op3));
+                fprintf (stderr, "expected %e, got %e\n", mpfr_get_d1 (ref),
+                         mpfr_get_d1 (res));
+                exit (1);
+              }
 
               /* foo(a, a, a,c) */
-              testfunc (ref, op1, op1, op3, rnd);
-              mpfr_set (res, op1, rnd);
-              testfunc (res, res, res, op3, rnd);
-              if (mpfr_compare (res, ref))
-                {
-                  printf ("Error for %s(a, a, b, c) for ", foo);
-                  DISP("a=", op1); DISP(", a=", op2); DISP2(", c=", op3);
-                  DISP("expected ", ref); DISP2(", got", res);
-                  exit (1);
-                }
+             testfunc (ref, op1, op1, op3, rnd);
+             mpfr_set (res, op1, rnd);
+             testfunc (res, res, res, op3, rnd);
+             if (mpfr_compare (res, ref)) 
+              {
+                fprintf (stderr, 
+                         "Error for %s(a, a, a, c) for a=%e, a=%e, c=%e\n",
+                         foo,
+                         mpfr_get_d1 (op1), mpfr_get_d1 (op2), mpfr_get_d1 (op3));
+                fprintf (stderr, "expected %e, got %e\n", mpfr_get_d1 (ref),
+                         mpfr_get_d1 (res));
+                exit (1);
+              }
 
               /* foo(a, a, b,a) */
               testfunc (ref, op1, op2, op1, rnd);
               mpfr_set (res, op1, rnd);
               testfunc (res, res, op2, res, rnd);
-              if (mpfr_compare (res, ref))
-                {
-                  printf ("Error for %s(a, a, b, c) for ", foo);
-                  DISP("a=", op1); DISP(", a=", op2); DISP2(", c=", op3);
-                  DISP("expected ", ref); DISP2(", got", res);
-                  exit (1);
-                }
+              if (mpfr_compare (res, ref)) 
+               {
+                 fprintf (stderr, 
+                          "Error for %s(a, a, b, a) for a=%e, a=%e, c=%e\n",
+                          foo,
+                       mpfr_get_d1 (op1), mpfr_get_d1 (op2), mpfr_get_d1 (op3));
+                 fprintf (stderr, "expected %e, got %e\n", mpfr_get_d1 (ref),
+                          mpfr_get_d1 (res));
+                 exit (1);
+               }
 
               /* foo(b, a, b, b) */
               testfunc (ref, op1, op2, op2, rnd);
               mpfr_set (res, op2, rnd);
               testfunc (res, op1, res, res, rnd);
-              if (mpfr_compare (res, ref))
-                {
-                  printf ("Error for %s(a, a, b, c) for ", foo);
-                  DISP("a=", op1); DISP(", a=", op2); DISP2(", c=", op3);
-                  DISP("expected ", ref); DISP2(", got", res);
-                  exit (1);
-                }
+              if (mpfr_compare (res, ref)) 
+               {
+                 fprintf (stderr, 
+                          "Error for %s(b, a, b, b) for a=%e, a=%e, c=%e\n", 
+                          foo,
+                        mpfr_get_d1 (op1), mpfr_get_d1 (op2), mpfr_get_d1 (op3));
+                 fprintf (stderr, "expected %e, got %e\n", mpfr_get_d1 (ref),
+                          mpfr_get_d1 (res));
+                 exit (1);
+               }
 
               /* foo (a, a, a, a) */
               testfunc (ref, op1, op1, op1 ,rnd);
               mpfr_set (res, op1, rnd);
               testfunc (res, res, res, res, rnd);
-              if (mpfr_compare (res, ref))
-                {
-                  printf ("Error for %s(a, a, a, a) for ", foo);
-                  DISP2("a=", op1);
-                  DISP("expected ", ref); DISP2(", got", res);
-                  exit (1);
-                }
+              if (mpfr_compare (res, ref)) 
+               {
+                 fprintf (stderr,
+                          "Error for %s(a, a, a, a) for a=%e\n", foo,
+                          mpfr_get_d1 (op1));
+                 fprintf (stderr, "expected %e, got %e\n", mpfr_get_d1 (ref),
+                          mpfr_get_d1 (res));
+                 exit (1);
+               }
             }
         }
     }
@@ -285,28 +294,42 @@ test4 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_srcptr,
 
 }
 
-static void
-test2ui (int (*testfunc)(mpfr_ptr, mpfr_srcptr, unsigned long int, mp_rnd_t),
-         char *foo, mp_prec_t prec, mp_rnd_t rnd)
+void
+test2ui (char *foo, mp_prec_t prec, mp_rnd_t rnd)
 {
   mpfr_t ref1, ref2;
   unsigned int ref3;
+  mp_limb_t c[1];
   mpfr_t res1;
   int i;
 
-#ifdef DEBUG
+#ifdef DEBUG  
   printf("checking %s\n", foo);
 #endif
   mpfr_init2 (ref1, prec);
   mpfr_init2 (ref2, prec);
   mpfr_init2 (res1, prec);
 
+
+
   /* ref2 can be NaN, +Inf, -Inf, +0, -0 or any number
      ref3 can be 0 or any number */
-  for (i=0; i<SPECIAL_MAX*2; i++)
+  for (i=0; i<12; i++)
     {
-      set_special (ref2, i%SPECIAL_MAX);
-      ref3 = i/SPECIAL_MAX == 0 ? 0 : randlimb ();
+      if (i%6==0) mpfr_set_nan (ref2);
+      if (i%6==1) mpfr_set_inf (ref2, 1);
+      if (i%6==2) mpfr_set_inf (ref2, -1);
+      if (i%6==3) mpfr_set_d (ref2, 0.0, GMP_RNDN);
+      if (i%6==4) mpfr_set_d (ref2, -0.0, GMP_RNDN);
+      if (i%6==5) mpfr_random (ref2);
+
+      if (i/6==0) 
+	ref3=0;
+      else 
+	{
+	  mpn_random (c, 1);
+	  ref3 = (unsigned int) c[0];
+	}
 
       /* reference call: foo(a, b, c) */
       testfunc (ref1, ref2, ref3, rnd);
@@ -316,13 +339,13 @@ test2ui (int (*testfunc)(mpfr_ptr, mpfr_srcptr, unsigned long int, mp_rnd_t),
       testfunc (res1, res1, ref3, rnd);
 
       if (mpfr_compare (res1, ref1))
-        {
-          printf ("Error for %s(a, a, c) for c=%u\n", foo, ref3);
-          DISP2("a=",ref2);
-          printf ("expected "); mpfr_print_binary (ref1); puts ("");
-          printf ("got      "); mpfr_print_binary (res1); puts ("");
-          exit (1);
-        }
+	{
+	  fprintf (stderr, "Error for %s(a, a, c) for a=%e c=%u\n", foo,
+	       mpfr_get_d1 (ref2), ref3);
+	  fprintf (stderr, "expected %e, got %e\n", mpfr_get_d1 (ref1),
+	       mpfr_get_d1 (res1));
+	  exit (1);
+	}
     }
 
   mpfr_clear (ref1);
@@ -330,25 +353,38 @@ test2ui (int (*testfunc)(mpfr_ptr, mpfr_srcptr, unsigned long int, mp_rnd_t),
   mpfr_clear (res1);
 }
 
-static void
-testui2 (int (*testfunc)(mpfr_ptr, unsigned long int, mpfr_srcptr, mp_rnd_t),
-         char *foo, mp_prec_t prec, mp_rnd_t rnd)
+void
+testui2 (char *foo, mp_prec_t prec, mp_rnd_t rnd)
 {
   mpfr_t ref1, ref3;
   unsigned int ref2;
+  mp_limb_t c[1];
   mpfr_t res1;
   int i;
 
-#ifdef DEBUG
+#ifdef DEBUG  
   printf("checking %s\n", foo);
 #endif
   mpfr_init2 (ref1, prec);
   mpfr_init2 (ref3, prec);
   mpfr_init2 (res1, prec);
+  mpfr_random (ref3);
+  mpn_random (c, 1);
+  ref2 = (unsigned int) c[0];
 
-  for (i=0; i<SPECIAL_MAX*2; i++) {
-    set_special (ref3, i%SPECIAL_MAX);
-    ref2 = i/SPECIAL_MAX==0 ? 0 : randlimb ();
+  for (i=0; i<12; i++) {
+    if (i%6==0) mpfr_set_nan (ref3);
+    if (i%6==1) mpfr_set_inf (ref3, 1);
+    if (i%6==2) mpfr_set_inf (ref3, -1);
+    if (i%6==3) mpfr_set_d (ref3, 0.0, GMP_RNDN);
+    if (i%6==4) mpfr_set_d (ref3, -0.0, GMP_RNDN);
+    if (i%6==5) mpfr_random (ref3);
+
+    if (i/6==0) ref2=0;
+    else {
+      mpn_random (c, 1);
+      ref2 = (unsigned int) c[0];
+    }
 
     /* reference call: foo(a, b, c) */
     testfunc (ref1, ref2, ref3, rnd);
@@ -356,13 +392,13 @@ testui2 (int (*testfunc)(mpfr_ptr, unsigned long int, mpfr_srcptr, mp_rnd_t),
     /* foo(a, b, a) */
     mpfr_set (res1, ref3, rnd); /* exact operation */
     testfunc (res1, ref2, res1, rnd);
-    if (mpfr_compare (res1, ref1))
-      {
-        printf ("Error for %s(a, b, a) for b=%u \n", foo, ref2);
-        DISP2("a=", ref3);
-        DISP("expected", ref1); DISP2(", got ", res1);
-        exit (1);
-      }
+    if (mpfr_compare (res1, ref1)) {
+      fprintf (stderr, "Error for %s(a, b, a) for b=%u a=%e\n", foo,
+	       ref2, mpfr_get_d1 (ref3));
+      fprintf (stderr, "expected %e, got %e\n", mpfr_get_d1 (ref1),
+	       mpfr_get_d1 (res1));
+      exit (1);
+    }
   }
 
   mpfr_clear (ref1);
@@ -371,39 +407,42 @@ testui2 (int (*testfunc)(mpfr_ptr, unsigned long int, mpfr_srcptr, mp_rnd_t),
 }
 
 /* foo(mpfr_ptr, mpfr_srcptr, mp_rndt) */
-static void
-test2 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mp_rnd_t),
-       char *foo, mp_prec_t prec, mp_rnd_t rnd)
+void
+test2 (char *foo, mp_prec_t prec, mp_rnd_t rnd)
 {
   mpfr_t ref1, ref2;
   mpfr_t res1;
   int i;
 
-#ifdef DEBUG
+#ifdef DEBUG  
   printf("checking %s\n", foo);
 #endif
   mpfr_init2 (ref1, prec);
   mpfr_init2 (ref2, prec);
   mpfr_init2 (res1, prec);
+  mpfr_random (ref2);
 
-  for (i=0; i<SPECIAL_MAX; i++)
-    {
-      set_special (ref2, i);
+  for (i=0; i<6; i++) {
+    if (i==0) mpfr_set_nan (ref2);
+    if (i==1) mpfr_set_inf (ref2, 1);
+    if (i==2) mpfr_set_inf (ref2, -1);
+    if (i==3) mpfr_set_d (ref2, 0.0, GMP_RNDN);
+    if (i==4) mpfr_set_d (ref2, -0.0, GMP_RNDN);
+    if (i==5) mpfr_random (ref2);
 
-      /* reference call: foo(a, b) */
-      testfunc (ref1, ref2, rnd);
+    /* reference call: foo(a, b) */
+    testfunc (ref1, ref2, rnd);
 
-      /* foo(a, a) */
-      mpfr_set (res1, ref2, rnd); /* exact operation */
-      testfunc (res1, res1, rnd);
-      if (mpfr_compare (res1, ref1))
-        {
-          printf ("Error for %s(a, a) for ", foo);
-          DISP2("a=", ref2);
-          DISP("expected", ref1); DISP2(", got ", res1);
-          exit (1);
-        }
+    /* foo(a, a) */
+    mpfr_set (res1, ref2, rnd); /* exact operation */
+    testfunc (res1, res1, rnd);
+    if (mpfr_compare (res1, ref1)) {
+      fprintf (stderr, "Error for %s(a, a) for a=%e\n", foo, mpfr_get_d1 (ref2));
+      fprintf (stderr, "expected %e, got %e\n", mpfr_get_d1 (ref1),
+	       mpfr_get_d1 (res1));
+      exit (1);
     }
+  }
 
   mpfr_clear (ref1);
   mpfr_clear (ref2);
@@ -411,95 +450,97 @@ test2 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mp_rnd_t),
 }
 
 /* foo(mpfr_ptr, mpfr_srcptr) */
-static void
-test2a (int (*testfunc)(mpfr_ptr, mpfr_srcptr),
-        char *foo, mp_prec_t prec)
+void
+test2a (char *foo, mp_prec_t prec)
 {
   mpfr_t ref1, ref2;
   mpfr_t res1;
   int i;
 
-#ifdef DEBUG
-  printf ("checking %s\n", foo);
+#ifdef DEBUG  
+  printf("checking %s\n", foo);
 #endif
   mpfr_init2 (ref1, prec);
   mpfr_init2 (ref2, prec);
   mpfr_init2 (res1, prec);
+  mpfr_random (ref2);
 
-  for (i=0; i<SPECIAL_MAX; i++)
-    {
-      set_special (ref2, i);
+  for (i=0; i<6; i++) {
+    if (i==0) mpfr_set_nan (ref2);
+    if (i==1) mpfr_set_inf (ref2, 1);
+    if (i==2) mpfr_set_inf (ref2, -1);
+    if (i==3) mpfr_set_d (ref2, 0.0, GMP_RNDN);
+    if (i==4) mpfr_set_d (ref2, -0.0, GMP_RNDN);
+    if (i==5) mpfr_random (ref2);
 
-      /* reference call: foo(a, b) */
-      testfunc (ref1, ref2);
+    /* reference call: foo(a, b) */
+    testfunc (ref1, ref2);
 
-      /* foo(a, a) */
-      mpfr_set (res1, ref2, GMP_RNDN); /* exact operation */
-      testfunc (res1, res1);
-      if (mpfr_compare (res1, ref1))
-        {
-          printf ("Error for %s(a, a) for ", foo);
-          DISP2("a=",ref2);
-          DISP("expected", ref1); DISP2(", got ", res1);
-          exit (1);
-        }
+    /* foo(a, a) */
+    mpfr_set (res1, ref2, GMP_RNDN); /* exact operation */
+    testfunc (res1, res1);
+    if (mpfr_compare (res1, ref1)) {
+      fprintf (stderr, "Error for %s(a, a) for a=%e\n", foo, mpfr_get_d1 (ref2));
+      fprintf (stderr, "expected %e, got %e\n", mpfr_get_d1 (ref1),
+	       mpfr_get_d1 (res1));
+      exit (1);
     }
+  }
 
   mpfr_clear (ref1);
   mpfr_clear (ref2);
   mpfr_clear (res1);
 }
 
-#if 0
-
 /* one operand, two results */
-static void
+void
 test3a (char *foo, mp_prec_t prec, mp_rnd_t rnd)
 {
   mpfr_t ref1, ref2, ref3;
   mpfr_t res1, res2;
   int i;
 
-#ifdef DEBUG
-  printf ("checking %s\n", foo);
+#ifdef DEBUG  
+  printf("checking %s\n", foo);
 #endif
   mpfr_init2 (ref1, prec);
   mpfr_init2 (ref2, prec);
   mpfr_init2 (ref3, prec);
   mpfr_init2 (res1, prec);
   mpfr_init2 (res2, prec);
+  mpfr_random (ref3);
 
-  for (i=0; i<SPECIAL_MAX; i++)
-    {
-      set_special (ref3, i);
+  for (i=0; i<6; i++) {
+    if (i==0) mpfr_set_nan (ref3);
+    if (i==1) mpfr_set_inf (ref3, 1);
+    if (i==2) mpfr_set_inf (ref3, -1);
+    if (i==3) mpfr_set_d (ref3, 0.0, GMP_RNDN);
+    if (i==4) mpfr_set_d (ref3, -0.0, GMP_RNDN);
+    if (i==5) mpfr_random (ref3);
 
-      /* reference call: foo(a, b, c) */
-      testfunc (ref1, ref2, ref3, rnd);
+     /* reference call: foo(a, b, c) */
+     testfunc (ref1, ref2, ref3, rnd);
 
-      /* foo(a, b, a) */
-      mpfr_set (res1, ref3, rnd); /* exact operation */
-      testfunc (res1, res2, res1, rnd);
-      if (mpfr_compare (res1, ref1) || mpfr_compare (res2, ref2))
-        {
-          printf ("Error for %s(a, b, a) for ", foo);
-          DISP2("a=",ref3);
-          DISP("expected (", ref1); DISP(",",ref2);
-          DISP("), got (", res1); DISP(",", res2); printf(")\n");
-          exit (1);
-        }
+     /* foo(a, b, a) */
+     mpfr_set (res1, ref3, rnd); /* exact operation */
+     testfunc (res1, res2, res1, rnd);
+     if (mpfr_compare (res1, ref1) || mpfr_compare (res2, ref2)) {
+       fprintf (stderr, "Error for %s(a, b, a) for a=%e\n", foo, mpfr_get_d1 (ref3));
+       fprintf (stderr, "expected (%e,%e), got (%e,%e)\n", mpfr_get_d1 (ref1),
+		mpfr_get_d1 (ref2), mpfr_get_d1 (res1), mpfr_get_d1 (res2));
+       exit (1);
+     }
 
-      /* foo(a, b, b) */
-      mpfr_set (res2, ref3, rnd); /* exact operation */
-      testfunc (res1, res2, res2, rnd);
-      if (mpfr_compare (res1, ref1) || mpfr_compare (res2, ref2))
-        {
-          printf ("Error for %s(a, b, b) for ", foo);
-          DISP2("b=",ref3);
-          DISP("expected (", ref1); DISP(",",ref2);
-          DISP("), got (", res1); DISP(",", res2); printf(")\n");
-          exit (1);
-        }
-    }
+     /* foo(a, b, b) */
+     mpfr_set (res2, ref3, rnd); /* exact operation */
+     testfunc (res1, res2, res2, rnd);
+     if (mpfr_compare (res1, ref1) || mpfr_compare (res2, ref2)) {
+       fprintf (stderr, "Error for %s(a, b, b) for b=%e\n", foo, mpfr_get_d1 (ref3));
+       fprintf (stderr, "expected (%e,%e), got (%e,%e)\n", mpfr_get_d1 (ref1),
+		mpfr_get_d1 (ref2), mpfr_get_d1 (res1), mpfr_get_d1 (res2));
+       exit (1);
+     }
+  }
 
   mpfr_clear (ref1);
   mpfr_clear (ref2);
@@ -508,100 +549,47 @@ test3a (char *foo, mp_prec_t prec, mp_rnd_t rnd)
   mpfr_clear (res2);
 }
 
-#endif
-
-static int
-reldiff_wrapper (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode)
-{
-  mpfr_reldiff (a, b, c, rnd_mode);
-  return 0;
-}
-
 int
 main (void)
 {
-  mp_rnd_t rnd;
-  mp_prec_t p;
-  MPFR_TEST_USE_RANDS ();
-  tests_start_mpfr ();
-
-  p = (randlimb () % 200)+ MPFR_PREC_MIN;
-  for (rnd = GMP_RNDN ; rnd < GMP_RND_MAX ; (mp_rnd_t) ((int) rnd++)) {
-    test3 (mpfr_add, "mpfr_add", p, rnd);
-    test3 (mpfr_sub, "mpfr_sub", p, rnd);
-    test3 (mpfr_mul, "mpfr_mul", p, rnd);
-    test3 (mpfr_div, "mpfr_div", p, rnd);
-
-    test3 (mpfr_agm, "mpfr_agm", p, rnd);
-    test3 (mpfr_min, "mpfr_min", p, rnd);
-    test3 (mpfr_max, "mpfr_max", p, rnd);
-    test3 (reldiff_wrapper, "mpfr_reldiff", p, rnd);
-
-    test2a (mpfr_round, "mpfr_round", p);
-    test2a (mpfr_ceil, "mpfr_ceil", p);
-    test2a (mpfr_floor, "mpfr_floor", p);
-    test2a (mpfr_trunc, "mpfr_trunc", p);
-
-    test2ui (mpfr_add_ui, "mpfr_add_ui", p, rnd);
-    test2ui (mpfr_mul_2exp, "mpfr_mul_2exp", p, rnd);
-    test2ui (mpfr_mul_ui, "mpfr_mul_ui", p, rnd);
-    test2ui (mpfr_pow_ui, "mpfr_pow_ui", p, rnd);
-    test2ui (mpfr_sub_ui, "mpfr_sub_ui", p, rnd);
-    test2ui (mpfr_div_2exp, "mpfr_div_2exp", p, rnd);
-    test2ui (mpfr_div_ui, "mpfr_div_ui", p, rnd);
-
-    testui2 (mpfr_ui_div, "mpfr_ui_div", p, rnd);
-    testui2 (mpfr_ui_sub, "mpfr_ui_sub", p, rnd);
-    testui2 (mpfr_ui_pow, "mpfr_ui_pow", p, rnd);
-
-    test2 (mpfr_sqr, "mpfr_sqr", p, rnd);
-    test2 (mpfr_sqrt, "mpfr_sqrt", p, rnd);
-    test2 (mpfr_abs, "mpfr_abs", p, rnd);
-    test2 (mpfr_neg, "mpfr_neg", p, rnd);
-
-    test2 (mpfr_log, "mpfr_log", p, rnd);
-    test2 (mpfr_log2, "mpfr_log2", p, rnd);
-    test2 (mpfr_log10, "mpfr_log10", p, rnd);
-    test2 (mpfr_log1p, "mpfr_log1p", p, rnd);
-
-    test2 (mpfr_exp, "mpfr_exp", p, rnd);
-    test2 (mpfr_exp2, "mpfr_exp2", p, rnd);
-    test2 (mpfr_exp10, "mpfr_exp10", p, rnd);
-    test2 (mpfr_expm1, "mpfr_expm1", p, rnd);
-    test2 (mpfr_eint, "mpfr_eint", p, rnd);
-
-    test2 (mpfr_sinh, "mpfr_sinh", p, rnd);
-    test2 (mpfr_cosh, "mpfr_cosh", p, rnd);
-    test2 (mpfr_tanh, "mpfr_tanh", p, rnd);
-    test2 (mpfr_asinh, "mpfr_asinh", p, rnd);
-    test2 (mpfr_acosh, "mpfr_acosh", p, rnd);
-    test2 (mpfr_atanh, "mpfr_atanh", p, rnd);
-
-    test2 (mpfr_asin, "mpfr_asin", p, rnd);
-    test2 (mpfr_acos, "mpfr_acos", p, rnd);
-    test2 (mpfr_atan, "mpfr_atan", p, rnd);
-    test2 (mpfr_cos, "mpfr_cos", p, rnd);
-    test2 (mpfr_sin, "mpfr_sin", p, rnd);
-    test2 (mpfr_tan, "mpfr_tan", p, rnd);
-
-    test2 (mpfr_sec, "mpfr_sec", p, rnd);
-    test2 (mpfr_csc, "mpfr_csc", p, rnd);
-    test2 (mpfr_cot, "mpfr_cot", p, rnd);
-
-    test2 (mpfr_erf, "mpfr_erf", p, rnd);
-    test2 (mpfr_erfc, "mpfr_erfc", p, rnd);
-
-    test2 (mpfr_zeta, "mpfr_zeta", p, rnd);
-    test2 (mpfr_gamma, "mpfr_gamma", p, rnd);
-    test2 (mpfr_rint, "mpfr_rint", p, rnd);
-    test2 (mpfr_frac, "mpfr_frac", p, rnd);
-
-    test3 (mpfr_pow, "mpfr_pow", p, rnd);
-    test3 (mpfr_atan2, "mpfr_atan2", p, rnd);
-
-    test4 (mpfr_fma, "mpfr_fma", p, rnd);
-  }
-
-  tests_end_mpfr ();
+  testfunc = (fct_t) mpfr_add; test3 ("mpfr_add", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_add_ui; test2ui ("mpfr_add_ui", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_agm; test3 ("mpfr_agm", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_ceil; test2 ("mpfr_ceil", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_div; test3 ("mpfr_div", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_div_2exp; test2ui ("mpfr_div_2exp", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_div_ui; test2ui ("mpfr_div_ui", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_exp; test2 ("mpfr_exp", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_floor; test2 ("mpfr_floor", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_log; test2 ("mpfr_log", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_mul; test3 ("mpfr_mul", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_mul_2exp; test2ui ("mpfr_mul_2exp", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_mul_ui; test2ui ("mpfr_mul_ui", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_neg; test2 ("mpfr_neg", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_pow_ui; test2ui ("mpfr_pow_ui", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_reldiff; test3 ("mpfr_reldiff", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_sub; test3 ("mpfr_sub", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_sub_ui; test2ui ("mpfr_sub_ui", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_sqrt; test2 ("mpfr_sqrt", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_ui_div; testui2 ("mpfr_ui_div", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_ui_sub; testui2 ("mpfr_ui_sub", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_trunc; test2 ("mpfr_trunc", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_asin; test2 ("mpfr_asin", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_acos; test2 ("mpfr_acos", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_atan; test2 ("mpfr_atan", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_sinh; test2 ("mpfr_sinh", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_cosh; test2 ("mpfr_cosh", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_tanh; test2 ("mpfr_tanh", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_asinh; test2 ("mpfr_asinh", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_acosh; test2 ("mpfr_acosh", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_atanh; test2 ("mpfr_atanh", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_exp2; test2 ("mpfr_exp2", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_cos; test2 ("mpfr_cos", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_sin; test2 ("mpfr_sin", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_tan; test2 ("mpfr_tan", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_log10; test2 ("mpfr_log10", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_log2; test2 ("mpfr_log2", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_pow; test3 ("mpfr_pow", 53, GMP_RNDN);
+  testfunc = (fct_t) mpfr_fma; test4 ("mpfr_fma", 53, GMP_RNDN);
   return 0;
 }

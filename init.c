@@ -1,6 +1,6 @@
 /* mpfr_init -- initialize a floating-point number
 
-Copyright 1999, 2001, 2002, 2004 Free Software Foundation, Inc.
+Copyright 1999, 2001 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,13 +16,16 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
 void
 mpfr_init (mpfr_ptr x)
 {
-  mpfr_init2 (x, __gmpfr_default_fp_bit_precision);
+  mpfr_init2 (x, __mpfr_default_fp_bit_precision);
 }

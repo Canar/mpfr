@@ -1,6 +1,6 @@
 /* mpfr_const_log2 -- compute natural logarithm of 2
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2001 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,176 +16,172 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-#define MPFR_NEED_LONGLONG_H
+#include <stdio.h>
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "longlong.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
-/* Declare the cache */
-MPFR_DECL_INIT_CACHE(__gmpfr_cache_const_log2, mpfr_const_log2_internal);
+mpfr_t __mpfr_const_log2; /* stored value of log(2) */
+mp_prec_t __mpfr_const_log2_prec=0; /* precision of stored value */
+mp_rnd_t __mpfr_const_log2_rnd; /* rounding mode of stored value */
 
-/* Set User interface */
-#undef mpfr_const_log2
-int
-mpfr_const_log2 (mpfr_ptr x, mp_rnd_t rnd_mode) {
-  return mpfr_cache (x, __gmpfr_cache_const_log2, rnd_mode);
+static int mpfr_aux_log2 _PROTO ((mpfr_ptr, mpz_srcptr, int, int));
+static int mpfr_const_aux_log2 _PROTO ((mpfr_ptr, mp_rnd_t));
+
+#define A
+#define A1 1
+#define A2 1
+#undef B
+#define C
+#define C1 2
+#define C2 1
+#define NO_FACTORIAL
+#undef R_IS_RATIONAL
+#define GENERIC mpfr_aux_log2
+#include "generic.c" 
+#undef A
+#undef A1
+#undef A2
+#undef NO_FACTORIAL
+#undef GENERIC
+#undef C
+#undef C1
+#undef C2
+
+static int
+mpfr_const_aux_log2 (mpfr_ptr mylog, mp_rnd_t rnd_mode)
+{
+  mp_prec_t prec;
+  mpfr_t tmp1, tmp2, result,tmp3; 
+  mpz_t cst;
+  int good = 0;
+  int logn;
+  mp_prec_t prec_i_want = MPFR_PREC(mylog);
+  mp_prec_t prec_x;
+
+  mpz_init(cst);
+  logn =  _mpfr_ceil_log2 ((double) MPFR_PREC(mylog));
+  prec_x = prec_i_want + logn;
+  while (!good){
+    prec = _mpfr_ceil_log2 ((double) prec_x);
+    mpfr_init2(tmp1, prec_x);
+    mpfr_init2(result, prec_x);
+    mpfr_init2(tmp2, prec_x);
+    mpfr_init2(tmp3, prec_x);
+    mpz_set_ui(cst, 1);
+    mpfr_aux_log2(tmp1, cst, 4, prec-2);
+    mpfr_div_2ui(tmp1, tmp1, 4, GMP_RNDD);
+    mpfr_mul_ui(tmp1, tmp1, 15, GMP_RNDD);
+
+    mpz_set_ui(cst, 3);
+    mpfr_aux_log2(tmp2, cst, 7, prec-2);
+    mpfr_div_2ui(tmp2, tmp2, 7, GMP_RNDD);
+    mpfr_mul_ui(tmp2, tmp2, 5*3, GMP_RNDD);
+    mpfr_sub(result, tmp1, tmp2, GMP_RNDD);
+
+    mpz_set_ui(cst, 13);
+    mpfr_aux_log2(tmp3, cst, 8, prec-2);
+    mpfr_div_2ui(tmp3, tmp3, 8, GMP_RNDD);
+    mpfr_mul_ui(tmp3, tmp3, 3*13, GMP_RNDD);
+    mpfr_sub(result, result, tmp3, GMP_RNDD);
+
+    mpfr_clear(tmp1);
+    mpfr_clear(tmp2);
+    mpfr_clear(tmp3);
+    if (mpfr_can_round(result, prec_x, GMP_RNDD, rnd_mode, prec_i_want)){
+      mpfr_set(mylog, result, rnd_mode);
+      good = 1;
+    } else
+      {
+	prec_x += logn;
+      }
+    mpfr_clear(result);
+  }
+  mpz_clear(cst);
+  return 0;
 }
 
-/* Auxiliary function: Compute the terms from n1 to n2 (excluded)
-   3/4*sum((-1)^n*n!^2/2^n/(2*n+1)!, n = n1..n2-1).
-   Numerator is T[0], denominator is Q[0],
-   Compute P[0] only when need_P is non-zero.
-   Need 1+ceil(log(n2-n1)/log(2)) cells in T[],P[],Q[].
+/* Cross-over point from nai"ve Taylor series to binary splitting,
+   obtained experimentally on a Pentium II. Optimal value for
+   target machine should be determined by tuneup. */
+#define LOG2_THRESHOLD 25000
+
+/* set x to log(2) rounded to precision MPFR_PREC(x) with direction rnd_mode 
+
+   use formula log(2) = sum(1/k/2^k, k=1..infinity)
+
+   whence 2^N*log(2) = S(N) + R(N)
+
+   where S(N) = sum(2^(N-k)/k, k=1..N-1)
+   and   R(N) = sum(1/k/2^(k-N), k=N..infinity) < 2/N
+
+   Let S'(N) = sum(floor(2^(N-k)/k), k=1..N-1)
+
+   Then 2^N*log(2)-S'(N) <= N-1+2/N <= N for N>=2.
 */
-static void
-S (mpz_t *T, mpz_t *P, mpz_t *Q, unsigned long n1, unsigned long n2, int need_P)
+void 
+mpfr_const_log2 (mpfr_ptr x, mp_rnd_t rnd_mode)
 {
-  if (n2 == n1 + 1)
+  mp_prec_t N, k, precx;
+  mpz_t s, t, u;
+
+  precx = MPFR_PREC(x);
+  MPFR_CLEAR_FLAGS(x); 
+
+  /* has stored value enough precision ? */
+  if (precx <= __mpfr_const_log2_prec)
     {
-      if (n1 == 0)
-        mpz_set_ui (P[0], 3);
-      else
+      if ((rnd_mode == __mpfr_const_log2_rnd) ||
+          mpfr_can_round (__mpfr_const_log2, __mpfr_const_log2_prec - 1,
+                          __mpfr_const_log2_rnd, rnd_mode, precx))
         {
-          mpz_set_ui (P[0], n1);
-          mpz_neg (P[0], P[0]);
+          mpfr_set (x, __mpfr_const_log2, rnd_mode);
+          return;
         }
-      if (n1 <= (ULONG_MAX / 4 - 1) / 2)
-        mpz_set_ui (Q[0], 4 * (2 * n1 + 1));
-      else /* to avoid overflow in 4 * (2 * n1 + 1) */
-        {
-          mpz_set_ui (Q[0], n1);
-          mpz_mul_2exp (Q[0], Q[0], 1);
-          mpz_add_ui (Q[0], Q[0], 1);
-          mpz_mul_2exp (Q[0], Q[0], 2);
-        }
-      mpz_set (T[0], P[0]);
     }
+  
+  /* need to recompute */
+  if (precx < LOG2_THRESHOLD) /* use nai"ve Taylor series evaluation */
+    {
+      /* the following was checked by exhaustive search to give a correct
+         result for all 4 rounding modes up to precx = 13500 */
+      N = precx + 2 * _mpfr_ceil_log2 ((double) precx) + 1;
+
+      mpz_init (s); /* set to zero */
+      mpz_init (u);
+      mpz_init_set_ui (t, 1);
+
+      /* use log(2) = sum((6*k-1)/(2*k^2-k)/2^(2*k+1), k=1..infinity) */
+      mpz_mul_2exp (t, t, N-1);
+      for (k=1; k<=N/2; k++)
+        {
+          mpz_div_2exp (t, t, 2);
+          mpz_mul_ui (u, t, 6*k-1);
+          mpz_fdiv_q_ui (u, u, k*(2*k-1));
+          mpz_add (s, s, u);
+        }
+
+      mpfr_set_z (x, s, rnd_mode);
+      MPFR_EXP(x) -= N;
+      mpz_clear (s);
+      mpz_clear (t);
+      mpz_clear (u);
+    }
+  else /* use binary splitting method */
+    mpfr_const_aux_log2(x, rnd_mode);
+
+  /* store computed value */
+  if (__mpfr_const_log2_prec == 0)
+    mpfr_init2 (__mpfr_const_log2, precx);
   else
-    {
-      unsigned long m = (n1 / 2) + (n2 / 2) + (n1 & 1UL & n2);
-      unsigned long v, w;
+    mpfr_set_prec (__mpfr_const_log2, precx);
 
-      S (T, P, Q, n1, m, 1);
-      S (T + 1, P + 1, Q + 1, m, n2, need_P);
-      mpz_mul (T[0], T[0], Q[1]);
-      mpz_mul (T[1], T[1], P[0]);
-      mpz_add (T[0], T[0], T[1]);
-      if (need_P)
-        mpz_mul (P[0], P[0], P[1]);
-      mpz_mul (Q[0], Q[0], Q[1]);
-
-      /* remove common trailing zeroes if any */
-      v = mpz_scan1 (T[0], 0);
-      if (v > 0)
-        {
-          w = mpz_scan1 (Q[0], 0);
-          if (w < v)
-            v = w;
-          if (need_P)
-            {
-              w = mpz_scan1 (P[0], 0);
-              if (w < v)
-                v = w;
-            }
-          /* now v = min(val(T), val(Q), val(P)) */
-          if (v > 0)
-            {
-              mpz_div_2exp (T[0], T[0], v);
-              mpz_div_2exp (Q[0], Q[0], v);
-              if (need_P)
-                mpz_div_2exp (P[0], P[0], v);
-            }
-        }
-    }
-}
-
-/* Don't need to save / restore exponent range: the cache does it */
-int
-mpfr_const_log2_internal (mpfr_ptr x, mp_rnd_t rnd_mode)
-{
-  unsigned long n = MPFR_PREC (x);
-  mp_prec_t w; /* working precision */
-  unsigned long N;
-  mpz_t *T, *P, *Q;
-  mpfr_t t, q;
-  int inexact;
-  int ok = 1; /* ensures that the 1st try will give correct rounding */
-  unsigned long lgN, i;
-  MPFR_ZIV_DECL (loop);
-
-  MPFR_LOG_FUNC (("rnd_mode=%d", rnd_mode), ("x[%#R]=%R inex=%d",x,x,inexact));
-
-  mpfr_init2 (t, MPFR_PREC_MIN);
-  mpfr_init2 (q, MPFR_PREC_MIN);
-
-  if (n < 1253)
-    w = n + 10; /* ensures correct rounding for the four rounding modes,
-                   together with N = w / 3 + 1 (see below). */
-  else if (n < 2571)
-    w = n + 11; /* idem */
-  else if (n < 3983)
-    w = n + 12;
-  else if (n < 4854)
-    w = n + 13;
-  else if (n < 26248)
-    w = n + 14;
-  else
-    {
-      w = n + 15;
-      ok = 0;
-    }
-
-  MPFR_ZIV_INIT (loop, w);
-  for (;;)
-    {
-      N = w / 3 + 1; /* Warning: do not change that (even increasing N!)
-                        without checking correct rounding in the above
-                        ranges for n. */
-
-      /* the following are needed for error analysis (see algorithms.tex) */
-      MPFR_ASSERTD(w >= 3 && N >= 2);
-
-      lgN = MPFR_INT_CEIL_LOG2 (N) + 1;
-      T  = (*__gmp_allocate_func) (3 * lgN * sizeof (mpz_t));
-      P  = T + lgN;
-      Q  = T + 2*lgN;
-      for (i = 0; i < lgN; i++)
-        {
-          mpz_init (T[i]);
-          mpz_init (P[i]);
-          mpz_init (Q[i]);
-        }
-
-      S (T, P, Q, 0, N, 0);
-
-      mpfr_set_prec (t, w);
-      mpfr_set_prec (q, w);
-
-      mpfr_set_z (t, T[0], GMP_RNDN);
-      mpfr_set_z (q, Q[0], GMP_RNDN);
-      mpfr_div (t, t, q, GMP_RNDN);
-
-      for (i = 0; i < lgN; i++)
-        {
-          mpz_clear (T[i]);
-          mpz_clear (P[i]);
-          mpz_clear (Q[i]);
-        }
-      (*__gmp_free_func) (T, 3 * lgN * sizeof (mpz_t));
-
-      if (MPFR_LIKELY (ok != 0
-                       || mpfr_can_round (t, w - 2, GMP_RNDN, rnd_mode, n)))
-        break;
-
-      MPFR_ZIV_NEXT (loop, w);
-    }
-  MPFR_ZIV_FREE (loop);
-
-  inexact = mpfr_set (x, t, rnd_mode);
-
-  mpfr_clear (t);
-  mpfr_clear (q);
-
-  return inexact;
+  mpfr_set (__mpfr_const_log2, x, rnd_mode);
+  __mpfr_const_log2_prec = precx;
+  __mpfr_const_log2_rnd = rnd_mode;
 }

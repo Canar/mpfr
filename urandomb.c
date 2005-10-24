@@ -3,7 +3,7 @@
    using STATE as the random state previously initialized by a call to
    gmp_randinit().
 
-Copyright 2000, 2001, 2002, 2003, 2004  Free Software Foundation, Inc.
+Copyright 2000, 2001 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -19,62 +19,54 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-
-#define MPFR_NEED_LONGLONG_H
+#include <stdio.h>
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "longlong.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
-int
+void
 mpfr_urandomb (mpfr_ptr rop, gmp_randstate_t rstate)
 {
   mp_ptr rp;
-  mp_prec_t nbits;
   mp_size_t nlimbs;
-  mp_size_t k; /* number of high zero limbs */
   mp_exp_t exp;
-  int cnt;
+  unsigned long cnt, nbits;
 
   MPFR_CLEAR_FLAGS(rop);
 
   rp = MPFR_MANT(rop);
   nbits = MPFR_PREC(rop);
-  nlimbs = MPFR_LIMB_SIZE(rop);
-  MPFR_SET_POS (rop);
+  nlimbs = (nbits + BITS_PER_MP_LIMB - 1) / BITS_PER_MP_LIMB;
 
-  _gmp_rand (rp, rstate, nlimbs * BITS_PER_MP_LIMB);
+  _gmp_rand (rp, rstate, nbits);
 
-  /* If nbits isn't a multiple of BITS_PER_MP_LIMB, mask the low bits */
-  cnt = nlimbs * BITS_PER_MP_LIMB - nbits;
-  if (MPFR_LIKELY(cnt != 0))
-    rp[0] &= ~MPFR_LIMB_MASK (cnt);
+  /* If nbits isn't a multiple of BITS_PER_MP_LIMB, shift up.  */
+  if (nlimbs != 0)
+    {
+      if (nbits % BITS_PER_MP_LIMB != 0)
+	mpn_lshift (rp, rp, nlimbs,
+		    BITS_PER_MP_LIMB - nbits % BITS_PER_MP_LIMB);
+    }
 
   exp = 0;
-  k = 0;
   while (nlimbs != 0 && rp[nlimbs - 1] == 0)
     {
-      k ++;
-      nlimbs --;
-      exp -= BITS_PER_MP_LIMB;
+      nlimbs--;
+      exp--;
     }
 
-  if (MPFR_LIKELY(nlimbs != 0)) /* otherwise value is zero */
-    {
-      count_leading_zeros (cnt, rp[nlimbs - 1]);
-      if (mpfr_set_exp (rop, exp - cnt))
-        {
-          MPFR_SET_NAN (rop);
-          __gmpfr_flags |= MPFR_FLAGS_NAN; /* Can't use MPFR_RET_NAN */
-          return 1;
-        }
-      if (cnt != 0)
-        mpn_lshift (rp + k, rp, nlimbs, cnt);
-      if (k)
-        MPN_ZERO (rp, k);
-    }
-  else
-    MPFR_SET_ZERO(rop);
+  count_leading_zeros (cnt, rp[nlimbs - 1]); 
+  if (cnt) mpn_lshift (rp, rp, nlimbs, cnt); 
+  exp -= cnt; 
 
-  return 0;
+  cnt = nlimbs*BITS_PER_MP_LIMB - nbits; 
+  /* cnt is the number of non significant bits in the low limb */
+  rp[0] &= ~((MP_LIMB_T_ONE << cnt) - 1);
+
+  MPFR_EXP (rop) = exp;
 }

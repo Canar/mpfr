@@ -1,6 +1,6 @@
 /* mpfr_mul_2ui -- multiply a floating-point number by a power of two
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2001 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,9 +16,12 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
 int
@@ -26,13 +29,13 @@ mpfr_mul_2ui (mpfr_ptr y, mpfr_srcptr x, unsigned long int n, mp_rnd_t rnd_mode)
 {
   int inexact;
 
-  inexact = MPFR_UNLIKELY(y != x) ? mpfr_set (y, x, rnd_mode) : 0;
+  inexact = y != x ? mpfr_set (y, x, rnd_mode) : 0;
 
-  if (MPFR_LIKELY( MPFR_IS_PURE_FP(y)) )
+  if (MPFR_IS_FP(y) && MPFR_NOTZERO(y))
     {
       /* n will have to be casted to long to make sure that the addition
          and subtraction below (for overflow detection) are signed */
-      while (MPFR_UNLIKELY(n > LONG_MAX))
+      while (n > LONG_MAX)
         {
           int inex2;
 
@@ -45,14 +48,11 @@ mpfr_mul_2ui (mpfr_ptr y, mpfr_srcptr x, unsigned long int n, mp_rnd_t rnd_mode)
       /* MPFR_EMIN_MIN + (long) n is signed and doesn't lead to an overflow;
          the first test useful so that the real test can't lead to an
          overflow. */
-      {
-        mp_exp_t exp = MPFR_GET_EXP (y);
-        if (MPFR_UNLIKELY( __gmpfr_emax < MPFR_EMIN_MIN + (long) n ||
-                           exp > __gmpfr_emax - (long) n))
-          return mpfr_overflow (y, rnd_mode, MPFR_SIGN(y));
+      if (__mpfr_emax < MPFR_EMIN_MIN + (long) n ||
+          MPFR_EXP(y) > __mpfr_emax - (long) n)
+        return mpfr_set_overflow (y, rnd_mode, MPFR_SIGN(y));
 
-        MPFR_SET_EXP (y, exp + (long) n);
-      }
+      MPFR_EXP(y) += (long) n;
     }
 
   return inexact;

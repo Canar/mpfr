@@ -1,6 +1,6 @@
 /* mpfr_asin -- arc-sinus of a floating-point number
 
-Copyright 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 2001 Free Software Foundation.
 
 This file is part of the MPFR Library, and was contributed by Mathieu Dutour.
 
@@ -16,103 +16,167 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
 int
 mpfr_asin (mpfr_ptr asin, mpfr_srcptr x, mp_rnd_t rnd_mode)
 {
   mpfr_t xp;
-  int compared, inexact;
-  mp_prec_t prec;
-  mp_exp_t xp_exp;
-  MPFR_SAVE_EXPO_DECL (expo);
-  MPFR_ZIV_DECL (loop);
+  mpfr_t arcs;
 
-  MPFR_LOG_FUNC (("x[%#R]=%R rnd=%d", x, x, rnd_mode),
-                 ("asin[%#R]=%R inexact=%d", asin, asin, inexact));
+  int signe, suplement;
 
-  /* Special cases */
-  if (MPFR_UNLIKELY (MPFR_IS_SINGULAR (x)))
+  mpfr_t tmp;
+  int Prec;
+  int prec_asin;
+  int good = 0;
+  int realprec;
+  int estimated_delta;
+  int compared; 
+
+  /* Trivial cases */
+  if (MPFR_IS_NAN(x) || MPFR_IS_INF(x))
     {
-      if (MPFR_IS_NAN (x) || MPFR_IS_INF (x))
-        {
-          MPFR_SET_NAN (asin);
-          MPFR_RET_NAN;
-        }
-      else /* x = 0 */
-        {
-          MPFR_ASSERTD (MPFR_IS_ZERO (x));
-          MPFR_SET_ZERO (asin);
-          MPFR_RET (0); /* exact result */
-        }
+      MPFR_SET_NAN(asin);
+      MPFR_RET_NAN;
     }
 
-  /* asin(x) = x + x^3/6 + ... so the error is < 2^(3*EXP(x)-2) */
-  MPFR_FAST_COMPUTE_IF_SMALL_INPUT (asin,x, -2*MPFR_GET_EXP (x)+2,1,rnd_mode,);
-
-  /* Set x_p=|x| (x is a normal number) */
-  mpfr_init2 (xp, MPFR_PREC (x));
-  inexact = mpfr_abs (xp, x, GMP_RNDN);
-  MPFR_ASSERTD (inexact == 0);
+  /* Set x_p=|x| */
+  signe = MPFR_SIGN(x);
+  mpfr_init2 (xp, MPFR_PREC(x));
+  mpfr_set (xp, x, rnd_mode);
+  if (signe == -1)
+    MPFR_CHANGE_SIGN(xp);
 
   compared = mpfr_cmp_ui (xp, 1);
 
-  if (MPFR_UNLIKELY (compared >= 0))
+  if (compared > 0) /* asin(x) = NaN for |x| > 1 */
     {
+      MPFR_SET_NAN(asin);
       mpfr_clear (xp);
-      if (compared > 0)                  /* asin(x) = NaN for |x| > 1 */
-        {
-          MPFR_SET_NAN (asin);
-          MPFR_RET_NAN;
-        }
-      else                              /* x = 1 or x = -1 */
-        {
-          if (MPFR_IS_POS (x)) /* asin(+1) = Pi/2 */
-            inexact = mpfr_const_pi (asin, rnd_mode);
-          else /* asin(-1) = -Pi/2 */
-            {
-              inexact = -mpfr_const_pi (asin, MPFR_INVERT_RND(rnd_mode));
-              MPFR_CHANGE_SIGN (asin);
-            }
-          mpfr_div_2ui (asin, asin, 1, rnd_mode); /* May underflow */
-          return inexact;
-        }
+      MPFR_RET_NAN;
     }
 
-  MPFR_SAVE_EXPO_MARK (expo);
-
-  /* Compute exponent of 1 - ABS(x) */
-  mpfr_ui_sub (xp, 1, xp, GMP_RNDD);
-  MPFR_ASSERTD (MPFR_GET_EXP (xp) <= 0);
-  MPFR_ASSERTD (MPFR_GET_EXP (x) <= 0);
-  xp_exp = 2 - MPFR_GET_EXP (xp);
-
-  /* Set up initial prec */
-  prec = MPFR_PREC (asin) + 10 + xp_exp;
-
-  /* use asin(x) = atan(x/sqrt(1-x^2)) */
-  MPFR_ZIV_INIT (loop, prec);
-  for (;;)
+  if (compared == 0) /* x = 1 or x = -1 */
     {
-      mpfr_set_prec (xp, prec);
-      mpfr_sqr (xp, x, GMP_RNDN);
-      mpfr_ui_sub (xp, 1, xp, GMP_RNDN);
-      mpfr_sqrt (xp, xp, GMP_RNDN);
-      mpfr_div (xp, x, xp, GMP_RNDN);
-      mpfr_atan (xp, xp, GMP_RNDN);
-      if (MPFR_LIKELY (MPFR_CAN_ROUND (xp, prec - xp_exp,
-                                       MPFR_PREC (asin), rnd_mode)))
-        break;
-      MPFR_ZIV_NEXT (loop, prec);
+      if (signe > 0) /* asin(+1) = Pi/2 */
+        mpfr_const_pi (asin, rnd_mode);
+      else /* asin(-1) = -Pi/2 */
+        {
+          if (rnd_mode == GMP_RNDU)
+            rnd_mode = GMP_RNDD;
+          else if (rnd_mode == GMP_RNDD)
+            rnd_mode = GMP_RNDU;
+          mpfr_const_pi (asin, rnd_mode);
+          mpfr_neg (asin, asin, rnd_mode);
+        }
+      MPFR_EXP(asin)--;
+      mpfr_clear (xp);
+      return 1; /* inexact */
     }
-  MPFR_ZIV_FREE (loop);
-  inexact = mpfr_set (asin, xp, rnd_mode);
+
+  if (MPFR_IS_ZERO(x)) /* x = 0 */
+    {
+      mpfr_set_ui (asin, 0, GMP_RNDN);
+      mpfr_clear(xp);
+      return 0; /* exact result */
+    }
+
+  prec_asin = MPFR_PREC(asin);
+  mpfr_ui_sub (xp, 1, xp, GMP_RNDD);
+  
+  suplement = 2 - MPFR_EXP(xp);
+#ifdef DEBUG
+  printf("suplement=%d\n", suplement);
+#endif
+  realprec = prec_asin + 10;
+
+  while (!good)
+    {
+      estimated_delta = 1 + suplement;
+      Prec = realprec+estimated_delta;
+
+      /* Initialisation    */
+      mpfr_init2 (tmp, Prec);
+      mpfr_init2 (arcs, Prec);
+
+#ifdef DEBUG
+      printf("Prec=%d\n", Prec);
+      printf("              x=");
+      mpfr_out_str (stdout, 2, 0, x, GMP_RNDN);
+      printf ("\n");
+#endif
+      mpfr_mul (tmp, x, x, GMP_RNDN);
+#ifdef DEBUG
+      printf("            x^2=");
+      mpfr_out_str (stdout, 2, 0, tmp, GMP_RNDN);
+      printf ("\n");
+#endif
+      mpfr_ui_sub (tmp, 1, tmp, GMP_RNDN);
+#ifdef DEBUG
+      printf("          1-x^2=");
+      mpfr_out_str (stdout, 2, 0, tmp, GMP_RNDN);
+      printf ("\n");
+      printf("10:          1-x^2=");
+      mpfr_out_str (stdout, 10, 0, tmp, GMP_RNDN);
+      printf ("\n");
+#endif
+      mpfr_sqrt (tmp, tmp, GMP_RNDN);
+#ifdef DEBUG
+      printf("  sqrt(1-x^2)=");
+      mpfr_out_str (stdout, 2, 0, tmp, GMP_RNDN);
+      printf ("\n");
+      printf("10:  sqrt(1-x^2)=");
+      mpfr_out_str (stdout, 10, 0, tmp, GMP_RNDN);
+      printf ("\n");
+#endif
+      mpfr_div (tmp, x, tmp, GMP_RNDN);
+#ifdef DEBUG
+      printf("x/sqrt(1-x^2)=");
+      mpfr_out_str (stdout, 2, 0, tmp, GMP_RNDN);
+      printf ("\n");
+#endif
+      mpfr_atan (arcs, tmp, GMP_RNDN);
+#ifdef DEBUG
+      printf("atan(x/..x^2)=");
+      mpfr_out_str (stdout, 2, 0, arcs, GMP_RNDN);
+      printf ("\n");
+#endif
+      if (mpfr_can_round (arcs, realprec, GMP_RNDN, rnd_mode, MPFR_PREC(asin)))
+	{
+	  mpfr_set (asin, arcs, rnd_mode);
+#ifdef DEBUG
+	  printf("asin         =");
+	  mpfr_out_str (stdout, 2, prec_asin, asin, GMP_RNDN);
+	  printf ("\n");
+#endif
+	  good = 1;
+	}
+      else
+	{
+	  realprec += _mpfr_ceil_log2 ((double) realprec);
+#ifdef DEBUG
+	  printf("RETRY\n");
+#endif
+	}
+      mpfr_clear (tmp);
+      mpfr_clear (arcs);
+  }
 
   mpfr_clear (xp);
 
-  MPFR_SAVE_EXPO_FREE (expo);
-  return mpfr_check_range (asin, inexact, rnd_mode);
+  return 1; /* inexact result */
 }
+
+
+
+
+

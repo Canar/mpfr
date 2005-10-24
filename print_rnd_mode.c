@@ -1,6 +1,6 @@
 /* mpfr_print_rnd_mode -- convert a given rounding mode to a string
 
-Copyright 1999, 2001, 2002, 2003, 2004 Free Software Foundation.
+Copyright 1999, 2001, 2002 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -16,12 +16,13 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-#include "mpfr-impl.h"
+#include "gmp.h"
+#include "mpfr.h"
 
-const char *
+char *
 mpfr_print_rnd_mode (mp_rnd_t rnd_mode)
 {
   switch (rnd_mode)
@@ -34,7 +35,7 @@ mpfr_print_rnd_mode (mp_rnd_t rnd_mode)
       return "GMP_RNDN";
     case GMP_RNDZ:
       return "GMP_RNDZ";
-    default:
-      return (const char*) 0;
     }
+
+  return (char *) 0;
 }

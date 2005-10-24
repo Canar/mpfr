@@ -1,6 +1,6 @@
 /* mpfr_set_prec -- reset the precision of a floating-point number
 
-Copyright 1999, 2001, 2002, 2004 Free Software Foundation, Inc.
+Copyright 1999, 2001 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,37 +16,38 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
+#include <stdio.h>
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
-void
-mpfr_set_prec (mpfr_ptr x, mpfr_prec_t p)
+int
+mpfr_set_prec (mpfr_ptr x, mp_prec_t p)
 {
-  mp_size_t xsize, xoldsize;
-  mp_ptr tmp;
+  mp_size_t xsize;
 
-  /* first, check if p is correct */
-  MPFR_ASSERTN (p >= MPFR_PREC_MIN && p <= MPFR_PREC_MAX);
+  MPFR_ASSERTN(p >= MPFR_PREC_MIN && p <= MPFR_PREC_MAX);
 
-  /* Calculate the new number of limbs */
-  xsize = (p - 1) / BITS_PER_MP_LIMB + 1;
+  xsize = (p - 1) / BITS_PER_MP_LIMB + 1; /* new limb size */
 
-  /* Realloc only if the new size is greater than the old */
-  xoldsize = MPFR_GET_ALLOC_SIZE (x);
-  if (xsize > xoldsize)
+  if (xsize > MPFR_ABSSIZE(x))
     {
-      tmp = (mp_ptr) (*__gmp_reallocate_func)
-        (MPFR_GET_REAL_PTR(x), MPFR_MALLOC_SIZE(xoldsize), MPFR_MALLOC_SIZE(xsize));
-      MPFR_SET_MANT_PTR(x, tmp);
-      MPFR_SET_ALLOC_SIZE(x, xsize);
+      MPFR_MANT(x) = (mp_ptr) (*__gmp_reallocate_func)
+        (MPFR_MANT(x), (size_t) MPFR_ABSSIZE(x) * BYTES_PER_MP_LIMB,
+         (size_t) xsize * BYTES_PER_MP_LIMB);
+      MPFR_SIZE(x) = xsize; /* new number of allocated limbs */
     }
-  MPFR_PREC (x) = p;
-  MPFR_SET_NAN (x); /* initializes to NaN */
+
+  MPFR_PREC(x) = p;
+  MPFR_SET_NAN(x); /* initializes to NaN */
+
+  return MPFR_MANT(x) == NULL;
 }
 
-#undef mpfr_get_prec
 mp_prec_t
 mpfr_get_prec (mpfr_srcptr x)
 {

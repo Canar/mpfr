@@ -1,6 +1,6 @@
 /* auxiliary functions for MPFR tests.
 
-Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2000, 2001, 2002 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,31 +16,57 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-#ifndef __MPFR_TEST_H__
-#define __MPFR_TEST_H__
+#include <math.h>
+#ifdef __mips
+#include <sys/fpu.h>
+#endif
 
-#include <stdio.h>
-
-#include "mpfr-impl.h"
+/* set precision control to double on x86 */
+#if (defined (__i386__) || defined (__i486__))
+#ifdef __CYGWIN32__ /* no fpu_control.h under Cygnus */
+#define _FPU_EXTENDED 0x300
+#define _FPU_DOUBLE   0x200
+#define _FPU_DEFAULT  0x137f
+#define HAVE_SETFPUCW
+#else
+#ifdef HAVE_FPU_CONTROL_H
+#include <fpu_control.h>
+#define HAVE_SETFPUCW
+#endif
+#endif /* ifdef __CYGWIN32__ */
+#ifndef __setfpucw
+#define __setfpucw(cw) __asm__ ("fldcw %0" : : "m" (cw))
+#endif /* ifndef __setfpucw */
+#endif /* __i386__ */
 
 /* generates a random long int, a random double,
    and corresponding seed initializing */
-#define DBL_RAND() ((double) randlimb() / (double) MP_LIMB_T_MAX)
+#ifdef HAVE_LRAND48
+#define LONG_RAND lrand48
+#define DBL_RAND  drand48
+#define SEED_RAND srand48
+#else
+#define LONG_RAND random
+#define DBL_RAND() ((double) random() / (double) RAND_MAX)
+#define SEED_RAND srandom
+#endif
+
+#if defined (__hpux)
+#define srandom srand48
+#define random() (mrand48() & 0x7fffffff)
+#endif
+
+void mpfr_test_init _PROTO ((void));
+double drand _PROTO ((void)); 
+int ulp _PROTO ((double, double)); 
+double dbl _PROTO ((double, int)); 
+double Ulp _PROTO ((double));
 
 #define MINNORM 2.2250738585072013831e-308 /* 2^(-1022), smallest normalized */
 #define MAXNORM 1.7976931348623157081e308 /* 2^(1023)*(2-2^(-52)) */
-
-/* Generates a random rounding mode */
-#define RND_RAND() (randlimb() % GMP_RND_MAX)
-
-/* Generates a random sign */
-#define SIGN_RAND() ( (randlimb()%2) ? MPFR_SIGN_POS : MPFR_SIGN_NEG)
-
-/* Loop for all rounding modes */
-#define RND_LOOP(_r) for((_r) = 0 ; (_r) < GMP_RND_MAX ; (_r)++)
 
 /* The MAX, MIN and ABS macros may already be defined if gmp-impl.h has
    been included. They have the same semantics as in gmp-impl.h, but the
@@ -53,105 +79,84 @@ MA 02110-1301, USA. */
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define ABS(x) (((x)>0) ? (x) : -(x))
 
-#if defined (__cplusplus)
-extern "C" {
-#endif
-
-void tests_memory_start _MPFR_PROTO ((void));
-void tests_memory_end _MPFR_PROTO ((void));
-
-void tests_start_mpfr _MPFR_PROTO ((void));
-void tests_end_mpfr _MPFR_PROTO ((void));
-
-int mpfr_set_machine_rnd_mode _MPFR_PROTO ((mp_rnd_t));
-void mpfr_test_init _MPFR_PROTO ((void));
-mp_limb_t randlimb _MPFR_PROTO ((void));
-void randseed _MPFR_PROTO ((unsigned int));
-int ulp _MPFR_PROTO ((double, double));
-double dbl _MPFR_PROTO ((double, int));
-double Ulp _MPFR_PROTO ((double));
-int Isnan _MPFR_PROTO ((double));
-void d_trace _MPFR_PROTO ((const char *, double));
-void ld_trace _MPFR_PROTO ((const char *, long double));
-
-FILE *src_fopen _MPFR_PROTO ((const char *, const char *));
-void set_emin _MPFR_PROTO ((mp_exp_t));
-void set_emax _MPFR_PROTO ((mp_exp_t));
-
-int mpfr_cmp_str _MPFR_PROTO ((mpfr_srcptr x, const char *, int, mp_rnd_t));
-#define mpfr_cmp_str1(x,s) mpfr_cmp_str(x,s,10,GMP_RNDN)
-#define mpfr_set_str1(x,s) mpfr_set_str(x,s,10,GMP_RNDN)
-
-#define mpfr_cmp0(x,y) (MPFR_ASSERTN (!MPFR_IS_NAN (x) && !MPFR_IS_NAN (y)), mpfr_cmp (x,y))
-
-#ifndef MPFR_TEST_USE_RANDS
-# define MPFR_TEST_USE_RANDS() ((void)0)
-#endif
-
-#if defined (__cplusplus)
-}
-#endif
-
-/* define CHECK_EXTERNAL if you want to check mpfr against another library
-   with correct rounding. You'll probably have to modify mpfr_print_raw()
-   and/or test_add() below:
-   * mpfr_print_raw() prints each number as "p m e" where p is the precision,
-     m the mantissa (as a binary integer with sign), and e the exponent.
-     The corresponding number is m*2^e. Example: "2 10 -6" represents
-     2*2^(-6) with a precision of 2 bits.
-   * test_add() outputs "b c a" on one line, for each addition a <- b + c.
-     Currently it only prints such a line for rounding to nearest, when
-     the inputs b and c are not NaN and/or Inf.
-*/
-#ifdef CHECK_EXTERNAL
-static void
-mpfr_print_raw (mpfr_srcptr x)
+/* initialization function for tests using the hardware floats */
+void
+mpfr_test_init ()
 {
-  printf ("%lu ", MPFR_PREC (x));
-  if (MPFR_IS_NAN (x))
-    {
-      printf ("@NaN@");
-      return;
-    }
+#ifdef __mips
+  /* to get denormalized numbers on IRIX64 */
+  union fpc_csr exp;
 
-  if (MPFR_SIGN (x) < 0)
-    printf ("-");
+  exp.fc_word = get_fpc_csr();
+  exp.fc_struct.flush = 0;
+  set_fpc_csr(exp.fc_word);
+#endif
 
-  if (MPFR_IS_INF (x))
-    printf ("@Inf@");
-  else if (MPFR_IS_ZERO (x))
-    printf ("0 0");
-  else
-    {
-      mp_limb_t *mx;
-      mp_prec_t px;
-      mp_size_t n;
-
-      mx = MPFR_MANT (x);
-      px = MPFR_PREC (x);
-
-      for (n = (px - 1) / BITS_PER_MP_LIMB; ; n--)
-        {
-          mp_limb_t wd, t;
-
-          MPFR_ASSERTN (n >= 0);
-          wd = mx[n];
-          for (t = MPFR_LIMB_HIGHBIT; t != 0; t >>= 1)
-            {
-              printf ((wd & t) == 0 ? "0" : "1");
-              if (--px == 0)
-                {
-                  mp_exp_t ex;
-
-                  ex = MPFR_GET_EXP (x);
-                  MPFR_ASSERTN (ex >= LONG_MIN && ex <= LONG_MAX);
-                  printf (" %ld", (long) ex - (long) MPFR_PREC (x));
-                  return;
-                }
-            }
-        }
-    }
+#ifdef HAVE_SETFPUCW
+  /* sets the precision to double */
+  __setfpucw((_FPU_DEFAULT & (~_FPU_EXTENDED)) | _FPU_DOUBLE);
+#endif
 }
-#endif
 
-#endif
+/* generate a random double using the whole range of possible values,
+   including denormalized numbers, NaN, infinities, ... */
+double
+drand (void)
+{
+  double d; int *i, expo;
+
+  i = (int*) &d;
+  d = 1.0;
+  if (i[0] == 0)
+    expo = 1; /* little endian, exponent in i[1] */
+  else
+    expo = 0;
+  i[0] = LONG_RAND();
+  i[1] = LONG_RAND();
+  while (i[expo] >= 2146435072)
+    i[expo] = LONG_RAND(); /* avoids NaNs */
+  if ((LONG_RAND() % 2) && !isnan (d))
+    d = -d; /* generates negative numbers */
+  return d;
+}
+
+/* returns ulp(x) for x a 'normal' double-precision number */
+double
+Ulp (double x)
+{
+   double y, eps;
+
+   if (x < 0) x = -x;
+
+   y = x * 2.220446049250313080847263336181640625e-16 ; /* x / 2^52 */
+
+   /* as ulp(x) <= y = x/2^52 < 2*ulp(x),
+   we have x + ulp(x) <= x + y <= x + 2*ulp(x),
+   therefore o(x + y) = x + ulp(x) or x + 2*ulp(x) */
+
+   eps =  x + y;
+   eps = eps - x; /* ulp(x) or 2*ulp(x) */
+
+   return (eps > y) ? 0.5 * eps : eps;
+}
+
+/* returns the number of ulp's between a and b */
+int
+ulp (double a, double b)
+{
+  if (a==0.0) {
+    if (b==0.0) return 0;
+    else if (b<0.0) return 2147483647;
+    else return -2147483647;
+  }
+  return (a-b)/Ulp(a);
+}
+
+/* return double m*2^e */
+double
+dbl (double m, int e)
+{
+  if (e>=0) while (e-->0) m *= 2.0;
+  else while (e++<0) m /= 2.0;
+  return m;
+}

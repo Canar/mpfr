@@ -1,6 +1,6 @@
 /* mpfr_sub_ui -- subtract a floating-point number and a machine integer
 
-Copyright 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 2000, 2001, 2002 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,38 +16,36 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-
-#define MPFR_NEED_LONGLONG_H
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "longlong.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
 int
 mpfr_sub_ui (mpfr_ptr y, mpfr_srcptr x, unsigned long int u, mp_rnd_t rnd_mode)
 {
-  if (MPFR_LIKELY (u != 0))  /* if u=0, do nothing */
-    {
-      mpfr_t uu;
-      mp_limb_t up[1];
-      unsigned long cnt;
-      int inex;
+  if (u)  /* if u=0, do nothing */
+  {
+    mpfr_t uu;
+    mp_limb_t up[1];
+    unsigned long cnt;
+    int inex;
 
-      MPFR_SAVE_EXPO_DECL (expo);
+    MPFR_INIT1(up, uu, BITS_PER_MP_LIMB, 1);
+    count_leading_zeros(cnt, (mp_limb_t) u);
+    *up = (mp_limb_t) u << cnt;
+    MPFR_EXP(uu) = BITS_PER_MP_LIMB - cnt;
 
-      MPFR_TMP_INIT1 (up, uu, BITS_PER_MP_LIMB);
-      MPFR_ASSERTN (u == (mp_limb_t) u);
-      count_leading_zeros (cnt, (mp_limb_t) u);
-      *up = (mp_limb_t) u << cnt;
-
-      /* Optimization note: Exponent save/restore operations may be
-         removed if mpfr_sub works even when uu is out-of-range. */
-      MPFR_SAVE_EXPO_MARK (expo);
-      MPFR_SET_EXP (uu, BITS_PER_MP_LIMB - cnt);
-      inex = mpfr_sub (y, x, uu, rnd_mode);
-      MPFR_SAVE_EXPO_FREE (expo);
-      return mpfr_check_range (y, inex, rnd_mode);
-    }
+    /* Optimization note: Exponent operations may be removed
+       if mpfr_sub works even when uu is out-of-range. */
+    mpfr_save_emin_emax();
+    inex = mpfr_sub(y, x, uu, rnd_mode);
+    MPFR_RESTORE_RET(inex, y, rnd_mode);
+  }
   else
     return mpfr_set (y, x, rnd_mode);
 }

@@ -1,6 +1,6 @@
 /* mpfr_swap (U, V) -- Swap U and V.
 
-Copyright 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+Copyright 2000, 2001 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,40 +16,38 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-#include <string.h>
-
+#include "gmp.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
-
-/* Using memcpy is a few slower than swapping by hand. */
 
 void
 mpfr_swap (mpfr_ptr u, mpfr_ptr v)
 {
-  mpfr_prec_t p1, p2;
-  mpfr_sign_t s1, s2;
-  mp_exp_t e1, e2;
-  mp_limb_t *m1, *m2;
+  mp_ptr up, vp;
+  mp_size_t usize, vsize;
+  mp_prec_t uprec, vprec;
+  mp_exp_t  uexp, vexp;
 
-  p1 = MPFR_PREC(u);
-  p2 = MPFR_PREC(v);
-  MPFR_PREC(v) = p1;
-  MPFR_PREC(u) = p2;
+  uprec = MPFR_PREC(u);
+  vprec = MPFR_PREC(v);
+  MPFR_PREC(v) = uprec;
+  MPFR_PREC(u) = vprec;
 
-  s1 = MPFR_SIGN(u);
-  s2 = MPFR_SIGN(v);
-  MPFR_SIGN(v) = s1;
-  MPFR_SIGN(u) = s2;
+  usize = MPFR_SIZE(u);
+  vsize = MPFR_SIZE(v);
+  MPFR_SIZE(v) = usize;
+  MPFR_SIZE(u) = vsize;
 
-  e1 = MPFR_EXP(u);
-  e2 = MPFR_EXP(v);
-  MPFR_EXP(v) = e1;
-  MPFR_EXP(u) = e2;
+  uexp = MPFR_EXP(u);
+  vexp = MPFR_EXP(v);
+  MPFR_EXP(v) = uexp;
+  MPFR_EXP(u) = vexp;
 
-  m1 = MPFR_MANT(u);
-  m2 = MPFR_MANT(v);
-  MPFR_MANT(v) = m1;
-  MPFR_MANT(u) = m2;
+  up = MPFR_MANT(u);
+  vp = MPFR_MANT(v);
+  MPFR_MANT(v) = up;
+  MPFR_MANT(u) = vp;
 }

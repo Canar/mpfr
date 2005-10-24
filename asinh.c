@@ -1,6 +1,6 @@
-/* mpfr_asinh -- inverse hyperbolic sine
+/* mpfr_asinh -- Inverse Hyperbolic Sinus of Unsigned Integer Number
 
-Copyright 2001, 2002, 2003, 2004, 2005 Free Software Foundation.
+Copyright 2001, 2002 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -16,98 +16,115 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-#define MPFR_NEED_LONGLONG_H
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
-/* The computation of asinh is done by  *
- *    asinh = ln(x + sqrt(x^2 + 1))     */
+ /* The computation of asinh is done by
 
+    asinh= ln(x+sqrt(x^2+1))
+ */
 int
-mpfr_asinh (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
+mpfr_asinh (mpfr_ptr y, mpfr_srcptr xt, mp_rnd_t rnd_mode)
 {
   int inexact;
-  int signx, neg;
-  mp_prec_t Ny, Nt;
-  mpfr_t t; /* auxiliary variables */
-  mp_exp_t err;
-  MPFR_SAVE_EXPO_DECL (expo);
-  MPFR_ZIV_DECL (loop);
+  mpfr_t x;
+  int flag_neg=0;
+  mp_prec_t Nx;
 
-  MPFR_LOG_FUNC (("x[%#R]=%R rnd=%d", x, x, rnd_mode),
-                 ("y[%#R]=%R inexact=%d", y, y, inexact));
-
-  if (MPFR_UNLIKELY (MPFR_IS_SINGULAR (x)))
-    {
-      if (MPFR_IS_NAN (x))
-        {
-          MPFR_SET_NAN (y);
-          MPFR_RET_NAN;
-        }
-      else if (MPFR_IS_INF (x))
-        {
-          MPFR_SET_INF (y);
-          MPFR_SET_SAME_SIGN (y, x);
-          MPFR_RET (0);
-        }
-      else /* x is necessarily 0 */
-        {
-          MPFR_ASSERTD (MPFR_IS_ZERO (x));
-          MPFR_SET_ZERO (y);   /* asinh(0) = 0 */
-          MPFR_SET_SAME_SIGN (y, x);
-          MPFR_RET (0);
-        }
+  if (MPFR_IS_NAN(xt)) 
+    {  
+      MPFR_SET_NAN(y); 
+      MPFR_RET_NAN;
     }
 
-  /* asinh(x) = x - x^3/6 + ... so the error is < 2^(3*EXP(x)-2) */
-  MPFR_FAST_COMPUTE_IF_SMALL_INPUT (y, x, -2*MPFR_GET_EXP (x)+2,0,rnd_mode,);
+  MPFR_CLEAR_NAN(y);
 
-  Ny = MPFR_PREC (y);   /* Precision of output variable */
+  if (MPFR_IS_INF(xt))
+    { 
+      MPFR_SET_INF(y);
+      MPFR_SET_SAME_SIGN(y, xt);
+      MPFR_RET(0);
+    }
 
-  signx = MPFR_SIGN (x);
-  neg = MPFR_IS_NEG (x);
+  MPFR_CLEAR_INF(y);
+
+  if (MPFR_IS_ZERO(xt))
+    {
+      MPFR_SET_ZERO(y);   /* asinh(0) = 0 */
+      MPFR_SET_SAME_SIGN(y, xt);
+      MPFR_RET(0);
+    }
+
+  Nx = MPFR_PREC(xt);   /* Precision of input variable */
+  mpfr_init2(x, Nx);
+  mpfr_set(x, xt, GMP_RNDN);
+
+  if (MPFR_SIGN(x) < 0)
+    {
+      MPFR_CHANGE_SIGN(x);
+      flag_neg=1;
+    }
 
   /* General case */
+  {
+    /* Declaration of the intermediary variable */
+    mpfr_t t, te,ti;       
+    
+    /* Declaration of the size variable */
+    mp_prec_t Nx = MPFR_PREC(x);   /* Precision of input variable */
+    mp_prec_t Ny = MPFR_PREC(y);   /* Precision of input variable */
+    
+    mp_prec_t Nt;   /* Precision of the intermediary variable */
+    long int err;  /* Precision of error */
+                
+    /* compute the precision of intermediary variable */
+    Nt=MAX(Nx,Ny);
+    /* the optimal number of bits : see algorithms.ps */
+    Nt=Nt+4+_mpfr_ceil_log2(Nt);
 
-  /* compute the precision of intermediary variable */
-  /* the optimal number of bits : see algorithms.tex */
-  Nt = Ny + 4 + MPFR_INT_CEIL_LOG2 (Ny);
+    /* initialise of intermediary	variable */
+    mpfr_init(t);             
+    mpfr_init(te);             
+    mpfr_init(ti);                    
 
-  MPFR_SAVE_EXPO_MARK (expo);
+    /* First computation of cosh */
+    do {
 
-  /* initialize intermediary variables */
-  mpfr_init2 (t, Nt);
+      /* reactualisation of the precision */
+      mpfr_set_prec(t,Nt);             
+      mpfr_set_prec(te,Nt);             
+      mpfr_set_prec(ti,Nt);             
 
-  /* First computation of asinh */
-  MPFR_ZIV_INIT (loop, Nt);
-  for (;;)
-    {
       /* compute asinh */
-      mpfr_mul (t, x, x, GMP_RNDD);                    /* x^2 */
-      mpfr_add_ui (t, t, 1, GMP_RNDD);                 /* x^2+1 */
-      mpfr_sqrt (t, t, GMP_RNDN);                      /* sqrt(x^2+1) */
-      (neg ? mpfr_sub : mpfr_add) (t, t, x, GMP_RNDN); /* sqrt(x^2+1)+x */
-      mpfr_log (t, t, GMP_RNDN);                       /* ln(sqrt(x^2+1)+x)*/
+      mpfr_mul(te,x,x,GMP_RNDD);  /* (x^2) */
+      mpfr_add_ui(ti,te,1,GMP_RNDD);  /* (x^2+1) */
+      mpfr_sqrt(t,ti,GMP_RNDN);     /* sqrt(x^2+1) */
+      mpfr_add(t,t,x,GMP_RNDN);    /* sqrt(x^2+1)+x */
+      mpfr_log(t,t,GMP_RNDN);        /* ln(sqrt(x^2+1)+x)*/
 
-      /* error estimate -- see algorithms.ps */
-      err = Nt - (MAX (3 - MPFR_GET_EXP (t), 0) + 1);
-
-      if (MPFR_LIKELY (MPFR_IS_ZERO (t)
-                       || MPFR_CAN_ROUND (t, err, Ny, rnd_mode)))
-        break;
+      /* estimation of the error see- algorithms.ps*/
+      /*err=Nt-_mpfr_ceil_log2(1+pow(2,3-MPFR_EXP(t)));*/
+      err=Nt-(MAX(3-MPFR_EXP(t),0)+1);
 
       /* actualisation of the precision */
-      MPFR_ZIV_NEXT (loop, Nt);
-      mpfr_set_prec (t, Nt);
-    }
-  MPFR_ZIV_FREE (loop);
+      Nt += 10;
 
-  inexact = mpfr_set4 (y, t, rnd_mode, signx);
+    } while ((err < 0) || (!mpfr_can_round(t,err,GMP_RNDN,rnd_mode,Ny) || (MPFR_IS_ZERO(t))));
 
-  mpfr_clear (t);
+    if(flag_neg)
+      MPFR_CHANGE_SIGN(t);
 
-  MPFR_SAVE_EXPO_FREE (expo);
-  return mpfr_check_range (y, inexact, rnd_mode);
+    inexact = mpfr_set(y,t,rnd_mode);
+
+    mpfr_clear(t);
+    mpfr_clear(ti);
+    mpfr_clear(te);
+  }
+  mpfr_clear(x);
+  MPFR_RET(inexact);
 }

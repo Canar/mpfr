@@ -17,17 +17,19 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
+#include "gmp.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
 int
 mpfr_neg (mpfr_ptr a, mpfr_srcptr b, mp_rnd_t rnd_mode)
 {
-  if (MPFR_UNLIKELY(a != b))
+  if (a != b)
     return mpfr_set4 (a, b, rnd_mode, -MPFR_SIGN(b));
-  else if (MPFR_UNLIKELY(MPFR_IS_NAN (b)))
+  else if (MPFR_IS_NAN(b))
     {
       MPFR_RET_NAN;
     }

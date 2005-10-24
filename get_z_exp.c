@@ -1,7 +1,7 @@
 /* mpfr_get_z_exp -- get a multiple-precision integer and an exponent
                      from a floating-point number
 
-Copyright 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 2000, 2001, 2002, 2003 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -17,9 +17,13 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "longlong.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
 /* puts the mantissa of f into z, and returns 'exp' such that f = z * 2^exp
@@ -39,33 +43,33 @@ mpfr_get_z_exp (mpz_ptr z, mpfr_srcptr f)
   mp_size_t fn;
   int sh;
 
-  MPFR_ASSERTD (MPFR_IS_FP (f));
+  MPFR_ASSERTN(MPFR_IS_FP(f));
 
-  if (MPFR_UNLIKELY (MPFR_IS_ZERO (f)))
+  if (MPFR_IS_ZERO(f))
     {
       mpz_set_ui (z, 0);
       return __gmpfr_emin;
     }
 
-  fn = MPFR_LIMB_SIZE(f);
+  fn = 1 + (MPFR_PREC(f) - 1) / BITS_PER_MP_LIMB;
 
   /* check whether allocated space for z is enough */
-  if (MPFR_UNLIKELY (ALLOC (z) < fn))
-    MPZ_REALLOC (z, fn);
+  if (ALLOC(z) < fn)
+    MPZ_REALLOC(z, fn);
 
-  MPFR_UNSIGNED_MINUS_MODULO (sh, MPFR_PREC (f));
-  if (MPFR_LIKELY (sh))
-    mpn_rshift (PTR (z), MPFR_MANT (f), fn, sh);
+  sh = (mp_prec_t) fn * BITS_PER_MP_LIMB - MPFR_PREC(f);
+  if (sh)
+    mpn_rshift (PTR(z), MPFR_MANT(f), fn, sh);
   else
-    MPN_COPY (PTR (z), MPFR_MANT (f), fn);
+    MPN_COPY (PTR(z), MPFR_MANT(f), fn);
 
-  SIZ(z) = MPFR_IS_NEG (f) ? -fn : fn;
+  SIZ(z) = MPFR_SIGN(f) < 0 ? -fn : fn;
 
   /* Test if the result is representable. Later, we could choose
-     to return MPFR_EXP_MIN if it isn't, or perhaps MPFR_EXP_MAX
+     to return MP_EXP_T_MIN if it isn't, or perhaps MP_EXP_T_MAX
      to signal an error. The mantissa would still be meaningful. */
-  MPFR_ASSERTD ((mp_exp_unsigned_t) MPFR_GET_EXP (f) - MPFR_EXP_MIN
-                >= (mp_exp_unsigned_t) MPFR_PREC(f));
+  MPFR_ASSERTN((mp_exp_unsigned_t) MPFR_GET_EXP (f) - MP_EXP_T_MIN
+               >= (mp_exp_unsigned_t) MPFR_PREC(f));
 
   return MPFR_GET_EXP (f) - MPFR_PREC (f);
 }

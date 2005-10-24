@@ -1,7 +1,7 @@
 /* mpfr_cmp_ui_2exp -- compare a floating-point number with an unsigned
 machine integer multiplied by a power of 2
 
-Copyright 1999, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -17,10 +17,13 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-#define MPFR_NEED_LONGLONG_H
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "longlong.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
 /* returns a positive value if b > i*2^f,
@@ -29,26 +32,21 @@ MA 02110-1301, USA. */
    b must not be NaN
 */
 
-int
+int 
 mpfr_cmp_ui_2exp (mpfr_srcptr b, unsigned long int i, mp_exp_t f)
 {
-  if (MPFR_UNLIKELY( MPFR_IS_SINGULAR(b) ))
-    {
-      if (MPFR_IS_NAN (b))
-        {
-          MPFR_SET_ERANGE ();
-          return 0;
-        }
-      else if (MPFR_IS_INF(b))
-        return MPFR_INT_SIGN (b);
-      else /* since b cannot be NaN, b=0 here */
-        return i != 0 ? -1 : 0;
-    }
+  MPFR_ASSERTN(!MPFR_IS_NAN(b));
 
-  if (MPFR_IS_NEG (b))
+  if (MPFR_IS_INF(b))
+    return MPFR_SIGN(b);
+
+  /* now b is neither NaN nor +/-Infinity */
+  if (MPFR_IS_ZERO(b))
+    return i != 0 ? -1 : 0;
+  else if (MPFR_SIGN(b) < 0)
     return -1;
   /* now b > 0 */
-  else if (MPFR_UNLIKELY(i == 0))
+  else if (i == 0)
     return 1;
   else /* b > 0, i > 0 */
     {
@@ -90,11 +88,4 @@ mpfr_cmp_ui_2exp (mpfr_srcptr b, unsigned long int i, mp_exp_t f)
           return 1;
       return 0;
     }
-}
-
-#undef mpfr_cmp_ui
-int
-mpfr_cmp_ui (mpfr_srcptr b, unsigned long int i)
-{
-  return mpfr_cmp_ui_2exp (b, i, 0);
 }

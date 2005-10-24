@@ -1,6 +1,6 @@
 /* mpfr_inf_p -- check for infinities
 
-Copyright 2000, 2001, 2004 Free Software Foundation.
+Copyright 2000, 2001 Free Software Foundation.
 
 This file is part of the MPFR Library.
 
@@ -16,13 +16,16 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
 int
-(mpfr_inf_p) (mpfr_srcptr x)
+mpfr_inf_p (mpfr_srcptr x)
 {
-  return MPFR_IS_INF(x);
+  return !MPFR_IS_NAN(x) && MPFR_IS_INF(x);
 }

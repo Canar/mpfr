@@ -1,6 +1,6 @@
 /* mpfr_sqrt_ui -- square root of a machine integer
 
-Copyright 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+Copyright 2000, 2001, 2002, 2003 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,10 +16,13 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-#define MPFR_NEED_LONGLONG_H
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "longlong.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
 int
@@ -31,21 +34,21 @@ mpfr_sqrt_ui (mpfr_ptr r, unsigned long u, mp_rnd_t rnd_mode)
       mp_limb_t up[1];
       unsigned long cnt;
       int inex;
-      MPFR_SAVE_EXPO_DECL (expo);
 
-      MPFR_TMP_INIT1 (up, uu, BITS_PER_MP_LIMB);
-      MPFR_ASSERTN (u == (mp_limb_t) u);
+      MPFR_INIT1(up, uu, BITS_PER_MP_LIMB, 1);
+      MPFR_ASSERTN(u == (mp_limb_t) u);
       count_leading_zeros (cnt, (mp_limb_t) u);
       *up = (mp_limb_t) u << cnt;
 
-      MPFR_SAVE_EXPO_MARK (expo);
+      mpfr_save_emin_emax();
       MPFR_SET_EXP (uu, BITS_PER_MP_LIMB - cnt);
       inex = mpfr_sqrt(r, uu, rnd_mode);
-      MPFR_SAVE_EXPO_FREE (expo);
+      mpfr_restore_emin_emax();
       return mpfr_check_range(r, inex, rnd_mode);
     }
   else /* sqrt(0) = 0 */
     {
+      MPFR_CLEAR_FLAGS(r);
       MPFR_SET_ZERO(r);
       MPFR_SET_POS(r);
       MPFR_RET(0);

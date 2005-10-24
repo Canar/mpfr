@@ -1,6 +1,6 @@
 /* Test file for mpfr_ui_div.
 
-Copyright 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 2000, 2001, 2002, 2003 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,32 +16,40 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <time.h>
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
+#include "mpfr-impl.h"
 #include "mpfr-test.h"
 
-/* checks that y/x gives the right result with 53 bits of precision */
+/* checks that y/x gives the same results in double
+   and with mpfr with 53 bits of precision */
 static void
-check (unsigned long y, const char *xs, mp_rnd_t rnd_mode, const char *zs)
+check (unsigned long y, double x, mp_rnd_t rnd_mode, double z1)
 {
+  double z2;
   mpfr_t xx, zz;
 
-  mpfr_inits2 (53, xx, zz, NULL);
-  mpfr_set_str1 (xx, xs);
+  mpfr_init2 (xx, 53);
+  mpfr_init2 (zz, 53);
+  mpfr_set_d (xx, x, rnd_mode);
   mpfr_ui_div (zz, y, xx, rnd_mode);
-  if (mpfr_cmp_str1(zz, zs))
+  z2 = mpfr_get_d1 (zz);
+  if (z1 != z2 && !(Isnan(z1) && Isnan(z2)))
     {
-      printf ("expected quotient is %s, got ", zs);
-      mpfr_out_str (stdout, 10, 0, zz, GMP_RNDN);
-      printf ("mpfr_ui_div failed for y=%lu x=%s with rnd_mode=%s\n",
-              y, xs, mpfr_print_rnd_mode (rnd_mode));
+      printf ("expected quotient is %1.20e, got %1.20e\n", z1, z2);
+      printf ("mpfr_ui_div failed for y=%lu x=%1.20e with rnd_mode=%s\n",
+              y, x, mpfr_print_rnd_mode (rnd_mode));
       exit (1);
     }
-  mpfr_clears (xx, zz, NULL);
+  mpfr_clear (xx);
+  mpfr_clear (zz);
 }
 
 static void
@@ -51,7 +59,7 @@ check_inexact (void)
   mp_prec_t px, py;
   int inexact, cmp;
   unsigned long int u;
-  int rnd;
+  mp_rnd_t rnd;
 
   mpfr_init (x);
   mpfr_init (y);
@@ -70,10 +78,10 @@ check_inexact (void)
         {
           mpfr_set_prec (y, py);
           mpfr_set_prec (z, py + px);
-          for (rnd = 0; rnd < GMP_RND_MAX; rnd++)
+          for (rnd=0; rnd<4; rnd++)
             {
-              inexact = mpfr_ui_div (y, u, x, (mp_rnd_t) rnd);
-              if (mpfr_mul (z, y, x, (mp_rnd_t) rnd))
+              inexact = mpfr_ui_div (y, u, x, rnd);
+              if (mpfr_mul (z, y, x, rnd))
                 {
                   printf ("z <- y * x should be exact\n");
                   exit (1);
@@ -84,7 +92,7 @@ check_inexact (void)
                   ((inexact < 0) && (cmp >= 0)))
                 {
                   printf ("Wrong inexact flag for u=%lu, rnd=%s\n",
-                          u, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                          u, mpfr_print_rnd_mode (rnd));
                   printf ("expected %d, got %d\n", cmp, inexact);
                   printf ("x="); mpfr_print_binary (x); puts ("");
                   printf ("y="); mpfr_print_binary (y); puts ("");
@@ -112,48 +120,27 @@ check_nan (void)
   MPFR_CLEAR_FLAGS (d);
   MPFR_SET_INF (d);
   MPFR_SET_POS (d);
-  MPFR_ASSERTN (mpfr_ui_div (q, 1L, d, GMP_RNDZ) == 0); /* exact */
-  MPFR_ASSERTN (mpfr_number_p (q));
-  MPFR_ASSERTN (mpfr_sgn (q) == 0);
+  ASSERT_ALWAYS (mpfr_ui_div (q, 1L, d, GMP_RNDZ) == 0); /* exact */
+  ASSERT_ALWAYS (mpfr_number_p (q));
+  ASSERT_ALWAYS (mpfr_sgn (q) == 0);
 
   /* 1/-inf == -0 */
   MPFR_CLEAR_FLAGS (d);
   MPFR_SET_INF (d);
   MPFR_SET_NEG (d);
-  MPFR_ASSERTN (mpfr_ui_div (q, 1L, d, GMP_RNDZ) == 0); /* exact */
-  MPFR_ASSERTN (mpfr_number_p (q));
-  MPFR_ASSERTN (mpfr_sgn (q) == 0);
+  ASSERT_ALWAYS (mpfr_ui_div (q, 1L, d, GMP_RNDZ) == 0); /* exact */
+  ASSERT_ALWAYS (mpfr_number_p (q));
+  ASSERT_ALWAYS (mpfr_sgn (q) == 0);
 
   /* 1/nan == nan */
   MPFR_SET_NAN (d);
-  MPFR_ASSERTN (mpfr_ui_div (q, 1L, d, GMP_RNDZ) == 0); /* exact */
-  MPFR_ASSERTN (mpfr_nan_p (q));
+  ASSERT_ALWAYS (mpfr_ui_div (q, 1L, d, GMP_RNDZ) == 0); /* exact */
+  ASSERT_ALWAYS (mpfr_nan_p (q));
 
   /* 0/0 == nan */
   mpfr_set_ui (d, 0L, GMP_RNDN);
-  MPFR_ASSERTN (mpfr_ui_div (q, 0L, d, GMP_RNDZ) == 0); /* exact */
-  MPFR_ASSERTN (mpfr_nan_p (q));
-
-  /* 1/+0 = +inf */
-  mpfr_set_ui (d, 0L, GMP_RNDN);
-  MPFR_ASSERTN (mpfr_ui_div (q, 1L, d, GMP_RNDZ) == 0); /* exact */
-  MPFR_ASSERTN (mpfr_inf_p (q) && mpfr_sgn (q) > 0);
-
-  /* 1/-0 = -inf */
-  mpfr_set_ui (d, 0L, GMP_RNDN);
-  mpfr_neg (d, d, GMP_RNDN);
-  MPFR_ASSERTN (mpfr_ui_div (q, 1L, d, GMP_RNDZ) == 0); /* exact */
-  MPFR_ASSERTN (mpfr_inf_p (q) && mpfr_sgn (q) < 0);
-
-  /* 0/1 = +0 */
-  mpfr_set_ui (d, 1L, GMP_RNDN);
-  MPFR_ASSERTN (mpfr_ui_div (q, 0L, d, GMP_RNDZ) == 0); /* exact */
-  MPFR_ASSERTN (mpfr_cmp_ui (q, 0) == 0 && MPFR_IS_POS (q));
-
-  /* 0/-1 = -0 */
-  mpfr_set_si (d, -1, GMP_RNDN);
-  MPFR_ASSERTN (mpfr_ui_div (q, 0L, d, GMP_RNDZ) == 0); /* exact */
-  MPFR_ASSERTN (mpfr_cmp_ui (q, 0) == 0 && MPFR_IS_NEG (q));
+  ASSERT_ALWAYS (mpfr_ui_div (q, 0L, d, GMP_RNDZ) == 0); /* exact */
+  ASSERT_ALWAYS (mpfr_nan_p (q));
 
   mpfr_clear (d);
   mpfr_clear (q);
@@ -166,16 +153,16 @@ main (int argc, char *argv[])
 
   check_nan ();
   check_inexact ();
-  check(948002822, "1.22191250737771397120e+20", GMP_RNDN,
-        "7.758352715731357946e-12");
-  check(1976245324, "1.25296395864546893357e+232", GMP_RNDZ,
-        "1.5772563211925444801e-223");
-  check(740454110, "2.11496253355831863313e+183", GMP_RNDZ,
-        "3.5010270784996976041e-175");
-  check(1690540942, "1.28278599852446657468e-276", GMP_RNDU,
-        "1.3178666932321966062e285");
-  check(1476599377, "-2.14191393656148625995e+305", GMP_RNDD,
-        "-6.8938315017943889615e-297");
+  check(948002822, 1.22191250737771397120e+20, GMP_RNDN,
+	7.758352715731357946e-12);
+  check(1976245324, 1.25296395864546893357e+232, GMP_RNDZ,
+	1.5772563211925444801e-223);
+  check(740454110, 2.11496253355831863313e+183, GMP_RNDZ,
+	3.5010270784996976041e-175);
+  check(1690540942, 1.28278599852446657468e-276, GMP_RNDU,
+	1.3178666932321966062e285);
+  check(1476599377, -2.14191393656148625995e+305, GMP_RNDD,
+	-6.8938315017943889615e-297);
 
   tests_end_mpfr ();
   return 0;

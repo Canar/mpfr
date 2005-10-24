@@ -1,6 +1,6 @@
 /* Miscellaneous support for test programs.
 
-Copyright 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,62 +16,46 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-#ifdef HAVE_CONFIG_H
-# if HAVE_CONFIG_H
-#  include "config.h"     /* for a build within gmp */
-# endif
+#if HAVE_CONFIG_H
+#include "config.h"     /* for a build within gmp */
 #endif
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <float.h>
-
-#if HAVE_SETLOCALE
-#include <locale.h>
-#endif
 
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>  /* for struct timeval */
 # include <time.h>
-#elif HAVE_SYS_TIME_H
-#  include <sys/time.h>
 #else
+# if HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
 #  include <time.h>
+# endif
 #endif
 
-#if HAVE_SYS_FPU_H
-# include <sys/fpu.h>
-#endif
-
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
+#include "mpfr-impl.h"
 #include "mpfr-test.h"
 
-static void tests_rand_start (void);
-static void tests_rand_end   (void);
-
-/* We want to always import the function mpfr_dump inside the test
-   suite, so that we can use it in GDB. But it doesn't work if we build
-   a Windows DLL (initializer element is not a constant) */
-#if !__GMP_LIBGMP_DLL
-extern void (*dummy_func) (mpfr_srcptr);
-void (*dummy_func)(mpfr_srcptr) = mpfr_dump;
+#if HAVE_SYS_FPU_H
+#include <sys/fpu.h>  /* for mips fpc_csr */
 #endif
+
+
+void tests_rand_start _PROTO ((void));
+void tests_rand_end   _PROTO ((void));
 
 void
 tests_start_mpfr (void)
 {
   /* don't buffer, so output is not lost if a test causes a segv etc */
   setbuf (stdout, NULL);
-
-#if HAVE_SETLOCALE
-  /* Added on 2005-07-09. This allows to test MPFR under various
-     locales. New bugs will probably be found, in particular with
-     LC_ALL="tr_TR.ISO8859-9" because of the i/I character... */
-  setlocale (LC_ALL, "");
-#endif
 
   tests_memory_start ();
   tests_rand_start ();
@@ -80,12 +64,23 @@ tests_start_mpfr (void)
 void
 tests_end_mpfr (void)
 {
-  mpfr_free_cache ();
   tests_rand_end ();
+  if (__gmpfr_const_pi_prec != 0)
+    {
+      mpfr_clear (__mpfr_const_pi);
+      __gmpfr_const_pi_prec = 0;
+    }
+
+  if (__gmpfr_const_log2_prec != 0)
+    {
+      mpfr_clear (__mpfr_const_log2);
+      __gmpfr_const_log2_prec = 0;
+    }
+
   tests_memory_end ();
 }
 
-static void
+void
 tests_rand_start (void)
 {
   gmp_randstate_ptr  rands;
@@ -129,19 +124,18 @@ tests_rand_start (void)
     }
 }
 
-static void
+void
 tests_rand_end (void)
 {
   RANDS_CLEAR ();
 }
 
-/* initialization function for tests using the hardware floats
-   Not very usefull now. */
+/* initialization function for tests using the hardware floats */
 void
 mpfr_test_init ()
 {
-  double d;
-#if HAVE_FPC_CSR
+  double c, d, eps;
+#ifdef __mips
   /* to get denormalized numbers on IRIX64 */
   union fpc_csr exp;
 
@@ -158,10 +152,11 @@ mpfr_test_init ()
     }
 #endif
 
+  tests_machine_prec_double ();
+
   /* generate DBL_EPSILON with a loop to avoid that the compiler
      optimizes the code below in non-IEEE 754 mode, deciding that
      c = d is always false. */
-#if 0
   for (eps = 1.0; eps != DBL_EPSILON; eps /= 2.0);
   c = 1.0 + eps;
   d = eps * (1.0 - eps) / 2.0;
@@ -172,6 +167,30 @@ mpfr_test_init ()
               "         (maybe extended precision not disabled)\n"
               "         Some tests may fail\n");
     }
+}
+
+
+/* Set the machine floating point precision, to double or long double.
+
+   On i386 this controls the mantissa precision on the x87 stack, but the
+   exponent range is only enforced when storing to memory.
+
+   For reference, on most i386 systems the default is 64-bit "long double"
+   precision, but on FreeBSD 3.x and amd64 5.x it's 53-bit "double".  */
+
+void
+tests_machine_prec_double (void)
+{
+#if MPFR_HAVE_TESTS_x86
+  x86_fldcw ((x86_fstcw () & ~0x300) | 0x200);
+#endif
+}
+
+void
+tests_machine_prec_long_double (void)
+{
+#if MPFR_HAVE_TESTS_x86
+  x86_fldcw (x86_fstcw () | 0x300);
 #endif
 }
 
@@ -182,7 +201,7 @@ randlimb (void)
 {
   mp_limb_t limb;
 
-  _gmp_rand (&limb, RANDS, BITS_PER_MP_LIMB);
+  _gmp_rand (&limb, RANDS, GMP_NUMB_BITS);
   return limb;
 }
 
@@ -220,7 +239,7 @@ ulp (double a, double b)
   if (twoa == a) /* a is +/-0.0 or +/-Inf */
     return ((b < a) ? INT_MAX : -INT_MAX);
 
-  return (int) ((a - b) / Ulp (a));
+  return (a - b) / Ulp (a);
 }
 
 /* return double m*2^e */
@@ -256,7 +275,7 @@ d_trace (const char *name, double d)
 
   u.d = d;
   printf ("[");
-  for (i = 0; i < (int) sizeof (u.b); i++)
+  for (i = 0; i < sizeof (u.b); i++)
     {
       if (i != 0)
         printf (" ");
@@ -279,50 +298,11 @@ ld_trace (const char *name, long double ld)
 
   u.ld = ld;
   printf ("[");
-  for (i = 0; i < (int) sizeof (u.b); i++)
+  for (i = 0; i < sizeof (u.b); i++)
     {
       if (i != 0)
         printf (" ");
       printf ("%02X", (int) u.b[i]);
     }
   printf ("] %.20Lg\n", ld);
-}
-
-/* Open a file in the src directory - can't use fopen directly */
-FILE *src_fopen (const char *filename, const char *mode)
-{
-  const char *srcdir = getenv ("srcdir");
-  char *buffer;
-  FILE *f;
-
-  if (srcdir == NULL)
-    return fopen (filename, mode);
-  buffer = (char*) malloc (strlen (filename) + strlen (srcdir) + 2);
-  if (buffer == NULL)
-    {
-      printf ("src_fopen: failed to alloc memory)\n");
-      exit (1);
-    }
-  sprintf (buffer, "%s/%s", srcdir, filename);
-  f = fopen (buffer, mode);
-  free (buffer);
-  return f;
-}
-
-void set_emin (mp_exp_t exponent)
-{
-  if (mpfr_set_emin (exponent))
-    {
-      printf ("set_emin: setting emin to %ld failed\n", (long int) exponent);
-      exit (1);
-    }
-}
-
-void set_emax (mp_exp_t exponent)
-{
-  if (mpfr_set_emax (exponent))
-    {
-      printf ("set_emax: setting emax to %ld failed\n", (long int) exponent);
-      exit (1);
-    }
 }

@@ -1,6 +1,6 @@
 /* mpfr_get_str -- output a floating-point number to a string
 
-Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 This function was contributed by Alain Delplanque and Paul Zimmermann.
 
 This file is part of the MPFR Library.
@@ -17,27 +17,34 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-#include <string.h> /* For strlen */
-#include <limits.h> /* For LONG_MAX and LONG_MIN */
-
-#define MPFR_NEED_LONGLONG_H
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <limits.h>
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "longlong.h"
+#include "mpfr.h"
 #include "mpfr-impl.h"
 
-static double mpfr_ceil_double (double);
-static int mpfr_get_str_aux (char *const, mp_exp_t *const, mp_limb_t *const,
-                       mp_size_t, mp_exp_t, long, int, size_t, mp_rnd_t);
-static mp_exp_t mpfr_get_str_compute_g (int, mp_exp_t);
+static double mpfr_ceil_double _PROTO ((double));
+static int mpfr_get_str_aux _PROTO ((char *, mp_exp_t *, mp_limb_t *,
+		       mp_size_t, mp_exp_t, long, int, size_t, mp_rnd_t));
+static mp_exp_t mpfr_get_str_compute_g _PROTO ((int, mp_exp_t));
 
-static const char num_to_text[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+static char num_to_text[] = "0123456789abcdefghijklmnopqrstuvwxyz";
 
 /* for 2 <= b <= 36, log_b2[b-2] + log_b2_low[b-2] is a 76-bit upper
    approximation of log(2)/log(b), with log_b2[b-2] having 23 significative
    bits only. These approximations were computed with the following program.
 
 #include <stdio.h>
+#include "gmp.h"
+#include "mpfr.h"
 
 double log_b2[35], log_b2_low[35];
 
@@ -181,7 +188,137 @@ mpfr_ceil_double (double x)
   return ((y < x) ? y + 1.0 : y);
 }
 
-#define MPFR_ROUND_FAILED 3
+/* this function computes an approximation of b^e in {a, n}, with exponent
+   stored in exp_r. The computed value is rounded towards zero (truncated).
+   It returns an integer f such that the final error is bounded by 2^f ulps,
+   that is:
+   a*2^exp_r <= b^e <= 2^exp_r (a + 2^f),
+   where a represents {a, n}, i.e. the integer
+   a[0] + a[1]*B + ... + a[n-1]*B^(n-1) where B=2^BITS_PER_MP_LIMB */
+long
+mpn_exp (mp_limb_t *a, mp_exp_t *exp_r, int b, mp_exp_t e, size_t n)
+{
+  mp_limb_t *c, B;
+  mp_exp_t f, h;
+  int i;
+  unsigned long t; /* number of bits in e */
+  unsigned long bits;
+  size_t n1;
+  unsigned int erreur;           /* (number - 1) of loop a^2b inexact */
+                                 /* erreur == t meens no error */
+  int err_s_a2 = 0;
+  int err_s_ab = 0;              /* number of error when shift A^2, AB */
+  TMP_DECL(marker);
+
+  MPFR_ASSERTN(e > 0);
+  MPFR_ASSERTN((2 <= b) && (b <= 36));
+
+  TMP_MARK(marker);
+
+  /* initialization of a, b, f, h */
+
+  /* normalize the base */
+  B = (mp_limb_t) b;
+  count_leading_zeros (h, B);
+
+  bits = BITS_PER_MP_LIMB - h;
+
+  B = B << h;
+  h = - h;
+
+  /* allocate space for A and set it to B */
+  c = (mp_limb_t*) TMP_ALLOC(2 * n * BYTES_PER_MP_LIMB);
+  a [n - 1] = B;
+  MPN_ZERO (a, n - 1);
+  /* initial exponent for A: invariant is A = {a, n} * 2^f */
+  f = h - (n - 1) * BITS_PER_MP_LIMB;
+
+  /* determine number of bits in e */
+  count_leading_zeros (t, (mp_limb_t) e);
+
+  t = BITS_PER_MP_LIMB - t; /* number of bits of exponent e */
+
+  erreur = t;
+
+  MPN_ZERO (c, 2 * n);
+
+  for (i = t - 2; i >= 0; i--)
+    {
+
+      /* determine precision needed */
+      bits = n * BITS_PER_MP_LIMB - mpn_scan1 (a, 0);
+      n1 = (n * BITS_PER_MP_LIMB - bits) / BITS_PER_MP_LIMB;
+
+      /* square of A : {c+2n1, 2(n-n1)} = {a+n1, n-n1}^2 */
+      mpn_sqr_n (c + 2 * n1, a + n1, n - n1);
+
+      /* set {c+n, 2n1-n} to 0 : {c, n} = {a, n}^2*K^n */
+
+      f = 2 * f + n * BITS_PER_MP_LIMB;
+      if ((c[2*n - 1] & MPFR_LIMB_HIGHBIT) == 0)
+	{
+	  /* shift A by one bit to the left */
+	  mpn_lshift (a, c + n, n, 1);
+	  a[0] |= mpn_lshift (c + n - 1, c + n - 1, 1, 1);
+	  f --;
+	  if (erreur != t)
+	    err_s_a2 ++;
+	}
+      else
+	MPN_COPY (a, c + n, n);
+
+      if ((erreur == t) && (2 * n1 <= n) &&
+	  (mpn_scan1 (c + 2 * n1, 0) < (n - 2 * n1) * BITS_PER_MP_LIMB))
+	erreur = i;
+
+      if (e & (1 << i))
+	{
+	  /* multiply A by B */
+	  c[2 * n - 1] = mpn_mul_1 (c + n - 1, a, n, B);
+	  f += h + BITS_PER_MP_LIMB;
+	  if ((c[2 * n - 1] & MPFR_LIMB_HIGHBIT) == 0)
+	    { /* shift A by one bit to the left */
+	      mpn_lshift (a, c + n, n, 1);
+	      a[0] |= mpn_lshift (c + n - 1, c + n - 1, 1, 1);
+	      f --;
+	    }
+	  else
+	    {
+	      MPN_COPY (a, c + n, n);
+	      if (erreur != t)
+		err_s_ab ++;
+	    }
+	  if ((erreur == t) && (c[n - 1] != 0))
+            erreur = i;
+
+	}
+    }
+
+  TMP_FREE(marker);
+
+  *exp_r = f;
+
+  if (erreur == t)
+    return -1; /* exact */
+  else
+    {
+      /* if there are p loops after the first inexact result, with
+	 j shifts in a^2 and l shifts in a*b, then the final error is
+	 at most 2^(p+ceil((j+1)/2)+l+1)*ulp(res).
+         This is bounded by 2^(5/2*t-1/2) where t is the number of bits of e.
+      */
+      erreur = erreur + err_s_ab + err_s_a2 / 2 + 3;
+      if ((erreur - 1) >= ((n * BITS_PER_MP_LIMB - 1) / 2))
+	erreur = n * BITS_PER_MP_LIMB; /* completely wrong: this is very
+                                        unlikely to happen since erreur is
+                                       at most 5/2*log_2(e), and
+                                       n * BITS_PER_MP_LIMB is at least
+                                       3*log_2(e) */
+    }
+
+  return erreur;
+}
+
 
 /* Input: an approximation r*2^f of an real Y, with |r*2^f-Y| <= 2^(e+f).
    Returns if possible in the string s the mantissa corresponding to
@@ -196,21 +333,13 @@ mpfr_ceil_double (double x)
    It is assumed that b^(m-1) <= Y < b^(m+1), thus the returned value
    satisfies b^(m-1) <= rnd(Y) < b^(m+1).
 
-   Rounding may fail for two reasons:
-   - the error is too large to determine the integer N nearest to Y
-   - either the number of digits of N in base b is too large (m+1),
-     N=2*N1+(b/2) and the rounding mode is too nearest. This can
-     only happen when b is even.
-
    Return value:
    - the direction of rounding (-1, 0, 1) if rounding is possible
-   - -MPFR_ROUND_FAILED if rounding not possible because m+1 digits
-   - MPFR_ROUND_FAILED otherwise (too large error)
+   - 2 otherwise (rounding is not possible)
 */
 static int
-mpfr_get_str_aux (char *const str, mp_exp_t *const exp, mp_limb_t *const r,
-                  mp_size_t n, mp_exp_t f, long e, int b, size_t m,
-                  mp_rnd_t rnd)
+mpfr_get_str_aux (char *str, mp_exp_t *exp, mp_limb_t *r, mp_size_t n,
+		  mp_exp_t f, long e, int b, size_t m, mp_rnd_t rnd)
 {
   int dir;                  /* direction of the rounded result */
   mp_limb_t ret = 0;        /* possible carry in addition */
@@ -220,7 +349,7 @@ mpfr_get_str_aux (char *const str, mp_exp_t *const exp, mp_limb_t *const r,
   mp_rnd_t rnd1;
   size_t i;
   int exact = (e < 0);
-  MPFR_TMP_DECL(marker);
+  TMP_DECL(marker);
 
   /* if f > 0, then the maximal error 2^(e+f) is larger than 2 so we can't
      determine the integer Y */
@@ -228,7 +357,7 @@ mpfr_get_str_aux (char *const str, mp_exp_t *const exp, mp_limb_t *const r,
   /* if f is too small, then r*2^f is smaller than 1 */
   MPFR_ASSERTN(f > (-n * BITS_PER_MP_LIMB));
 
-  MPFR_TMP_MARK(marker);
+  TMP_MARK(marker);
 
   /* R = 2^f sum r[i]K^(i)
      r[i] = (r_(i,k-1)...r_(i,0))_2
@@ -253,33 +382,36 @@ mpfr_get_str_aux (char *const str, mp_exp_t *const exp, mp_limb_t *const r,
       i0 = (-f) / BITS_PER_MP_LIMB;
       j0 = (-f) % BITS_PER_MP_LIMB;
 
-      ret = mpfr_round_raw (r + i0, r, n * BITS_PER_MP_LIMB, 0,
-                            n * BITS_PER_MP_LIMB + f, rnd, &dir);
-      MPFR_ASSERTD(dir != MPFR_ROUND_FAILED);
+      ret = mpfr_round_raw_generic (r + i0, r, n * BITS_PER_MP_LIMB, 0,
+				     n * BITS_PER_MP_LIMB + f, rnd, &dir, 0);
 
-      /* warning: mpfr_round_raw_generic returns MPFR_EVEN_INEX (2) or
-         -MPFR_EVEN_INEX (-2) in case of even rounding */
+      /* warning: mpfr_round_raw_generic returns 2 or -2 in case of even
+         rounding */
+      if (dir > 0)      /* when dir = MPFR_EVEN_INEX */
+	dir = 1;
+      else if (dir < 0) /* when dir = -MPFR_EVEN_INEX */
+	dir = -1;
 
       if (ret) /* Y is a power of 2 */
-        {
-          if (j0)
-            r[n - 1] = MPFR_LIMB_HIGHBIT >> (j0 - 1);
-          else /* j0=0, necessarily i0 >= 1 otherwise f=0 and r is exact */
-            {
-              r[n - 1] = ret;
+	{
+	  if (j0)
+	    r[n - 1] = MPFR_LIMB_HIGHBIT >> (j0 - 1);
+	  else /* j0=0, necessarily i0 >= 1 otherwise f=0 and r is exact */
+	    {
+	      r[n - 1] = ret;
               r[--i0] = 0; /* set to zero the new low limb */
-            }
-        }
+	    }
+	}
       else /* shift r to the right by (-f) bits (i0 already done) */
-        {
-          if (j0)
+	{
+	  if (j0)
             mpn_rshift (r + i0, r + i0, n - i0, j0);
-        }
+	}
 
       /* now the rounded value Y is in {r+i0, n-i0} */
 
       /* convert r+i0 into base b */
-      str1 = (unsigned char*) MPFR_TMP_ALLOC (m + 3); /* need one extra character for mpn_get_str */
+      str1 = (unsigned char*) TMP_ALLOC (m + 3); /* need one extra character for mpn_get_str */
       size_s1 = mpn_get_str (str1, b, r + i0, n - i0);
 
       /* round str1 */
@@ -287,11 +419,11 @@ mpfr_get_str_aux (char *const str, mp_exp_t *const exp, mp_limb_t *const r,
       *exp = size_s1 - m; /* number of superfluous characters */
 
       /* if size_s1 = m + 2, necessarily we have b^(m+1) as result,
-         and the result will not change */
+	 and the result will not change */
 
       /* so we have to double-round only when size_s1 = m + 1 and
-         (i) the result is inexact
-         (ii) or the last digit is non-zero */
+	 (i) the result is inexact
+	 (ii) or the last digit is non-zero */
       if ((size_s1 == m + 1) && ((dir != 0) || (str1[size_s1 - 1] != 0)))
         {
           /* rounding mode */
@@ -302,36 +434,33 @@ mpfr_get_str_aux (char *const str, mp_exp_t *const exp, mp_limb_t *const r,
             {
               if (2 * str1[size_s1 - 1] == b)
                 {
-                  if (dir == 0 && exact) /* exact: even rounding */
-                    {
-                      rnd1 = ((str1[size_s1-2] & 1) == 0)
-                        ? GMP_RNDD : GMP_RNDU;
-                    }
+                  if (dir == -1)
+                    rnd1 = GMP_RNDU;
+                  else if (dir == 0) /* exact: even rounding */
+		    {
+		      if (exact)
+			rnd1 = ((str1[size_s1-2] & 1) == 0)
+			  ? GMP_RNDD : GMP_RNDU;
+		      else
+                        goto cannot_round;
+		    }
                   else
-                    {
-                      /* otherwise we cannot round correctly: for example
-                         if b=10, we might have a mantissa of
-                         xxxxxxx5.00000000 which can be rounded to nearest
-                         to 8 digits but not to 7 */
-                      dir = -MPFR_ROUND_FAILED;
-                      MPFR_ASSERTD(dir != MPFR_EVEN_INEX);
-                      goto free_and_return;
-                    }
+                    rnd1 = GMP_RNDD;
                 }
               else if (2 * str1[size_s1 - 1] < b)
                 rnd1 = GMP_RNDD;
-              else
+	      else
                 rnd1 = GMP_RNDU;
             }
 
-          /* now rnd1 is either GMP_RNDD or GMP_RNDZ -> truncate
-                             or GMP_RDNU -> round towards infinity */
+	  /* now rnd1 is either GMP_RNDD or GMP_RNDZ -> truncate
+	                     or GMP_RDNU -> round towards infinity */
 
           /* round away from zero */
           if (rnd1 == GMP_RNDU)
-            {
-              if (str1[size_s1 - 1] != 0)
-                {
+	    {
+	      if (str1[size_s1 - 1] != 0)
+		{
                   /* the carry cannot propagate to the whole string, since
                      Y = x*b^(m-g) < 2*b^m <= b^(m+1)-b
                      where x is the input float */
@@ -344,8 +473,8 @@ mpfr_get_str_aux (char *const str, mp_exp_t *const exp, mp_limb_t *const r,
                     }
                   str1[i]++;
                 }
-              dir = 1;
-            }
+	      dir = 1;
+	    }
           /* round toward zero (truncate) */
           else
             dir = -1;
@@ -353,42 +482,33 @@ mpfr_get_str_aux (char *const str, mp_exp_t *const exp, mp_limb_t *const r,
 
       /* copy str1 into str and convert to ASCII */
       for (i = 0; i < m; i++)
-        str[i] = num_to_text[(int) str1[i]];
-        str[m] = 0;
+	str[i] = num_to_text[(int) str1[i]];
+      str[m] = 0;
     }
   /* mpfr_can_round_raw failed: rounding is not possible */
   else
     {
-      dir = MPFR_ROUND_FAILED; /* should be different from MPFR_EVEN_INEX */
-      MPFR_ASSERTD(dir != MPFR_EVEN_INEX);
+    cannot_round:
+      dir = 2;
     }
 
- free_and_return:
-  MPFR_TMP_FREE(marker);
+  TMP_FREE(marker);
 
-  return dir;
+  return (dir);
 }
 
 /* returns ceil(e/log_2(beta)) */
 static mp_exp_t
 mpfr_get_str_compute_g (int beta, mp_exp_t e)
 {
-  double g0, g1, de;
+  double g0, g1;
   mp_exp_t g;
 
-  de = (double) e;
-  g0 = de * log_b2[beta - 2];
-  g1 = de * log_b2_low[beta - 2];
-  if (de > 9007199254740992.0 || de < -9007199254740992.0)
-    /* can happen on 64-bit machines */
-    {
-      mp_exp_t low_e = e - (mp_exp_t) de;
-      g1 += (double) low_e * log_b2[beta - 2];
-    }
+  g0 = (double) e * log_b2[beta - 2];
+  g1 = (double) e * log_b2_low[beta - 2];
   g = (mp_exp_t) mpfr_ceil_double (g0);
   g0 -= (double) g;
-  g += (mp_exp_t) mpfr_ceil_double (g0 + g1);
-  return g;
+  return g + (mp_exp_t) mpfr_ceil_double (g0 + g1);
 }
 
 /* prints the mantissa of x in the string s, and writes the corresponding
@@ -409,7 +529,7 @@ mpfr_get_str (char *s, mp_exp_t *e, int b, size_t m, mpfr_srcptr x, mp_rnd_t rnd
 {
   int exact;                      /* exact result */
   mp_exp_t exp, g;
-  mp_exp_t prec; /* precision of the computation */
+  mp_exp_t prec, log_2prec; /* precision of the computation */
   long err;
   mp_limb_t *a;
   mp_exp_t exp_a;
@@ -420,12 +540,11 @@ mpfr_get_str (char *s, mp_exp_t *e, int b, size_t m, mpfr_srcptr x, mp_rnd_t rnd
   size_t n, i;
   char *s0;
   int neg;
-  int ret; /* return value of mpfr_get_str_aux */
-  MPFR_ZIV_DECL (loop);
-  MPFR_TMP_DECL(marker);
 
   /* if exact = 1 then err is undefined */
   /* otherwise err is such that |x*b^(m-g)-a*2^exp_a| < 2^(err+exp_a) */
+
+  TMP_DECL(marker);
 
   /* is the base valid? */
   if (b < 2 || b > 36)
@@ -434,16 +553,24 @@ mpfr_get_str (char *s, mp_exp_t *e, int b, size_t m, mpfr_srcptr x, mp_rnd_t rnd
   if (m == 0)
     {
 
-      /* take at least 1 + ceil(n*log(2)/log(b)) digits, where n is the
-         number of bits of the mantissa, to ensure back conversion from
-         the output gives the same floating-point.
+      m = MPFR_PREC(x);
+      if (IS_POW2(b) && b >= 4)
+        /* when the base is a power of two, we can compute exactly the number
+           of digits sufficient to print the number exactly.
+           Warning: we may loose some bits in the first digit.
+           If EXP(x)=0, no bit is lost.
+           If EXP(x)=-1, one bit is lost... */
+        {
+          int k, lost;
 
-         Warning: if b = 2^k, this may be too large. The worst case is when
-         the first base-b digit contains only one bit, so we get
-         1 + ceil((n-1)/k) = 2 + floor((n-2)/k) instead.
-      */
-      m = 1 + mpfr_get_str_compute_g (b, (IS_POW2(b)) ? MPFR_PREC(x) - 1
-                                      : MPFR_PREC(x));
+          count_leading_zeros (k, (mp_limb_t) b);
+          k = BITS_PER_MP_LIMB - k - 1; /* b = 2^k */
+          lost = (-MPFR_EXP(x)) % k;
+          if (lost < 0)
+            lost += k;
+          m += lost;
+        }
+      m = (size_t) mpfr_ceil_double (__mp_bases[b].chars_per_bit_exactly * (double) m);
       if (m < 2)
         m = 2;
     }
@@ -508,33 +635,32 @@ mpfr_get_str (char *s, mp_exp_t *e, int b, size_t m, mpfr_srcptr x, mp_rnd_t rnd
       f = (MPFR_GET_EXP (x) - 1) / pow2;
       r = MPFR_GET_EXP (x) - f * pow2;
       if (r <= 0)
-        {
-          f --;
-          r += pow2;
-        }
+	{
+	  f --;
+	  r += pow2;
+	}
 
       /* the first digit will contain only r bits */
-      prec = (m - 1) * pow2 + r; /* total number of bits */
+      prec = (m - 1) * pow2 + r;
       n = (prec - 1) / BITS_PER_MP_LIMB + 1;
 
-      MPFR_TMP_MARK (marker);
-      x1 = (mp_limb_t*) MPFR_TMP_ALLOC((n + 1) * sizeof (mp_limb_t));
+      TMP_MARK (marker);
+      x1 = (mp_limb_t*) TMP_ALLOC((n + 1) * sizeof (mp_limb_t));
       nb = n * BITS_PER_MP_LIMB - prec;
       /* round xp to the precision prec, and put it into x1
-         put the carry into x1[n] */
-      if ((x1[n] = mpfr_round_raw (x1, xp, MPFR_PREC(x),
-                                  MPFR_IS_STRICTNEG(x),
-                                   prec, rnd, &inexp)))
+	 put the carry into x1[n] */
+      if ((x1[n] = mpfr_round_raw_generic (x1, xp, MPFR_PREC(x), MPFR_ISNEG(x),
+                                           prec, rnd, &inexp, 0)))
         {
-          /* overflow when rounding x: x1 = 2^prec */
-          if (r == pow2)    /* prec = m * pow2,
-                               2^prec will need (m+1) digits in base 2^pow2 */
-            {
-              /* divide x1 by 2^pow2, and increase the exponent */
-              mpn_rshift (x1, x1, n + 1, pow2);
-              f ++;
-            }
-          else /* 2^prec needs still m digits, but x1 may need n+1 limbs */
+	  /* overflow when rounding x: x1 = 2^prec */
+	  if (r == pow2)    /* prec = m * pow2,
+			       2^prec will need (m+1) digits in base 2^pow2 */
+	    {
+	      /* divide x1 by 2^pow2, and increase the exponent */
+	      mpn_rshift (x1, x1, n + 1, pow2);
+	      f ++;
+	    }
+	  else /* 2^prec needs still m digits, but x1 may need n+1 limbs */
             n ++;
         }
 
@@ -556,27 +682,27 @@ mpfr_get_str (char *s, mp_exp_t *e, int b, size_t m, mpfr_srcptr x, mp_rnd_t rnd
       /* the exponent of s is f + 1 */
       *e = f + 1;
 
-      MPFR_TMP_FREE(marker);
+      TMP_FREE(marker);
 
       return (s0);
-    }
+   }
 
   /* if x < 0, reduce to x > 0 */
   if (neg)
-    rnd = MPFR_INVERT_RND(rnd);
+    rnd = (rnd == GMP_RNDU ? GMP_RNDD : (rnd == GMP_RNDD ? GMP_RNDU : rnd));
 
   g = mpfr_get_str_compute_g (b, MPFR_GET_EXP (x) - 1);
   exact = 1;
   prec = (mp_exp_t) mpfr_ceil_double ((double) m / log_b2[b-2]) + 1;
   exp = ((mp_exp_t) m < g) ? g - (mp_exp_t) m : (mp_exp_t) m - g;
-  prec += MPFR_INT_CEIL_LOG2 (prec); /* number of guard bits */
+  log_2prec = (mp_exp_t) __gmpfr_ceil_log2 ((double) prec);
+  prec += log_2prec; /* number of guard bits */
   if (exp != 0) /* add maximal exponentiation error */
-    prec += 3 * (mp_exp_t) MPFR_INT_CEIL_LOG2 (exp);
+    prec += 3 * (mp_exp_t) __gmpfr_ceil_log2 ((double) exp);
 
-  MPFR_ZIV_INIT (loop, prec);
   for (;;)
     {
-      MPFR_TMP_MARK(marker);
+      TMP_MARK(marker);
 
       exact = 1;
 
@@ -584,133 +710,110 @@ mpfr_get_str (char *s, mp_exp_t *e, int b, size_t m, mpfr_srcptr x, mp_rnd_t rnd
       n = 1 + (prec - 1) / BITS_PER_MP_LIMB;
 
       /* a will contain the approximation of the mantissa */
-      a = (mp_limb_t*) MPFR_TMP_ALLOC (n * sizeof (mp_limb_t));
+      a = (mp_limb_t*) TMP_ALLOC (n * sizeof (mp_limb_t));
 
       nx = 1 + (MPFR_PREC(x) - 1) / BITS_PER_MP_LIMB;
 
       if ((mp_exp_t) m == g) /* final exponent is 0, no multiplication or
-                                division to perform */
-        {
-          if (nx > n)
+				division to perform */
+	{
+	  if (nx > n)
             exact = mpn_scan1 (xp, 0) >= (nx - n) * BITS_PER_MP_LIMB;
-          err = !exact;
-          MPN_COPY2 (a, n, xp, nx);
-          exp_a = MPFR_GET_EXP (x) - n * BITS_PER_MP_LIMB;
-        }
+	  err = !exact;
+	  MPN_COPY2 (a, n, xp, nx);
+	  exp_a = MPFR_GET_EXP (x) - n * BITS_PER_MP_LIMB;
+	}
       else if ((mp_exp_t) m > g) /* we have to multiply x by b^exp */
         {
-          /* a2*2^exp_a =  b^e */
-          err = mpfr_mpn_exp (a, &exp_a, b, exp, n);
-          /* here, the error on a is at most 2^err ulps */
-          exact = (err == -1);
+	  /* a2*2^exp_a =  b^e */
+	  err = mpn_exp (a, &exp_a, b, exp, n);
+	  /* here, the error on a is at most 2^err ulps */
+	  exact = (err == -1);
 
-          /* x = x1*2^(n*BITS_PER_MP_LIMB) */
-          x1 = (nx >= n) ? xp + nx - n : xp;
-          nx1 = (nx >= n) ? n : nx; /* nx1 = min(n, nx) */
+	  /* x = x1*2^(n*BITS_PER_MP_LIMB) */
+	  x1 = (nx >= n) ? xp + nx - n : xp;
+	  nx1 = (nx >= n) ? n : nx; /* nx1 = min(n, nx) */
 
-          /* test si exact */
-          if (nx > n)
+	  /* test si exact */
+	  if (nx > n)
             exact = (exact &&
                      ((mpn_scan1 (xp, 0) >= (nx - n) * BITS_PER_MP_LIMB)));
 
-          /* we loose one more bit in the multiplication,
-             except when err=0 where we loose two bits */
-          err = (err <= 0) ? 2 : err + 1;
+	  /* we loose one more bit in the multiplication,
+	     except when err=0 where we loose two bits */
+	  err = (err <= 0) ? 2 : err + 1;
 
           /* result = a * x */
-          result = (mp_limb_t*) MPFR_TMP_ALLOC ((n + nx1) * sizeof (mp_limb_t));
-          mpn_mul (result, a, n, x1, nx1);
+	  result = (mp_limb_t*) TMP_ALLOC ((n + nx1) * sizeof (mp_limb_t));
+	  mpn_mul (result, a, n, x1, nx1);
           exp_a += MPFR_GET_EXP (x);
-          if (mpn_scan1 (result, 0) < (nx1 * BITS_PER_MP_LIMB))
-            exact = 0;
+	  if (mpn_scan1 (result, 0) < (nx1 * BITS_PER_MP_LIMB))
+	    exact = 0;
 
           /* normalize a and truncate */
           if ((result[n + nx1 - 1] & MPFR_LIMB_HIGHBIT) == 0)
-            {
-              mpn_lshift (a, result + nx1, n , 1);
-              a[0] |= result[nx1 - 1] >> (BITS_PER_MP_LIMB - 1);
+	    {
+	      mpn_lshift (a, result + nx1, n , 1);
+	      a[0] |= result[nx1 - 1] >> (BITS_PER_MP_LIMB - 1);
               exp_a --;
-            }
-          else
+	    }
+	  else
             MPN_COPY (a, result + nx1, n);
         }
       else
         {
-          /* a2*2^exp_a =  b^e */
-          err = mpfr_mpn_exp (a, &exp_a, b, exp, n);
-          exact = (err == -1);
+	  /* a2*2^exp_a =  b^e */
+	  err = mpn_exp (a, &exp_a, b, exp, n);
+	  exact = (err == -1);
 
-          /* allocate memory for x1, result and reste */
-          x1 = (mp_limb_t*) MPFR_TMP_ALLOC (2 * n * sizeof (mp_limb_t));
-          result = (mp_limb_t*) MPFR_TMP_ALLOC ((n + 1) * sizeof (mp_limb_t));
-          reste = (mp_limb_t*) MPFR_TMP_ALLOC (n * sizeof (mp_limb_t));
+	  /* allocate memory for x1, result and reste */
+	  x1 = (mp_limb_t*) TMP_ALLOC (2 * n * sizeof (mp_limb_t));
+	  result = (mp_limb_t*) TMP_ALLOC ((n + 1) * sizeof (mp_limb_t));
+          reste = (mp_limb_t*) TMP_ALLOC (n * sizeof (mp_limb_t));
 
-          /* initialize x1 = x */
-          MPN_COPY2 (x1, 2 * n, xp, nx);
-          if ((exact) && (nx > 2 * n) &&
-              (mpn_scan1 (xp, 0) < (nx - 2 * n) * BITS_PER_MP_LIMB))
-            exact = 0;
+	  /* initialize x1 = x */
+	  MPN_COPY2 (x1, 2 * n, xp, nx);
+	  if ((exact) && (nx > 2 * n) &&
+	      (mpn_scan1 (xp, 0) < (nx - 2 * n) * BITS_PER_MP_LIMB))
+	    exact = 0;
 
-          /* result = x / a */
-          mpn_tdiv_qr (result, reste, 0, x1, 2 * n, a, n);
-          exp_a = MPFR_GET_EXP (x) - exp_a - 2 * n * BITS_PER_MP_LIMB;
+	  /* result = x / a */
+	  mpn_tdiv_qr (result, reste, 0, x1, 2 * n, a, n);
+	  exp_a = MPFR_GET_EXP (x) - exp_a - 2 * n * BITS_PER_MP_LIMB;
 
-          /* test if division was exact */
-          if (exact)
+	  /* test if division was exact */
+	  if (exact)
             exact = mpn_popcount (reste, n) == 0;
 
-          /* normalize the result and copy into a */
-          if (result[n] == 1)
-            {
-              mpn_rshift (a, result, n, 1);
-              a[n - 1] |= MPFR_LIMB_HIGHBIT;;
-              exp_a ++;
-            }
-          else
+	  /* normalize the result and copy into a */
+	  if (result[n] == 1)
+	    {
+	      mpn_rshift (a, result, n, 1);
+	      a[n - 1] |= MPFR_LIMB_HIGHBIT;;
+	      exp_a ++;
+	    }
+	  else
             MPN_COPY (a, result, n);
 
-          err = (err == -1) ? 2 : err + 2;
+	  err = (err == -1) ? 2 : err + 2;
         }
 
       /* check if rounding is possible */
       if (exact)
         err = -1;
-      ret = mpfr_get_str_aux (s, e, a, n, exp_a, err, b, m, rnd);
-      if (ret == MPFR_ROUND_FAILED)
-        {
-          /* too large error: increment the working precision */
-          MPFR_ZIV_NEXT (loop, prec);
-        }
-      else if (ret == -MPFR_ROUND_FAILED)
-        {
-          /* too many digits in mantissa: exp = |m-g| */
-          if ((mp_exp_t) m > g) /* exp = m - g, multiply by b^exp */
-            {
-              g++;
-              exp --;
-            }
-          else /* exp = g - m, divide by b^exp */
-            {
-              g++;
-              exp ++;
-            }
-        }
-      else
-        break;
+      if (mpfr_get_str_aux (s, e, a, n, exp_a, err, b, m, rnd) != 2)
+	break;
 
-      MPFR_TMP_FREE(marker);
+      /* increment the working precision */
+      prec += log_2prec;
+
+      TMP_FREE(marker);
     }
-  MPFR_ZIV_FREE (loop);
 
   *e += g;
 
-  MPFR_TMP_FREE(marker);
+  TMP_FREE(marker);
 
   return s0;
 
-}
-
-void mpfr_free_str (char *str)
-{
-   (*__gmp_free_func) (str, strlen (str) + 1);
 }

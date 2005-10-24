@@ -1,6 +1,6 @@
 /* Test file for mpfr_set_z.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,46 +16,27 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <time.h>
-
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
+#include "mpfr-impl.h"
 #include "mpfr-test.h"
 
-static void check0(void)
-{
-  mpz_t y;
-  mpfr_t x;
-  int inexact, r;
-
-  /* Check for +0 */
-  mpfr_init (x);
-  mpz_init (y);
-  mpz_set_si (y, 0);
-  for(r = 0; r < GMP_RND_MAX; r++)
-    {
-      inexact = mpfr_set_z (x, y, (mp_rnd_t) r);
-      if (!MPFR_IS_ZERO(x) || !MPFR_IS_POS(x) || inexact)
-        {
-          printf("mpfr_set_z(x,0) failed for %s\n",
-                 mpfr_print_rnd_mode ((mp_rnd_t) r));
-          exit(1);
-        }
-    }
-  mpfr_clear(x);
-  mpz_clear(y);
-}
 
 /* FIXME: It'd be better to examine the actual data in an mpfr_t to see that
    it's as expected.  Comparing mpfr_set_z with mpfr_cmp or against
    mpfr_get_si is a rather indirect test of a low level routine.  */
 
+
 static void
-check (long i, mp_rnd_t rnd)
+check (long i, unsigned char rnd)
 {
   mpfr_t f;
   mpz_t z;
@@ -78,12 +59,10 @@ check_large (void)
 {
   mpz_t z;
   mpfr_t x, y;
-  mp_exp_t emax, emin;
 
   mpz_init (z);
   mpfr_init2 (x, 160);
   mpfr_init2 (y, 160);
-
   mpz_set_str (z, "77031627725494291259359895954016675357279104942148788042", 10);
   mpfr_set_z (x, z, GMP_RNDN);
   mpfr_set_str_binary (y, "0.1100100100001111110110101010001000100001011010001100001000110100110001001100011001100010100010111000000011011100000111001101000100101001000000100100111000001001E186");
@@ -92,33 +71,7 @@ check_large (void)
       printf ("Error in mpfr_set_z on large input\n");
       exit (1);
     }
-
-  /* check overflow */
-  emax = mpfr_get_emax ();
-  set_emax (2);
-  mpz_set_str (z, "7", 10);
-  mpfr_set_z (x, z, GMP_RNDU);
-  MPFR_ASSERTN(mpfr_inf_p (x) && mpfr_sgn (x) > 0);
-  set_emax (3);
-  mpfr_set_prec (x, 2);
-  mpz_set_str (z, "7", 10);
-  mpfr_set_z (x, z, GMP_RNDU);
-  MPFR_ASSERTN(mpfr_inf_p (x) && mpfr_sgn (x) > 0);
-  set_emax (emax);
-
-  /* check underflow */
-  emin = mpfr_get_emin ();
-  set_emin (3);
-  mpz_set_str (z, "1", 10);
-  mpfr_set_z (x, z, GMP_RNDZ);
-  MPFR_ASSERTN(mpfr_cmp_ui (x, 0) == 0 && MPFR_IS_POS(x));
-  set_emin (2);
-  mpfr_set_z (x, z, GMP_RNDN);
-  MPFR_ASSERTN(mpfr_cmp_ui (x, 0) == 0 && MPFR_IS_POS(x));
-  set_emin (emin);
-
   mpz_clear (z);
-
   mpfr_clear (x);
   mpfr_clear (y);
 }
@@ -131,12 +84,10 @@ main (int argc, char *argv[])
   tests_start_mpfr ();
 
   check_large ();
-  check (0, GMP_RNDN);
+  check (0, 0);
   for (j = 0; j < 200000; j++)
-    check (randlimb () & LONG_MAX, (mp_rnd_t) RND_RAND ());
-  check0 ();
+    check (randlimb () & LONG_MAX, randlimb () % 4);
 
   tests_end_mpfr ();
-
   return 0;
 }

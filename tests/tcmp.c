@@ -1,6 +1,6 @@
 /* Test file for mpfr_cmp.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,12 +16,15 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
+#include "mpfr-impl.h"
 #include "mpfr-test.h"
 
 int
@@ -41,7 +44,7 @@ main (void)
   mpfr_set_prec (yy, 2);
   mpfr_set_str_binary(xx, "-0.10E0");
   mpfr_set_str_binary(yy, "-0.10E0");
-  if ((mpfr_cmp) (xx, yy))
+  if (mpfr_cmp (xx, yy))
     {
       printf ("mpfr_cmp (xx, yy) returns non-zero for prec=2\n");
       exit (1);
@@ -76,28 +79,27 @@ main (void)
       exit (1);
     }
 
-  mpfr_set_prec (xx, 53);
-  mpfr_set_prec (yy, 200);
-  mpfr_set_ui (xx, 1, (mp_rnd_t) 0);
-  mpfr_set_ui (yy, 1, (mp_rnd_t) 0);
-  if (mpfr_cmp (xx, yy) != 0)
+  mpfr_set_prec(xx, 53); mpfr_set_prec(yy, 200);
+  mpfr_set_d(xx, 1.0, 0);
+  mpfr_set_d(yy, 1.0, 0);
+  if (mpfr_cmp(xx,yy)!=0)
     {
       printf ("Error in mpfr_cmp: 1.0 != 1.0\n");
       exit (1);
     }
-  mpfr_set_prec (yy, 31);
-  mpfr_set_str (xx, "1.0000000002", 10, (mp_rnd_t) 0);
-  mpfr_set_ui (yy, 1, (mp_rnd_t) 0);
-  if (!(mpfr_cmp (xx,yy)>0))
+  mpfr_set_prec(yy, 31);
+  mpfr_set_d(xx, 1.0000000002, 0);
+  mpfr_set_d(yy, 1.0, 0);
+  if (!(mpfr_cmp(xx,yy)>0))
     {
       printf ("Error in mpfr_cmp: not 1.0000000002 > 1.0\n");
       exit (1);
     }
-  mpfr_set_prec (yy, 53);
+  mpfr_set_prec(yy, 53);
 
   /* bug found by Gerardo Ballabio */
-  mpfr_set_ui(xx, 0, GMP_RNDN);
-  mpfr_set_str (yy, "0.1", 10, GMP_RNDN);
+  mpfr_set_d(xx, 0.0, GMP_RNDN);
+  mpfr_set_d(yy, 0.1, GMP_RNDN);
   if (mpfr_cmp(xx, yy) >= 0)
     {
       printf ("Error in mpfr_cmp(0.0, 0.1), gives %d\n", mpfr_cmp(xx, yy));
@@ -105,7 +107,7 @@ main (void)
     }
 
   mpfr_set_inf (xx, 1);
-  mpfr_set_str (yy, "-23489745.0329", 10, GMP_RNDN);
+  mpfr_set_d(yy, -23489745.0329, GMP_RNDN);
   if (mpfr_cmp(xx, yy) <= 0)
     {
       printf ("Error in mpfr_cmp(Infp, 23489745.0329), gives %d\n",
@@ -146,7 +148,7 @@ main (void)
     }
 
   mpfr_set_inf (xx, -1);
-  mpfr_set_str (yy, "2346.09234", 10, GMP_RNDN);
+  mpfr_set_d(yy, 2346.09234, GMP_RNDN);
   if (mpfr_cmp(xx, yy) >= 0)
     {
       printf ("Error in mpfr_cmp(Infm, 2346.09234), gives %d\n",
@@ -154,8 +156,8 @@ main (void)
       exit (1);
     }
 
-  mpfr_set_ui (xx, 0, GMP_RNDN);
-  mpfr_set_ui (yy, 1, GMP_RNDN);
+  mpfr_set_d (xx, 0.0, GMP_RNDN);
+  mpfr_set_d (yy, 1.0, GMP_RNDN);
   if ((i = mpfr_cmp3 (xx, yy, 1)) >= 0)
     {
       printf ("Error: mpfr_cmp3 (0, 1, 1) gives %d instead of"
@@ -176,8 +178,8 @@ main (void)
       if (!Isnan(x) && !Isnan(y))
         {
           i++;
-          mpfr_set_d (xx, x, GMP_RNDN);
-          mpfr_set_d (yy, y, GMP_RNDN);
+          mpfr_set_d (xx, x, 0);
+          mpfr_set_d (yy, y, 0);
           c = mpfr_cmp (xx,yy);
           if ((c>0 && x<=y) || (c==0 && x!=y) || (c<0 && x>=y))
             {
@@ -186,30 +188,6 @@ main (void)
               exit (1);
             }
         }
-    }
-
-  /* Check for NAN */
-  mpfr_set_nan (xx);
-  mpfr_clear_erangeflag ();
-  c = (mpfr_cmp) (xx, yy);
-  if (c != 0 || !mpfr_erangeflag_p () )
-    {
-      printf ("NAN error (1)\n");
-      exit (1);
-    }
-  mpfr_clear_erangeflag ();
-  c = (mpfr_cmp) (yy, xx);
-  if (c != 0 || !mpfr_erangeflag_p () )
-    {
-      printf ("NAN error (2)\n");
-      exit (1);
-    }
-  mpfr_clear_erangeflag ();
-  c = (mpfr_cmp) (xx, xx);
-  if (c != 0 || !mpfr_erangeflag_p () )
-    {
-      printf ("NAN error (3)\n");
-      exit (1);
     }
 
   mpfr_clear (xx);

@@ -16,12 +16,15 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "gmp.h"
+#include "gmp-impl.h"
+#include "mpfr.h"
+#include "mpfr-impl.h"
 #include "mpfr-test.h"
 
 /* set bit n of x to b, where bit 0 is the most significant one */
@@ -96,7 +99,7 @@ worst_cases (void)
           b = randlimb () % 2;
           set_bit (x, i + j + 2, b);
           set_bit (y, i + j + 2, b);
-          for (k=0; k<64; k++)
+	  for (k=0; k<64; k++)
             {
               if (k)
                 set_bit (x, i + j + k + 1, 0);
@@ -166,13 +169,13 @@ tcmp2 (double x, double y, int i)
           exit (1);
         }
     }
-  else if (j != (unsigned) i)
+  else if (j != i)
     {
       printf ("Error in mpfr_cmp2 for\nx=");
       mpfr_out_str (stdout, 2, 0, xx, GMP_RNDN);
       printf ("\ny=");
       mpfr_out_str (stdout, 2, 0, yy, GMP_RNDN);
-      printf ("\ngot %lu instead of %d\n", j, i);
+      printf ("\ngot %lu instead of %u\n", j, i);
       exit (1);
     }
   mpfr_clear(xx); mpfr_clear(yy);
@@ -273,25 +276,14 @@ special (void)
       exit (1);
     }
 
-  mpfr_set_prec (x, 65);
-  mpfr_set_prec (y, 32);
-  mpfr_set_str_binary (x, "1.1110111011110001110111011111111111101000011001011100101100101101");
-  mpfr_set_str_binary (y, "0.11101110111100011101110111111111");
-  if (mpfr_cmp2 (x, y, &j) <= 0 || j != 0)
-    {
-      printf ("Error in mpfr_cmp2 (1)\n");
-      exit (1);
-    }
-
-  mpfr_clear (x);
-  mpfr_clear (y);
+  mpfr_clear(x); mpfr_clear(y);
 }
 
 int
 main (void)
 {
   int i, j;
-  double x, y, z;
+  double x = 1.0, y, z;
 
   tests_start_mpfr ();
   mpfr_test_init ();
@@ -301,8 +293,7 @@ main (void)
   tcmp2 (5.43885304644369510000e+185, -1.87427265794105340000e-57, 1);
   tcmp2 (1.06022698059744327881e+71, 1.05824655795525779205e+71, -1);
   tcmp2 (1.0, 1.0, 53);
-  /* warning: cmp2 does not allow 0 as input */
-  for (x = 0.5, i = 1; i < 54; i++)
+  for (i = 0; i < 54; i++)
     {
       tcmp2 (1.0, 1.0-x, i);
       x /= 2.0;

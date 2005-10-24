@@ -1,6 +1,6 @@
-/* mpfr_sec - secant function = 1/cos.
+/* Test file for mpfr_dump.
 
-Copyright 2005 Free Software Foundation, Inc.
+Copyright 2000, 2001, 2002 Free Software Foundation, Inc.
 
 This file is part of the MPFR Library.
 
@@ -16,13 +16,27 @@ License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the MPFR Library; see the file COPYING.LIB.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Place, Fifth Floor, Boston,
-MA 02110-1301, USA. */
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+MA 02111-1307, USA. */
 
-#define FUNCTION mpfr_sec
-#define INVERSE  mpfr_cos
-#define ACTION_NAN(y) do { MPFR_SET_NAN(y); MPFR_RET_NAN; } while (1)
-#define ACTION_INF(y) do { MPFR_SET_NAN(y); MPFR_RET_NAN; } while (1)
-#define ACTION_ZERO(y,x) return mpfr_set_ui (y, 1, GMP_RNDN)
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "gen_inverse.h"
+#include "mpfr-test.h"
+
+int
+main (void)
+{
+  mpfr_t z;
+
+  tests_start_mpfr ();
+
+  mpfr_init2 (z, 2);
+  mpfr_set_ui (z, 0, GMP_RNDN);
+  mpfr_dump (z, GMP_RNDD);
+  printf ("   ^--- 0.00e0 printed above is ok\n");
+  mpfr_clear (z);
+
+  tests_end_mpfr ();
+  return 0;
+}

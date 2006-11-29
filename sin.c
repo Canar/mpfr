@@ -135,7 +135,7 @@ mpfr_sin (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
   precy = MPFR_PREC (y);
   m = precy + MPFR_INT_CEIL_LOG2 (precy) + 13;
   e = MPFR_GET_EXP (x);
-  m += (e < 0) ? -2 * e : e;
+  m += (e < 0) ? -2*e : e;
 
   sign = mpfr_sin_sign (x);
   mpfr_init2 (c, m);
@@ -151,12 +151,12 @@ mpfr_sin (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
       if (MPFR_IS_NEG_SIGN(sign))
         MPFR_CHANGE_SIGN(c);
 
-      /* Warning: c may be 0! */
+      /* Warning c may be 0 ! */
       if (MPFR_UNLIKELY (MPFR_IS_ZERO (c)))
         {
           /* Huge cancellation: increase prec a lot! */
           m = MAX (m, MPFR_PREC (x));
-          m = 2 * m;
+          m = 2*m;
         }
       else
         {
@@ -165,9 +165,9 @@ mpfr_sin (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
           if (mpfr_can_round (c, e, GMP_RNDN, GMP_RNDZ,
                               precy + (rnd_mode == GMP_RNDN)))
             /* WARNING: even if we know c <= sin(x), don't give GMP_RNDZ
-	       as 3rd argument to mpfr_can_round, since if c is exactly
-	       representable to the target precision (inexact = 0 below),
-	       we would have to add one ulp when rounding away from 0. */
+               as 3rd argument to mpfr_can_round, since if c is exactly
+               representable to the target precision (inexact = 0 below),
+               we would have to add one ulp when rounding away from 0. */
             break;
 
           /* check for huge cancellation (Near 0) */

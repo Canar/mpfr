@@ -254,7 +254,7 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mp_rnd_t rnd_mode)
          sticky bits */
       qsize = q0size + 1;
       /* need to allocate memory for the quotient */
-      qp = (mp_ptr) MPFR_TMP_ALLOC (qsize * sizeof(mp_limb_t));
+      qp = (mp_ptr) MPFR_TMP_ALLOC (qsize*sizeof(mp_limb_t));
     }
   else
     {
@@ -264,7 +264,7 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mp_rnd_t rnd_mode)
   qqsize = qsize + qsize;
 
   /* prepare the dividend */
-  ap = (mp_ptr) MPFR_TMP_ALLOC (qqsize * sizeof(mp_limb_t));
+  ap = (mp_ptr) MPFR_TMP_ALLOC (qqsize*sizeof(mp_limb_t));
   if (MPFR_LIKELY(qqsize > usize)) /* use the full dividend */
     {
       k = qqsize - usize; /* k > 0 */
@@ -312,7 +312,7 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mp_rnd_t rnd_mode)
   /* we now can perform the division */
   qh = mpn_divrem (qp, 0, ap + k, qqsize - k, bp, qsize - k);
   /* warning: qh may be 1 if u1 == v1, but u < v */
-#ifdef DEBUG2
+#ifdef DEBUG
   printf ("q="); mpfr_mpn_print (qp, qsize);
   printf ("r="); mpfr_mpn_print (ap, qsize);
 #endif
@@ -365,7 +365,7 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mp_rnd_t rnd_mode)
           round_bit = sticky3 & (MPFR_LIMB_ONE << (sh2 - 1));
           sticky = (sticky3 ^ round_bit) | sticky_u;
         }
-      else if (rnd_mode == GMP_RNDZ || rnd_mode == GMP_RNDD || inex == 0)
+      else if (rnd_mode == GMP_RNDZ || rnd_mode == GMP_RNDD || inex == MPFR_LIMB_ZERO)
         sticky = (inex == 0) ? MPFR_LIMB_ZERO : MPFR_LIMB_ONE;
       else /* rnd_mode = GMP_RNDU */
         sticky = MPFR_LIMB_ONE;
@@ -373,7 +373,7 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mp_rnd_t rnd_mode)
     }
   else /* vsize > qsize: need to truncate the divisor */
     {
-      if (inex == 0)
+      if (inex == MPFR_LIMB_ZERO)
         goto truncate;
       else
         {
@@ -404,7 +404,7 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mp_rnd_t rnd_mode)
               mp_ptr sp;
               int cmp_s_r;
 
-              sp = (mp_ptr) MPFR_TMP_ALLOC (vsize * sizeof(mp_limb_t));
+              sp = (mp_ptr) MPFR_TMP_ALLOC (vsize*sizeof(mp_limb_t));
               k = vsize - qsize;
               /* sp <- {qp, qsize} * {vp, vsize-qsize} */
               qp[0] ^= sticky3orig; /* restore original quotient */

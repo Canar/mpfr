@@ -47,15 +47,10 @@ MA 02110-1301, USA. */
 # include <sys/fpu.h>
 #endif
 
-#ifdef MPFR_TEST_TIMEOUT
-#include <sys/resource.h>
-#endif
-
 #include "mpfr-test.h"
 
 static void tests_rand_start (void);
 static void tests_rand_end   (void);
-static void tests_limit_start (void);
 
 /* We want to always import the function mpfr_dump inside the test
    suite, so that we can use it in GDB. But it doesn't work if we build
@@ -80,7 +75,6 @@ tests_start_mpfr (void)
 
   tests_memory_start ();
   tests_rand_start ();
-  tests_limit_start ();
 }
 
 void
@@ -89,17 +83,6 @@ tests_end_mpfr (void)
   mpfr_free_cache ();
   tests_rand_end ();
   tests_memory_end ();
-}
-
-static void
-tests_limit_start (void)
-{
-#ifdef MPFR_TEST_TIMEOUT
-  struct rlimit rlim[1];
-
-  rlim->rlim_cur = MPFR_TEST_TIMEOUT;
-  setrlimit (RLIMIT_CPU, rlim);
-#endif
 }
 
 static void

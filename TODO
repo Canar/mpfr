@@ -72,8 +72,6 @@ Changes in existing functions:
        aa = q*b+r      --> q has exaclty n bits.
   If RNDN, takes nq+1 bits. (See also the new division function).
 
-- random functions: get rid of _gmp_rand.
-
 
 ##############################################################################
 New functions to implement:
@@ -216,16 +214,10 @@ New functions to implement:
 - mpfr_frexp(mpfr_t rop, mp_exp_t *n, mpfr_t op, mp_rnd_t rnd) suggested by
   Steve Kargl <sgk@troutmask.apl.washington.edu> Sun, 7 Aug 2005
 
-
 ##############################################################################
 Efficiency:
 ##############################################################################
 
-- fix regression with mpfr_mpz_root (from Keith Briggs, 5 July 2006), for
-   example on 3Ghz P4 with gmp-4.2, x=12.345:
-   prec=50000    k=2   k=3   k=10  k=100
-   mpz_root      0.036 0.072 0.476 7.628
-   mpfr_mpz_root 0.004 0.004 0.036 12.20
 - implement Mulders algorithm for squaring and division
 - for sparse input (say x=1 with 2 bits), mpfr_exp is not faster than for
         full precision when precision <= MPFR_EXP_THRESHOLD. The reason is
@@ -282,12 +274,9 @@ Miscellaneous:
 
 - In addition to major/minor/patchlevel version information, add a macro
   and/or function to the MPFR interface, that would tell what patches
-  have been applied and other possible information (some information is
-  already available as a suffix in the MPFR_VERSION_STRING macro, but it
-  should be short, thus it is not suitable if one wishes to mention all
-  the individual patches that have been applied); this can include the
-  features that have been enabled or disabled in configure. For instance,
-  see what Mutt and Subversion do concerning their CVS/Subversion builds.
+  have been applied and other possible information (e.g., Subversion
+  branch and revision, beta releases, and so on). For instance, see
+  what Mutt and Subversion do concerning their CVS/Subversion builds.
   Of course, patches must include some tag (one should not rely on a
   wrapper to apply them), that could be added to a PATCHES file. Mutt's
   doc/patch-notes.txt file mentions an interesting scheme: the following
@@ -355,13 +344,12 @@ Miscellaneous:
 
 - in div.c, try to find a case for which cy != 0 after the line
         cy = mpn_sub_1 (sp + k, sp + k, qsize, cy);
-  (which should be added to the tests), e.g. by having {vp, k} = 0, or
-  prove that this cannot happen.
+  (which should be added to the tests) or prove that this cannot
+  happen.
 
 - add a configure test for --enable-logging to ignore the option if
   it cannot be supported. Modify the "configure --help" description
   to say "on systems that support it".
-
 
 ##############################################################################
 Portability:
@@ -373,7 +361,6 @@ Portability:
   strings into newly allocated memory.  I thought I'd done that in a
   couple of places already.  Arrays of chars are not much fun.
 
-- use http://gcc.gnu.org/viewcvs/trunk/config/stdint.m4 for mpfr-gmp.h
 
 
 ##############################################################################

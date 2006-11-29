@@ -2,8 +2,8 @@
 @c %**start of header
 @setfilename mpfr.info
 @documentencoding ISO-8859-1
-@set VERSION 2.3.0-dev
-@set UPDATED-MONTH January 2006
+@set VERSION 2.2.1
+@set UPDATED-MONTH November 2006
 @settitle MPFR @value{VERSION}
 @synindex tp fn
 @iftex
@@ -674,8 +674,8 @@ Here is an example on how to initialize floating-point variables:
 @example
 @{
   mpfr_t x, y;
-  mpfr_init (x);			/* use default precision */
-  mpfr_init2 (y, 256);		/* precision @emph{exactly} 256 bits */
+  mpfr_init (x);                        /* use default precision */
+  mpfr_init2 (y, 256);          /* precision @emph{exactly} 256 bits */
   @dots{}
   /* When the program is about to exit, do ... */
   mpfr_clear (x);
@@ -725,7 +725,6 @@ these functions.
 @deftypefunx int mpfr_set_sj (mpfr_t @var{rop}, intmax_t @var{op}, mp_rnd_t @var{rnd})
 @deftypefunx int mpfr_set_d (mpfr_t @var{rop}, double @var{op}, mp_rnd_t @var{rnd})
 @deftypefunx int mpfr_set_ld (mpfr_t @var{rop}, long double @var{op}, mp_rnd_t @var{rnd})
-@deftypefunx int mpfr_set_decimal64 (mpfr_t @var{rop}, _Decimal64 @var{op}, mp_rnd_t @var{rnd})
 @deftypefunx int mpfr_set_z (mpfr_t @var{rop}, mpz_t @var{op}, mp_rnd_t @var{rnd})
 @deftypefunx int mpfr_set_q (mpfr_t @var{rop}, mpq_t @var{op}, mp_rnd_t @var{rnd})
 @deftypefunx int mpfr_set_f (mpfr_t @var{rop}, mpf_t @var{op}, mp_rnd_t @var{rnd})
@@ -735,20 +734,15 @@ Note that the input 0 is converted to +0 by @code{mpfr_set_ui},
 @code{mpfr_set_si}, @code{mpfr_set_sj}, @code{mpfr_set_uj},
 @code{mpfr_set_z}, @code{mpfr_set_q} and
 @code{mpfr_set_f}, regardless of the rounding mode.
-If the system doesn't support the IEEE-754 standard, @code{mpfr_set_d},
-@code{mpfr_set_ld} and 
-@code{mpfr_set_decimal64} might not preserve the signed zeros.
-The @code{mpfr_set_decimal64} function is built only with the configure
-option @samp{--enable-decimal-float}, and when the compiler or
-system provides the @code{_Decimal64} data type.
+If the system doesn't support the IEEE-754 standard, @code{mpfr_set_d} and
+@code{mpfr_set_ld} might not preserve the signed zeros.
 @code{mpfr_set_q} might not be able to work if the numerator (or the
 denominator) can not be representable as a @code{mpfr_t}.
 
 Note: If you want to store a floating-point constant to a @code{mpfr_t},
 you should use @code{mpfr_set_str} (or one of the MPFR constant functions,
-such as @code{mpfr_const_pi} for @m{\pi,Pi}) instead of @code{mpfr_set_d},
-@code{mpfr_set_ld} or @code{mpfr_set_decimal64}.
-Otherwise the floating-point constant will be first
+such as @code{mpfr_const_pi} for @m{\pi,Pi}) instead of @code{mpfr_set_d}
+or @code{mpfr_set_ld}. Otherwise the floating-point constant will be first
 converted into a reduced-precision (e.g., 53-bit) binary number before
 MPFR can work with it.
 @end deftypefun
@@ -891,28 +885,21 @@ See @code{mpfr_set_str}.
 
 @deftypefun double mpfr_get_d (mpfr_t @var{op}, mp_rnd_t @var{rnd})
 @deftypefunx {long double} mpfr_get_ld (mpfr_t @var{op}, mp_rnd_t @var{rnd})
-@deftypefunx _Decimal64 mpfr_get_decimal64 (mpfr_t @var{op}, mp_rnd_t @var{rnd})
-Convert @var{op} to a @code{double} (respectively @code{_Decimal64} or
-@code{long double}), using the rounding mode @var{rnd}.
-If the system doesn't support IEEE 754 standard, these functions
-might not preserve the signed zeros.
-The @code{mpfr_get_decimal64} function is built only with the configure
-option @samp{--enable-decimal-float}, and when the compiler or
-system provides the @code{_Decimal64} data type.
+Convert @var{op} to a @code{double} (respectively @code{long double}),
+using the rounding mode @var{rnd}.
+If the system doesn't support IEEE 754 standard, this function
+ might not preserve the signed zeros.
 @end deftypefun
 
 @deftypefun double mpfr_get_d_2exp (long *@var{exp}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
-@deftypefunx {long double} mpfr_get_ld_2exp (long *@var{exp}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Return @var{d} and set @var{exp} such that @math{0.5@le{}@GMPabs{@var{d}}<1}
 and @m{@var{d}\times 2^{exp}, @var{d} times 2 raised to @var{exp}} equals
-@var{op} rounded to double (resp. long double)
-precision, using the given rounding mode.
+@var{op} rounded to double precision, using the given rounding mode.
 @comment See ISO C standard, frexp function.
 If @var{op} is zero, then a zero of the same sign (or an unsigned zero,
 if the implementation does not have signed zeros) is returned, and
 @var{exp} is set to 0.
-If @var{op} is NaN or an infinity, then the corresponding double precision
-(resp. long-double precision)
+If @var{op} is NaN or an infinity, then the corresponding double-precision
 value is returned, and @var{exp} is undefined.
 @end deftypefun
 
@@ -1408,7 +1395,6 @@ MPFR version to match this alternative definition.
 @end deftypefun
 
 @deftypefun int mpfr_zeta (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
-@deftypefunx int mpfr_zeta_ui (mpfr_t @var{rop}, unsigned long @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the value of the Riemann Zeta function on @var{op},
 rounded in the direction @var{rnd}.
 @end deftypefun
@@ -1668,9 +1654,7 @@ This function is useful for
 testing functions and algorithms, since this kind of random numbers have
 proven to be more likely to trigger corner-case bugs.
 Negative random numbers are generated when @var{size} is negative.
-Put +0 in @var{rop} when size if zero. The internal state of the default
-pseudorandom number generator is modified by a call to this function (the
-same one as GMP if MPFR was built using @samp{--with-gmp-build}).
+Put +0 in @var{rop} when size if zero.
 @end deftypefun
 
 @deftypefun mp_exp_t mpfr_get_exp (mpfr_t @var{x})
@@ -1980,10 +1964,8 @@ space for @var{x}. Otherwise the behavior is undefined.
 Return non-zero if @var{op1} and @var{op2} are both non-zero ordinary
 numbers with the same exponent and the same first @var{op3} bits, both
 zero, or both infinities of the same sign. Return zero otherwise. This
-function is defined for compatibility with @code{mpf}. Do not use it if
-you want to know whether two numbers are close to each other; for instance,
-1.011111 and 1.100000 are regarded as different for any value of @var{op3}
-larger than 1.
+function is defined for compatibility with @code{mpf}, but does not
+make much sense.
 @end deftypefun
 
 @deftypefun void mpfr_reldiff (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
@@ -2212,7 +2194,6 @@ contributed the original version of @file{mul_ui.c}, the @file{gmp_op.c}
 file, and helped to the Windows porting.
 Jean-Luc R@'emy contributed the @code{mpfr_zeta} code.
 Ludovic Meunier helped in the design of the @code{mpfr_erf} code.
-Damien Stehl@'e contributed the @code{mpfr_get_ld_2exp} function.
 
 The development of the MPFR library would not have been possible without the
 continuous support of LORIA, INRIA and INRIA Lorraine.

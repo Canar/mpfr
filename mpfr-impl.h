@@ -281,28 +281,6 @@ __MPFR_DECLSPEC extern const mpfr_t __gmpfr_four;
 
 
 /******************************************************
- ******************** Warnings ************************
- ******************************************************/
-
-/* MPFR_WARNING is no longer useful, but let's keep the macro in case
-   it needs to be used again in the future. */
-
-#ifdef MPFR_USE_WARNINGS
-/* Note: needs <stdio.h> and <stdlib.h> */
-# define MPFR_WARNING(W)                    \
-  do                                        \
-    {                                       \
-      char *q = getenv ("MPFR_QUIET");      \
-      if (q == NULL || *q == 0)             \
-        fprintf (stderr, "MPFR: %s\n", W);  \
-    }                                       \
-  while (0)
-#else
-# define MPFR_WARNING(W)  ((void) 0)
-#endif
-
-
-/******************************************************
  ****************** double macros *********************
  ******************************************************/
 
@@ -375,6 +353,8 @@ typedef union ieee_double_extract Ieee_double_extract;
 #  define DOUBLE_ISNAN(x) ((x) != (x))
 # endif
 #endif
+
+
 
 /******************************************************
  *************** Long double macros *******************
@@ -474,15 +454,6 @@ typedef union {
 /* #define MPFR_LDBL_MANT_DIG   64 */
 #define MPFR_LIMBS_PER_LONG_DOUBLE ((64-1)/BITS_PER_MP_LIMB+1)
 
-#endif
-
-/******************************************************
- *************** _Decimal64 support *******************
- ******************************************************/
-
-#if MPFR_WANT_DECIMAL_FLOATS
-/* to cast between binary64 and decimal64 */
-union ieee_double_decimal64 { double d; _Decimal64 d64; };
 #endif
 
 /******************************************************
@@ -812,11 +783,8 @@ extern unsigned char *mpfr_stack;
  *   Undefined if x is 0 */
 #if __MPFR_GNUC(2,95) || __MPFR_ICC(8,1,0)
 # define MPFR_INT_CEIL_LOG2(x)                            \
-    (MPFR_UNLIKELY ((x) == 1) ? 0 :                       \
-     __extension__ ({ int _b; mp_limb_t _limb;            \
-      MPFR_ASSERTN ((x) > 1);                             \
-      _limb = (x) - 1;                                    \
-      MPFR_ASSERTN (_limb == (x) - 1);                    \
+    (__extension__ ({int _b; mp_limb_t _limb = (x);       \
+      MPFR_ASSERTN (_limb == (x));                        \
       count_leading_zeros (_b, _limb);                    \
       (BITS_PER_MP_LIMB - _b); }))
 #else
@@ -1485,7 +1453,6 @@ __MPFR_DECLSPEC int  mpfr_cache _MPFR_PROTO ((mpfr_ptr, mpfr_cache_t,
 
 __MPFR_DECLSPEC void mpfr_mulhigh_n _MPFR_PROTO ((mp_ptr, mp_srcptr,
                                                   mp_srcptr, mp_size_t));
-__MPFR_DECLSPEC void mpfr_sqrhigh_n _MPFR_PROTO ((mp_ptr, mp_srcptr, mp_size_t));
 
 __MPFR_DECLSPEC int mpfr_round_p _MPFR_PROTO ((mp_limb_t *, mp_size_t,
                                                mp_exp_t, mp_prec_t));

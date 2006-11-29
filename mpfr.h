@@ -24,9 +24,9 @@ MA 02110-1301, USA. */
 
 /* Define MPFR version number */
 #define MPFR_VERSION_MAJOR 2
-#define MPFR_VERSION_MINOR 3
-#define MPFR_VERSION_PATCHLEVEL 0
-#define MPFR_VERSION_STRING "2.3.0-dev"
+#define MPFR_VERSION_MINOR 2
+#define MPFR_VERSION_PATCHLEVEL 1
+#define MPFR_VERSION_STRING "2.2.1"
 
 /* Macros dealing with MPFR VERSION */
 #define MPFR_VERSION_NUM(a,b,c) (((a) << 16L) | ((b) << 8) | (c))
@@ -227,10 +227,6 @@ __MPFR_DECLSPEC void mpfr_set_default_prec _MPFR_PROTO((mpfr_prec_t));
 __MPFR_DECLSPEC mp_prec_t mpfr_get_default_prec _MPFR_PROTO((void));
 
 __MPFR_DECLSPEC int mpfr_set_d _MPFR_PROTO ((mpfr_ptr, double, mpfr_rnd_t));
-#if MPFR_WANT_DECIMAL_FLOATS
-__MPFR_DECLSPEC int mpfr_set_decimal64 _MPFR_PROTO ((mpfr_ptr, _Decimal64,
-						     mp_rnd_t));
-#endif
 __MPFR_DECLSPEC int
   mpfr_set_ld _MPFR_PROTO ((mpfr_ptr, long double, mpfr_rnd_t));
 __MPFR_DECLSPEC int
@@ -284,17 +280,11 @@ __MPFR_DECLSPEC uintmax_t mpfr_get_uj _MPFR_PROTO ((mpfr_srcptr, mpfr_rnd_t));
 
 __MPFR_DECLSPEC mp_exp_t mpfr_get_z_exp _MPFR_PROTO ((mpz_ptr, mpfr_srcptr));
 __MPFR_DECLSPEC double mpfr_get_d _MPFR_PROTO ((mpfr_srcptr, mpfr_rnd_t));
-#if MPFR_WANT_DECIMAL_FLOATS
-__MPFR_DECLSPEC _Decimal64 mpfr_get_decimal64 _MPFR_PROTO ((mpfr_srcptr,
-							   mp_rnd_t));
-#endif
 __MPFR_DECLSPEC long double mpfr_get_ld _MPFR_PROTO ((mpfr_srcptr,
                                                       mpfr_rnd_t));
 __MPFR_DECLSPEC double mpfr_get_d1 _MPFR_PROTO ((mpfr_srcptr));
 __MPFR_DECLSPEC double mpfr_get_d_2exp _MPFR_PROTO ((long*, mpfr_srcptr,
                                                      mpfr_rnd_t));
-__MPFR_DECLSPEC long double mpfr_get_ld_2exp _MPFR_PROTO ((long*, mpfr_srcptr,
-                                                           mpfr_rnd_t));
 __MPFR_DECLSPEC long mpfr_get_si _MPFR_PROTO ((mpfr_srcptr, mpfr_rnd_t));
 __MPFR_DECLSPEC unsigned long mpfr_get_ui _MPFR_PROTO ((mpfr_srcptr,
                                                         mpfr_rnd_t));
@@ -509,7 +499,6 @@ __MPFR_DECLSPEC int mpfr_root _MPFR_PROTO ((mpfr_ptr,mpfr_srcptr,unsigned long,m
 __MPFR_DECLSPEC int mpfr_gamma _MPFR_PROTO((mpfr_ptr,mpfr_srcptr,mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_lngamma _MPFR_PROTO((mpfr_ptr,mpfr_srcptr,mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_zeta _MPFR_PROTO ((mpfr_ptr,mpfr_srcptr,mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_zeta_ui _MPFR_PROTO ((mpfr_ptr,unsigned long,mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_fac_ui _MPFR_PROTO ((mpfr_ptr, unsigned long int,
                                               mpfr_rnd_t));
 
@@ -568,7 +557,7 @@ __MPFR_DECLSPEC int    mpfr_custom_get_kind   _MPFR_PROTO ((mpfr_srcptr));
 }
 #endif
 
-/* DON'T USE THIS! (For MPFR-public macros only, see below.) */
+/* DON'T USE THIS! */
 #if __GMP_MP_SIZE_T_INT
 #define __MPFR_EXP_NAN  ((mp_exp_t)((~((~(unsigned int)0)>>1))+2))
 #define __MPFR_EXP_ZERO ((mp_exp_t)((~((~(unsigned int)0)>>1))+1))
@@ -579,8 +568,6 @@ __MPFR_DECLSPEC int    mpfr_custom_get_kind   _MPFR_PROTO ((mpfr_srcptr));
 #define __MPFR_EXP_INF  ((mp_exp_t)((~((~(unsigned long)0)>>1))+3))
 #endif
 
-/* Warning! This macro doesn't work with K&R C and shouldn't be used
-   internally. For public use only, but see the MPFR manual. */
 #define MPFR_DECL_INIT(_x, _p)                                        \
   mp_limb_t __gmpfr_local_tab_##_x[((_p)-1)/GMP_NUMB_BITS+1];         \
   mpfr_t    _x = {{(_p),1,__MPFR_EXP_NAN,__gmpfr_local_tab_##_x}}

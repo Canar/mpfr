@@ -178,7 +178,7 @@ compare_exp2_exp3 (mp_prec_t p0, mp_prec_t p1)
                   mpfr_print_rnd_mode (rnd));
           mpfr_print_binary (x);
           puts ("");
-          printf ("mpfr_exp_2 gives ");
+          printf ("mpfr_exp_2 gives  ");
           mpfr_print_binary (y);
           puts ("");
           printf ("mpfr_exp_3 gives ");

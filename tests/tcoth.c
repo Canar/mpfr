@@ -83,7 +83,7 @@ static void
 check_bugs (void)
 {
   mpfr_t x, y;
-  
+
   mpfr_init (x);
   mpfr_init (y);
 

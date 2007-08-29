@@ -1,4 +1,240 @@
 ------------------------------------------------------------------------
+r4796 | vlefevre | 2007-08-28 15:40:53 +0000 (Tue, 28 Aug 2007) | 3 lines
+Changed paths:
+   M /branches/2.3/atan2.c
+   M /branches/2.3/tests/tatan.c
+
+Ported the mpfr_atan2 fix in underflow case and corresponding testcases
+from the trunk.
+
+------------------------------------------------------------------------
+r4787 | vlefevre | 2007-08-28 13:17:01 +0000 (Tue, 28 Aug 2007) | 2 lines
+Changed paths:
+   M /branches/2.3/README.dev
+
+README.dev: added a paragraph concerning Ziv loops.
+
+------------------------------------------------------------------------
+r4782 | vlefevre | 2007-08-27 14:29:03 +0000 (Mon, 27 Aug 2007) | 2 lines
+Changed paths:
+   M /branches/2.3
+   M /branches/2.3/tests
+
+Updated svn:ignore properties.
+
+------------------------------------------------------------------------
+r4780 | vlefevre | 2007-08-27 11:55:25 +0000 (Mon, 27 Aug 2007) | 7 lines
+Changed paths:
+   M /branches/2.3/FAQ.html
+
+FAQ update:
+  * The question numbers are now hardcoded instead of being generated
+    with CSS rules.
+  * Added the list of questions at the top.
+  * CSS styles: a grey bar is displayed on the left of the target answer
+    (if the browser supports the ":target" pseudo-class from CSS3).
+
+------------------------------------------------------------------------
+r4777 | vlefevre | 2007-08-27 10:44:49 +0000 (Mon, 27 Aug 2007) | 2 lines
+Changed paths:
+   M /branches/2.3/FAQ.html
+
+FAQ update.
+
+------------------------------------------------------------------------
+r4775 | vlefevre | 2007-08-22 15:52:23 +0000 (Wed, 22 Aug 2007) | 6 lines
+Changed paths:
+   M /branches/2.3/INSTALL
+
+INSTALL: added another warning concerning the --with-gmp options.
+For instance, under Linux, "cpp -I/usr/include -v < /dev/null" says:
+  ignoring duplicate directory "/usr/include"
+    as it is a non-system directory that duplicates a system directory
+and does not modify the include search path as wanted.
+
+------------------------------------------------------------------------
+r4773 | vlefevre | 2007-08-15 17:30:50 +0000 (Wed, 15 Aug 2007) | 2 lines
+Changed paths:
+   M /branches/2.3/mpfr.texi
+
+mpfr.texi: improved description of mpfr_setsign (merged c4772).
+
+------------------------------------------------------------------------
+r4771 | vlefevre | 2007-08-14 11:43:05 +0000 (Tue, 14 Aug 2007) | 2 lines
+Changed paths:
+   M /branches/2.3/NEWS
+
+Added to NEWS: Thread-safe support with Microsoft Visual compiler.
+
+------------------------------------------------------------------------
+r4769 | vlefevre | 2007-08-14 11:36:25 +0000 (Tue, 14 Aug 2007) | 6 lines
+Changed paths:
+   M /branches/2.3/mpfr-impl.h
+
+mpfr-impl.h: if MPFR_USE_THREAD_SAFE is defined (--enable-thread-safe):
+  * Added support for MSC (thanks to Brian Gladman).
+  * Define MPFR_THREAD_ATTR even after #error to make the error more
+    visible (see comment in the source).
+[svn merge -c4768 svn+ssh://gforge/svn/mpfr/trunk]
+
+------------------------------------------------------------------------
+r4767 | vlefevre | 2007-08-13 10:43:38 +0000 (Mon, 13 Aug 2007) | 2 lines
+Changed paths:
+   M /branches/2.3/ChangeLog
+
+ChangeLog update.
+
+------------------------------------------------------------------------
+r4766 | vlefevre | 2007-08-13 10:42:59 +0000 (Mon, 13 Aug 2007) | 3 lines
+Changed paths:
+   M /branches/2.3/tests/tstckintc.c
+
+tstckintc.c: fixed bus error on Solaris (the address of Buffer was not
+a multiple of 4).
+
+------------------------------------------------------------------------
+r4764 | vlefevre | 2007-08-13 05:09:19 +0000 (Mon, 13 Aug 2007) | 2 lines
+Changed paths:
+   M /branches/2.3/ChangeLog
+
+ChangeLog update.
+
+------------------------------------------------------------------------
+r4763 | vlefevre | 2007-08-13 05:08:16 +0000 (Mon, 13 Aug 2007) | 2 lines
+Changed paths:
+   M /branches/2.3/VERSION
+   M /branches/2.3/configure.in
+   M /branches/2.3/mpfr.h
+   M /branches/2.3/mpfr.texi
+   M /branches/2.3/version.c
+
+Updated version to 2.3.0-rc2.
+
+------------------------------------------------------------------------
+r4762 | vlefevre | 2007-08-13 05:06:22 +0000 (Mon, 13 Aug 2007) | 2 lines
+Changed paths:
+   M /branches/2.3/NEWS
+
+NEWS: new functions mpfr_signbit, mpfr_setsign, mpfr_copysign.
+
+------------------------------------------------------------------------
+r4760 | vlefevre | 2007-08-13 04:55:57 +0000 (Mon, 13 Aug 2007) | 8 lines
+Changed paths:
+   M /branches/2.3/Makefile.am
+   M /branches/2.3/TODO
+   M /branches/2.3/copysign.c
+   M /branches/2.3/mpfr.h
+   M /branches/2.3/mpfr.texi
+   A /branches/2.3/setsign.c (from /trunk/setsign.c:4759)
+   A /branches/2.3/signbit.c (from /trunk/signbit.c:4759)
+   M /branches/2.3/tests/tcopysign.c
+
+Implemented changes suggested in
+<http://websympa.loria.fr/wwsympa/arc/mpfr/2007-07/msg00123.html>.
+* Made mpfr_copysign() like the corresponding function in IEEE 754
+  (was an internal function until now).
+* Added mpfr_signbit() and mpfr_setsign().
+* Documented these three functions.
+* Updated TODO.
+
+------------------------------------------------------------------------
+r4758 | vlefevre | 2007-08-13 04:35:23 +0000 (Mon, 13 Aug 2007) | 2 lines
+Changed paths:
+   M /branches/2.3/jyn_asympt.c
+   M /branches/2.3/remquo.c
+   M /branches/2.3/tests/texp10.c
+   M /branches/2.3/tests/tl2b.c
+
+Make svn properties consistent.
+
+------------------------------------------------------------------------
+r4756 | vlefevre | 2007-08-11 23:37:09 +0000 (Sat, 11 Aug 2007) | 3 lines
+Changed paths:
+   M /branches/2.3/VERSION
+   M /branches/2.3/configure.in
+   M /branches/2.3/mpfr.h
+   M /branches/2.3/mpfr.texi
+   M /branches/2.3/version.c
+
+Reverted version to 2.3.0-dev again (the copysign issue is still
+unresolved).
+
+------------------------------------------------------------------------
+r4755 | vlefevre | 2007-08-11 23:24:51 +0000 (Sat, 11 Aug 2007) | 2 lines
+Changed paths:
+   M /branches/2.3/ChangeLog
+
+ChangeLog update.
+
+------------------------------------------------------------------------
+r4754 | vlefevre | 2007-08-11 23:23:56 +0000 (Sat, 11 Aug 2007) | 2 lines
+Changed paths:
+   M /branches/2.3/VERSION
+   M /branches/2.3/configure.in
+   M /branches/2.3/mpfr.h
+   M /branches/2.3/mpfr.texi
+   M /branches/2.3/version.c
+
+Updated version to 2.3.0-rc2.
+
+------------------------------------------------------------------------
+r4753 | vlefevre | 2007-08-11 23:22:49 +0000 (Sat, 11 Aug 2007) | 2 lines
+Changed paths:
+   M /branches/2.3/tests/tatan.c
+
+Fixed mpfr_inits and mpfr_clears calls in tests/tatan.c.
+
+------------------------------------------------------------------------
+r4750 | vlefevre | 2007-08-11 22:08:43 +0000 (Sat, 11 Aug 2007) | 2 lines
+Changed paths:
+   M /branches/2.3/VERSION
+   M /branches/2.3/configure.in
+   M /branches/2.3/mpfr.h
+   M /branches/2.3/mpfr.texi
+   M /branches/2.3/version.c
+
+Reverted version to 2.3.0-dev as I've found bugs.
+
+------------------------------------------------------------------------
+r4749 | vlefevre | 2007-08-11 21:37:18 +0000 (Sat, 11 Aug 2007) | 2 lines
+Changed paths:
+   M /branches/2.3/ChangeLog
+
+ChangeLog update.
+
+------------------------------------------------------------------------
+r4748 | vlefevre | 2007-08-11 21:29:01 +0000 (Sat, 11 Aug 2007) | 2 lines
+Changed paths:
+   M /branches/2.3/VERSION
+   M /branches/2.3/configure.in
+   M /branches/2.3/mpfr.h
+   M /branches/2.3/mpfr.texi
+   M /branches/2.3/version.c
+
+Updated version to 2.3.0-rc2.
+
+------------------------------------------------------------------------
+r4746 | vlefevre | 2007-08-10 02:19:02 +0000 (Fri, 10 Aug 2007) | 2 lines
+Changed paths:
+   A /branches/2.3 (from /trunk:4745)
+
+Created new 2.3 branch from the trunk (there were too many changes).
+
+------------------------------------------------------------------------
+r4744 | vlefevre | 2007-08-10 02:11:05 +0000 (Fri, 10 Aug 2007) | 2 lines
+Changed paths:
+   M /trunk/NEWS
+
+NEWS update.
+
+------------------------------------------------------------------------
+r4743 | vlefevre | 2007-08-10 02:06:56 +0000 (Fri, 10 Aug 2007) | 2 lines
+Changed paths:
+   M /trunk/ChangeLog
+
+ChangeLog update with "TZ=UTC svn log -v".
+
+------------------------------------------------------------------------
 r4742 | vlefevre | 2007-08-10 01:41:01 +0000 (Fri, 10 Aug 2007) | 3 lines
 Changed paths:
    M /trunk/asinh.c

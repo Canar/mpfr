@@ -188,8 +188,6 @@ test2 (void)
 }
 
 #define TEST_FUNCTION mpfr_zeta
-#define TEST_RANDOM_EMIN -48
-#define TEST_RANDOM_EMAX 31
 #include "tgeneric.c"
 
 /* Usage: tzeta - generic tests
@@ -397,7 +395,7 @@ main (int argc, char *argv[])
   mpfr_clear (y);
   mpfr_clear (z);
 
-  test_generic (2, 70, 5);
+  test_generic (2, 70, 1);
   test2 ();
 
   tests_end_mpfr ();

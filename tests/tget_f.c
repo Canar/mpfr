@@ -100,6 +100,7 @@ main (void)
   mp_exp_t e;
   int inex;
 
+  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   mpfr_init (y);

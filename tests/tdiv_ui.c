@@ -206,6 +206,7 @@ main (int argc, char **argv)
 {
   mpfr_t x;
 
+  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   special ();

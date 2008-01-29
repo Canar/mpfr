@@ -21,6 +21,7 @@ the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
 MA 02110-1301, USA. */
 
 #include <string.h>
+#include <locale.h>
 
 #include "mpfr-impl.h"
 
@@ -82,7 +83,7 @@ mpfr_out_str (FILE *stream, int base, size_t n_digits, mpfr_srcptr op,
 
   /* outputs mantissa */
   fputc (*s++, stream); e--; /* leading digit */
-  fputc ((unsigned char) MPFR_DECIMAL_POINT, stream);
+  fputc (MPFR_DECIMAL_POINT, stream);
   fputs (s, stream);         /* rest of mantissa */
   (*__gmp_free_func) (s0, l);
 

@@ -203,10 +203,6 @@ __MPFR_DECLSPEC extern MPFR_THREAD_ATTR mpfr_cache_t __gmpfr_cache_const_catalan
 #define BASE_MAX 36
 __MPFR_DECLSPEC extern const __mpfr_struct __gmpfr_l2b[BASE_MAX-1][2];
 
-/* Note: do not use the following values when they can be outside the
-   current exponent range, e.g. when the exponent range has not been
-   extended yet; under such a condition, they can be used only in
-   mpfr_cmpabs. */
 __MPFR_DECLSPEC extern const mpfr_t __gmpfr_one;
 __MPFR_DECLSPEC extern const mpfr_t __gmpfr_two;
 __MPFR_DECLSPEC extern const mpfr_t __gmpfr_four;
@@ -745,7 +741,7 @@ typedef unsigned long int  mpfr_uexp_t;
 # error "Neither GMP_LIMB_HIGHBIT nor MP_LIMB_T_HIGHBIT defined in GMP"
 #endif
 
-/* Mask to get the Most Significant Bit of a limb */
+/* Mask to get the Most Significent Bit of a limb */
 #define MPFR_LIMB_MSB(l) ((l)&MPFR_LIMB_HIGHBIT)
 
 /* Definition of MPFR_LIMB_ONE & MPFR_LIMB_ZERO*/
@@ -970,15 +966,7 @@ do {                                                                  \
   } while (0)
 
 /* Needs <locale.h> */
-#ifdef HAVE_LOCALE_H
-#include <locale.h>
-/* Warning! In case of signed char, the value of MPFR_DECIMAL_POINT may
-   be negative (the ISO C99 does not seem to forbid negative values). */
-#define MPFR_DECIMAL_POINT (localeconv()->decimal_point[0])
-#else
-#define MPFR_DECIMAL_POINT ((char) '.')
-#endif
-
+#define MPFR_DECIMAL_POINT ((unsigned char) localeconv()->decimal_point[0])
 
 /* Set y to s*significand(x)*2^e, for example MPFR_ALIAS(y,x,1,MPFR_EXP(x))
    sets y to |x|, and MPFR_ALIAS(y,x,MPFR_SIGN(x),0) sets y to x*2^f such

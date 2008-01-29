@@ -56,8 +56,6 @@ test_pow (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode)
 
 #define TEST_FUNCTION test_pow
 #define TWO_ARGS
-#define TEST_RANDOM_POS 16
-#define TGENERIC_NOWARNING 1
 #include "tgeneric.c"
 
 #define TEST_FUNCTION mpfr_pow_ui
@@ -1250,6 +1248,7 @@ main (int argc, char **argv)
 {
   mp_prec_t p;
 
+  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   bug20071127 ();

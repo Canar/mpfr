@@ -31,7 +31,7 @@ MA 02110-1301, USA. */
 #include <string.h>
 #include <float.h>
 
-#if HAVE_LOCALE_H
+#if HAVE_SETLOCALE
 #include <locale.h>
 #endif
 
@@ -133,7 +133,7 @@ tests_start_mpfr (void)
   /* don't buffer, so output is not lost if a test causes a segv etc */
   setbuf (stdout, NULL);
 
-#if HAVE_LOCALE_H && HAVE_SETLOCALE
+#if HAVE_SETLOCALE
   /* Added on 2005-07-09. This allows to test MPFR under various
      locales. New bugs will probably be found, in particular with
      LC_ALL="tr_TR.ISO8859-9" because of the i/I character... */
@@ -253,8 +253,6 @@ tests_rand_start (void)
                   "(include this in bug reports)\n", seed);
         }
     }
-  else
-      gmp_randseed_ui (rands, 0x2143FEDC);
 }
 
 static void
@@ -458,87 +456,14 @@ set_emax (mp_exp_t exponent)
     }
 }
 
-/* pos is 512 times the proportion of negative numbers.
-   If pos=256, half of the numbers are negative.
-   If pos=0, all generated numbers are positive.
-*/
 void
-tests_default_random (mpfr_ptr x, int pos, mp_exp_t emin, mp_exp_t emax)
+tests_default_random (mpfr_ptr x)
 {
   mpfr_random (x);
-  if (emin >= 1 || (randlimb () & 1))
-    mpfr_mul_2si (x, x, emin + (long) (randlimb () % (emax - emin + 1)),
-                  GMP_RNDN);
-  if (randlimb () % 512 < pos)
+  if (randlimb () & 1)
+    mpfr_mul_2si (x, x, (int) (randlimb () % 512) - 256, GMP_RNDN);
+  if (randlimb () & 1)
     mpfr_neg (x, x, GMP_RNDN);
-}
-
-/* The test_one argument is a boolean. If it is true, then the function
-   is tested in only one rounding mode (the one provided in rnd) and the
-   variable rndnext is not used (due to the break). If it is false, then
-   the function is tested in the 4 rounding modes, and rnd must initially
-   be GMP_RNDZ; thus rndnext will be initialized in the first iteration.
-   gcc may give a warning about rndnext, but this is an easy and correct
-   way to implement a simple queue for the rounding modes.
-   As examples of use, see the calls to test4rm from the data_check and
-   bad_cases functions. */
-static void
-test4rm (int (*fct) (), mpfr_srcptr x, mpfr_ptr y, mpfr_ptr z,
-         mp_rnd_t rnd, int test_one, char *name)
-{
-  mp_prec_t yprec = MPFR_PREC (y);
-  mp_rnd_t rndnext = GMP_RND_MAX;  /* means uninitialized */
-
-  MPFR_ASSERTN (test_one || rnd == GMP_RNDZ);
-  mpfr_set_prec (z, yprec);
-  while (1)
-    {
-      MPFR_ASSERTN (rnd != GMP_RND_MAX);
-      fct (z, x, rnd);
-      if (! mpfr_equal_p (y, z))
-        {
-          printf ("Error for %s with xprec=%ld, yprec=%ld, rnd=%s\nx = ",
-                  name, MPFR_PREC (x), yprec, mpfr_print_rnd_mode (rnd));
-          mpfr_out_str (stdout, 16, 0, x, GMP_RNDN);
-          printf ("\nexpected ");
-          mpfr_out_str (stdout, 16, 0, y, GMP_RNDN);
-          printf ("\ngot      ");
-          mpfr_out_str (stdout, 16, 0, z, GMP_RNDN);
-          printf ("\n");
-          exit (1);
-        }
-      if (test_one || rnd == GMP_RNDN)
-        break;
-      if (rnd == GMP_RNDZ)
-        {
-          if (MPFR_IS_NEG (y))
-            {
-              rnd = GMP_RNDU;
-              rndnext = GMP_RNDD;
-            }
-          else
-            {
-              rnd = GMP_RNDD;
-              rndnext = GMP_RNDU;
-            }
-        }
-      else
-        {
-          rnd = rndnext;
-          if (rndnext != GMP_RNDN)
-            {
-              rndnext = GMP_RNDN;
-              mpfr_nexttoinf (y);
-            }
-          else
-            {
-              if (yprec == MPFR_PREC_MIN)
-                break;
-              mpfr_prec_round (y, --yprec, GMP_RNDZ);
-              mpfr_set_prec (z, yprec);
-            }
-        }
-    }
 }
 
 /* Check data in file f for function foo, with name 'name'.
@@ -566,7 +491,7 @@ data_check (char *f, int (*foo) (), char *name)
   FILE *fp;
   mp_prec_t xprec, yprec;
   mpfr_t x, y, z;
-  mp_rnd_t rnd;
+  mp_rnd_t rnd, rndnext;
   char r;
   int c;
 
@@ -636,6 +561,7 @@ data_check (char *f, int (*foo) (), char *name)
             }
           mpfr_set_prec (x, xprec);
           mpfr_set_prec (y, yprec);
+          mpfr_set_prec (z, yprec);
           if (mpfr_inp_str (x, fp, 0, GMP_RNDN) == 0)
             {
               printf ("Error: corrupted argument in file '%s'\n", f);
@@ -653,7 +579,54 @@ data_check (char *f, int (*foo) (), char *name)
             }
           /* Skip whitespace, in particular at the end of the file. */
           fscanf (fp, " ");
-          test4rm (foo, x, y, z, rnd, r != 'Z', name);
+
+          while (1)
+            {
+              foo (z, x, rnd);
+              if (! mpfr_equal_p (y, z))
+                {
+                  printf ("Error for %s with xprec=%ld, yprec=%ld, rnd=%s\nx=",
+                          name, xprec, yprec, mpfr_print_rnd_mode (rnd));
+                  mpfr_out_str (stdout, 16, 0, x, GMP_RNDN);
+                  printf ("\nexpected ");
+                  mpfr_out_str (stdout, 16, 0, y, GMP_RNDN);
+                  printf ("\ngot      ");
+                  mpfr_out_str (stdout, 16, 0, z, GMP_RNDN);
+                  printf ("\n");
+                  exit (1);
+                }
+              if (r != 'Z' || rnd == GMP_RNDN)
+                break;
+              if (rnd == GMP_RNDZ)
+                {
+                  if (MPFR_IS_NEG (y))
+                    {
+                      rnd = GMP_RNDU;
+                      rndnext = GMP_RNDD;
+                    }
+                  else
+                    {
+                      rnd = GMP_RNDD;
+                      rndnext = GMP_RNDU;
+                    }
+                }
+              else
+                {
+                  rnd = rndnext;
+                  if (rndnext != GMP_RNDN)
+                    {
+                      rndnext = GMP_RNDN;
+                      mpfr_nexttoinf (y);
+                    }
+                  else
+                    {
+                      if (yprec == MPFR_PREC_MIN)
+                        break;
+                      mpfr_prec_round (y, --yprec, GMP_RNDZ);
+                      mpfr_set_prec (z, yprec);
+                    }
+                }
+            }
         }
     }
 
@@ -662,125 +635,4 @@ data_check (char *f, int (*foo) (), char *name)
   mpfr_clear (z);
 
   fclose (fp);
-}
-
-/* Test n random bad cases. A precision py in [pymin,pymax] and
- * a number y of precision py are chosen randomly. One computes
- * x = inv(y) in precision px = py + psup (rounded to nearest).
- * Then (in general), y is a bad case for fct in precision py (in
- * the directed rounding modes, but also in the rounding-to-nearest
- * mode for some lower precision: see data_check).
- * fct, inv, name: data related to the function.
- * pos, emin, emax: arguments for tests_default_random.
- */
-void
-bad_cases (int (*fct)(), int (*inv)(), char *name,
-           int pos, mp_exp_t emin, mp_exp_t emax,
-           mp_prec_t pymin, mp_prec_t pymax, mp_prec_t psup,
-           int n)
-{
-  mpfr_t x, y, z;
-  char *dbgenv;
-  int i, dbg;
-
-  dbgenv = getenv ("MPFR_DEBUG_BADCASES");
-  dbg = dbgenv != 0 ? atoi (dbgenv) : 0;  /* debug level */
-  mpfr_inits (x, y, z, (void *) 0);
-  for (i = 0; i < n; i++)
-    {
-      mp_prec_t px, py, pz;
-      int inex;
-
-      if (dbg)
-        printf ("bad_cases: i = %d\n", i);
-      py = pymin + (randlimb () % (pymax - pymin + 1));
-      mpfr_set_prec (y, py);
-      tests_default_random (y, pos, emin, emax);
-      if (dbg)
-        {
-          printf ("bad_cases: yprec =%4ld, y = ", (long) py);
-          mpfr_out_str (stdout, 16, 0, y, GMP_RNDN);
-          printf ("\n");
-        }
-      px = py + psup;
-      mpfr_set_prec (x, px);
-      mpfr_clear_flags ();
-      inv (x, y, GMP_RNDN);
-      if (mpfr_nanflag_p () || mpfr_overflow_p () || mpfr_underflow_p ())
-        {
-          if (dbg)
-            printf ("bad_cases: no normal inverse\n");
-          goto next_i;
-        }
-      if (dbg > 1)
-        {
-          printf ("bad_cases: x = ");
-          mpfr_out_str (stdout, 16, 0, x, GMP_RNDN);
-          printf ("\n");
-        }
-      pz = px;
-      do
-        {
-          pz += 32;
-          mpfr_set_prec (z, pz);
-          if (fct (z, x, GMP_RNDN) == 0)
-            {
-              if (dbg)
-                printf ("bad_cases: exact case\n");
-              goto next_i;
-            }
-          if (dbg)
-            {
-              if (dbg > 1)
-                {
-                  printf ("bad_cases: %s(x) ~= ", name);
-                  mpfr_out_str (stdout, 16, 0, z, GMP_RNDN);
-                }
-              else
-                {
-                  printf ("bad_cases:   [GMP_RNDZ]  ~= ");
-                  mpfr_out_str (stdout, 16, 40, z, GMP_RNDZ);
-                }
-              printf ("\n");
-            }
-          inex = mpfr_prec_round (z, py, GMP_RNDN);
-          if (mpfr_nanflag_p () || mpfr_overflow_p () || mpfr_underflow_p ()
-              || ! mpfr_equal_p (z, y))
-            {
-              if (dbg)
-                printf ("bad_cases: inverse doesn't match\n");
-              goto next_i;
-            }
-        }
-      while (inex == 0);
-      /* We really have a bad case. */
-      do
-        py--;
-      while (py >= MPFR_PREC_MIN && mpfr_prec_round (z, py, GMP_RNDZ) == 0);
-      py++;
-      /* py is now the smallest output precision such that we have
-         a bad case in the directed rounding modes. */
-      if (mpfr_prec_round (y, py, GMP_RNDZ) != 0)
-        {
-          printf ("Internal error for i = %d\n", i);
-          exit (1);
-        }
-      if ((inex > 0 && MPFR_IS_POS (z)) ||
-          (inex < 0 && MPFR_IS_NEG (z)))
-        {
-          mpfr_nexttozero (y);
-          if (mpfr_zero_p (y))
-            goto next_i;
-        }
-      if (dbg)
-        {
-          printf ("bad_cases: yprec =%4ld, y = ", (long) py);
-          mpfr_out_str (stdout, 16, 0, y, GMP_RNDN);
-          printf ("\n");
-        }
-      /* Note: y is now the expected result rounded towards zero. */
-      test4rm (fct, x, y, z, GMP_RNDZ, 0, name);
-    next_i: ;
-    }
-  mpfr_clears (x, y, z, (void *) 0);
 }

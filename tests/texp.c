@@ -213,8 +213,6 @@ check_large (void)
 }
 
 #define TEST_FUNCTION test_exp
-#define TEST_RANDOM_EMIN -36
-#define TEST_RANDOM_EMAX 36
 #include "tgeneric.c"
 
 static void
@@ -646,7 +644,6 @@ main (int argc, char *argv[])
   overflowed_exp0 ();
 
   data_check ("data/exp", mpfr_exp, "mpfr_exp");
-  bad_cases (mpfr_exp, mpfr_log, "mpfr_exp", 0, -256, 255, 4, 128, 800, 50);
 
   tests_end_mpfr ();
   return 0;

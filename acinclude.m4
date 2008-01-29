@@ -44,13 +44,6 @@ AC_REQUIRE([AC_CANONICAL_HOST])
 
 AC_CHECK_HEADER([limits.h],, AC_MSG_ERROR([limits.h not found]))
 AC_CHECK_HEADER([float.h],,  AC_MSG_ERROR([float.h not found]))
-AC_CHECK_HEADER([string.h],, AC_MSG_ERROR([string.h not found]))
-
-dnl Check for locales
-AC_CHECK_HEADERS([locale.h])
-
-dnl Check for wide characters (wchar_t and wint_t)
-AC_CHECK_HEADERS([wchar.h])
 
 dnl Check for stdargs
 AC_CHECK_HEADER([stdarg.h],[AC_DEFINE([HAVE_STDARG],1,[Define if stdarg])],
@@ -60,12 +53,9 @@ AC_CHECK_HEADER([stdarg.h],[AC_DEFINE([HAVE_STDARG],1,[Define if stdarg])],
 dnl sys/fpu.h - MIPS specific
 AC_CHECK_HEADERS([sys/time.h sys/fpu.h])
 
-dnl FIXME: The functions memmove, memset and strtol are really needed by
-dnl MPFR, but if they are implemented as macros, this is also OK (in our
-dnl case).  So, we do not return an error, but their tests are currently
-dnl useless.
+dnl FIXME: strtol is really needed. Maybe create another function?
 dnl gettimeofday is not defined for MinGW
-AC_CHECK_FUNCS([memmove memset setlocale strtol gettimeofday])
+AC_CHECK_FUNCS([memset setlocale strtol gettimeofday])
 
 dnl Check for IEEE-754 switches on Alpha
 case $host in
@@ -85,14 +75,6 @@ alpha*-*-*)
   else
     CFLAGS="$saved_CFLAGS $mpfr_cv_ieee_switches"
   fi
-esac
-
-dnl Check for Core2 processor
-case $host in
-x86_64-*linux*)
-  case `sed -n '/^vendor_id/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo` in
-    *Intel*) AC_DEFINE(HAVE_HOST_CORE2,1,[Define if processor is Core 2]) ;;
-  esac
 esac
 
 AC_CHECK_TYPE( [union fpc_csr],

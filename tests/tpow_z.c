@@ -22,7 +22,6 @@ MA 02110-1301, USA. */
 
 #include <stdlib.h>
 #include <float.h>
-#include <time.h>
 #include <math.h>
 
 #include "mpfr-test.h"
@@ -157,9 +156,7 @@ check_integer (mp_prec_t begin, mp_prec_t end, unsigned long max)
       mpfr_set_prec (y2, p);
       for (i = 0 ; i < max ; i++)
         {
-          mpz_urandomb (z, RANDS, GMP_NUMB_BITS);
-          if ((i & 1) != 0)
-            mpz_neg (z, z);
+          mpz_random (z, (i&1) == 0 ? -1 : 1);
           mpfr_random (x);
           mpfr_mul_2ui (x, x, 1, GMP_RNDN); /* 0 <= x < 2 */
           rnd = (mp_rnd_t) RND_RAND ();
@@ -299,6 +296,7 @@ check_overflow (void)
 int
 main (void)
 {
+  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   check_special ();

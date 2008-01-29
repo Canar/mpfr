@@ -80,16 +80,18 @@ void ld_trace _MPFR_PROTO ((const char *, long double));
 FILE *src_fopen _MPFR_PROTO ((const char *, const char *));
 void set_emin _MPFR_PROTO ((mp_exp_t));
 void set_emax _MPFR_PROTO ((mp_exp_t));
-void tests_default_random _MPFR_PROTO ((mpfr_ptr, int, mp_exp_t, mp_exp_t));
+void tests_default_random _MPFR_PROTO ((mpfr_ptr));
 void data_check _MPFR_PROTO ((char *, int (*) (), char *));
-void bad_cases _MPFR_PROTO ((int (*)(), int (*)(), char *, int, mp_exp_t,
-                             mp_exp_t, mp_prec_t, mp_prec_t, mp_prec_t, int));
 
 int mpfr_cmp_str _MPFR_PROTO ((mpfr_srcptr x, const char *, int, mp_rnd_t));
 #define mpfr_cmp_str1(x,s) mpfr_cmp_str(x,s,10,GMP_RNDN)
 #define mpfr_set_str1(x,s) mpfr_set_str(x,s,10,GMP_RNDN)
 
 #define mpfr_cmp0(x,y) (MPFR_ASSERTN (!MPFR_IS_NAN (x) && !MPFR_IS_NAN (y)), mpfr_cmp (x,y))
+
+#ifndef MPFR_TEST_USE_RANDS
+# define MPFR_TEST_USE_RANDS() ((void)0)
+#endif
 
 #if defined (__cplusplus)
 }

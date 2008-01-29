@@ -103,11 +103,6 @@ To make a release (for the MPFR team):
      with -m96bit-long-double and -m128bit-long-double. Test with both
      "make check" and the worst cases. Try also with gcc's -fno-common
      option.
-
-     Check that there are no abnormal regressions in the timings (both
-     for 100, 1000, 10000 digits, http://mpfr.org/mpfr-current/timings.html,
-     and for small precision, using the mbench program, see mpfr/mbench).
-
      Test the library interface compatibility by running the test suite
      compiled against an old library version and dynamically linked with
      the new library version: for instance, build the shared library of
@@ -221,11 +216,6 @@ flash memory.
 
    =====================================================================
 
-Avoid variable names "l", "I" and "O", which look like "1" and "0" with
-some fonts.
-
-   =====================================================================
-
 Quoted from <http://www.gnu.org/software/gcc/codingconventions.html>:
 
   Avoid the use of identifiers or idioms that would prevent code
@@ -248,20 +238,6 @@ not work with the native SunOS 4 C compiler, whose headers are
 not conform to the standard (even with C90); other problems may
 occur on this architecture. You can either include <stdio.h> or
 use 0 (possibly casted to the target pointer type).
-
-   ====================================================================
-
-Use locale-dependent functions when the result needs to depend on the
-locales, e.g. the fractional point in mpfr_out_str.
-
-Conversely, do not use locale-dependent functions when the result must
-not depend on the locales. In particular, the alphanumeric characters
-used in number strings (as created by mpfr_get_str) must be those of
-the required characters from the basic character set (see ISO C99
-standard Section 5.2.1 "Character sets"). And tolower(letter) does
-not necessarily return the corresponding lowercase letter from these
-required characters. For instance, tolower('I') returns a dotless 'i'
-in Turkish locales.
 
    ====================================================================
 
@@ -511,20 +487,3 @@ Bit Twiddling Hacks - Sean Eron Anderson maintain a list of tricks to get
 efficient code on <http://graphics.stanford.edu/~seander/bithacks.html>.
 WARNING: some of those tricks may not take into account possible overflows,
 and may not be portable.
-
-===========================================================================
-
-MPFR manual (mpfr.texi):
-  * Use "significand", not "mantissa".
-  * Use "@minus{}" for the minus character, not "-".
-  * Follow the English typography, not the French one!
-
-===========================================================================
-
-Running "make" outputs a lot of information, and warnings are not very
-visible. The following tool "eet" allows a copy of warning messages to
-be output to a different window (e.g. xterm or zenity):
-
-  http://www.vinc17.org/unix/#eet
-
-Direct link to the tarball: http://www.vinc17.org/unix/eet.tar.bz2

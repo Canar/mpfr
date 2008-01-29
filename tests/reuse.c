@@ -25,7 +25,7 @@ MA 02110-1301, USA. */
 
 #include "mpfr-test.h"
 
-#define DISP(s, t) {printf(s); mpfr_out_str(stdout, 2, 0, t, GMP_RNDN); }
+#define DISP(s, t) {printf(s); mpfr_out_str(stdout, 10, 0, t, GMP_RNDN); }
 #define DISP2(s,t) {DISP(s,t); putchar('\n');}
 
 #define SPECIAL_MAX 12
@@ -481,8 +481,7 @@ test3a (int (*testfunc)(mpfr_ptr, mpfr_ptr, mpfr_srcptr, mp_rnd_t),
       testfunc (res1, res2, res1, rnd);
       if (mpfr_compare (res1, ref1) || mpfr_compare (res2, ref2))
         {
-          printf ("Error for %s(a, b, a) for rnd=%s, ", foo,
-                  mpfr_print_rnd_mode (rnd));
+          printf ("Error for %s(a, b, a) for ", foo);
           DISP2("a=",ref3);
           DISP("expected (", ref1); DISP(",",ref2);
           DISP("), got (", res1); DISP(",", res2); printf(")\n");
@@ -521,6 +520,7 @@ main (void)
 {
   mp_rnd_t rnd;
   mp_prec_t p;
+  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   p = (randlimb () % 200)+ MPFR_PREC_MIN;
@@ -591,31 +591,18 @@ main (void)
       test2 (mpfr_erfc, "mpfr_erfc", p, rnd);
       test2 (mpfr_j0,   "mpfr_j0",   p, rnd);
       test2 (mpfr_j1,   "mpfr_j1",   p, rnd);
-#if MPFR_VERSION >= MPFR_VERSION_NUM(2,4,0)
-      test2 (mpfr_li2,  "mpfr_li2",  p, rnd);
-#endif
 
       test2 (mpfr_zeta, "mpfr_zeta", p, rnd);
       test2 (mpfr_gamma, "mpfr_gamma", p, rnd);
       test2 (mpfr_rint, "mpfr_rint", p, rnd);
       test2 (mpfr_frac, "mpfr_frac", p, rnd);
 
-      test3 (mpfr_remainder, "mpfr_remainder", p, rnd);
-#if MPFR_VERSION >= MPFR_VERSION_NUM(2,4,0)
-      test3 (mpfr_fmod, "mpfr_fmod", p, rnd);
-#endif
       test3 (mpfr_pow, "mpfr_pow", p, rnd);
       test3 (mpfr_atan2, "mpfr_atan2", p, rnd);
 
       test4 (mpfr_fma, "mpfr_fma", p, rnd);
 
-#if MPFR_VERSION >= MPFR_VERSION_NUM(2,4,0)
-      test3a (mpfr_modf, "mpfr_modf", p, rnd);
-#endif
       test3a (mpfr_sin_cos, "mpfr_sin_cos", p, rnd);
-#if MPFR_VERSION >= MPFR_VERSION_NUM(2,4,0)
-      test3a (mpfr_sinh_cosh, "mpfr_sinh_cosh", p, rnd);
-#endif
     }
 
   tests_end_mpfr ();

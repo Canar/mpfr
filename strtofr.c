@@ -23,6 +23,7 @@ MA 02110-1301, USA. */
 #include <string.h> /* For strlen */
 #include <stdlib.h> /* For strtol */
 #include <ctype.h>  /* For isspace */
+#include <locale.h> /* For MPFR_DECIMAL_POINT */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
@@ -226,7 +227,7 @@ parse_string (mpfr_t x, struct parsed_string *pstr,
   const char *prefix_str;
   int decimal_point;
 
-  decimal_point = (unsigned char) MPFR_DECIMAL_POINT;
+  decimal_point = MPFR_DECIMAL_POINT;
 
   /* Init variable */
   pstr->mantissa = NULL;

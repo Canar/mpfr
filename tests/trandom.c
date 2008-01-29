@@ -22,6 +22,7 @@ MA 02110-1301, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "mpfr-test.h"
 
@@ -178,6 +179,7 @@ test_urandomb (long nbtests, mp_prec_t prec, int verbose)
 {
   mpfr_t x;
   int *tab, size_tab, k, sh, xn;
+  gmp_randstate_t state;
   double d, av = 0, var = 0, chi2 = 0, th;
   mp_exp_t emin;
 
@@ -193,9 +195,12 @@ test_urandomb (long nbtests, mp_prec_t prec, int verbose)
   xn = 1 + (prec - 1) / mp_bits_per_limb;
   sh = xn * mp_bits_per_limb - prec;
 
+  gmp_randinit (state, GMP_RAND_ALG_LC, 128);
+  gmp_randseed_ui (state, time(NULL));
+
   for (k = 0; k < nbtests; k++)
     {
-      mpfr_urandomb (x, RANDS);
+      mpfr_urandomb (x, state);
       /* check that lower bits are zero */
       if (MPFR_MANT(x)[0] & MPFR_LIMB_MASK(sh))
         {
@@ -211,7 +216,7 @@ test_urandomb (long nbtests, mp_prec_t prec, int verbose)
   emin = mpfr_get_emin ();
   set_emin (1); /* the generated number in [0,1[ is not in the exponent
                         range, except if it is zero */
-  k = mpfr_urandomb (x, RANDS);
+  k = mpfr_urandomb (x, state);
   if (MPFR_IS_ZERO(x) == 0 && (k == 0 || mpfr_nan_p (x) == 0))
     {
       printf ("Error in mpfr_urandomb, expected NaN, got ");
@@ -221,6 +226,7 @@ test_urandomb (long nbtests, mp_prec_t prec, int verbose)
   set_emin (emin);
 
   mpfr_clear (x);
+  gmp_randclear (state);
   if (!verbose)
     {
       free(tab);
@@ -257,6 +263,7 @@ main (int argc, char *argv[])
   mp_prec_t prec;
   int verbose = 0;
 
+  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   if (argc > 1)

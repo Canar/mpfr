@@ -88,18 +88,17 @@ main (int argc, char *argv[])
   unsigned long k, bd, nc, i;
   char *str, *str2;
   mp_exp_t e;
-  int base, logbase, prec, baseprec, ret, obase;
+  int base, logbase, prec, baseprec, ret;
 
   tests_start_mpfr ();
 
-  if (argc >= 2) /* tset_str <string> [<prec>] [<ibase>] [<obase>] */
+  if (argc >= 2) /* tset_str <string> [<prec>] [<base>] */
     {
       prec = (argc >= 3) ? atoi (argv[2]) : 53;
       base = (argc >= 4) ? atoi (argv[3]) : 2;
-      obase = (argc >= 5) ? atoi (argv[4]) : 10;
       mpfr_init2 (x, prec);
       mpfr_set_str (x, argv[1], base, GMP_RNDN);
-      mpfr_out_str (stdout, obase, 0, x, GMP_RNDN);
+      mpfr_out_str (stdout, 10, 0, x, GMP_RNDN);
       puts ("");
       mpfr_clear (x);
       return 0;
@@ -201,10 +200,8 @@ main (int argc, char *argv[])
   mpfr_set_prec (y, prec);
   for (i=0;i<N;i++)
     {
-      mp_rnd_t rnd;
-
       mpfr_random (x);
-      rnd = RND_RAND ();
+      k = RND_RAND ();
       logbase = (randlimb () % 5) + 1;
       base = 1 << logbase;
       /* Warning: the number of bits needed to print exactly a number of
@@ -215,13 +212,13 @@ main (int argc, char *argv[])
         baseprec = prec;
       else
         baseprec = 1 + (prec - 2 + logbase) / logbase;
-      str = mpfr_get_str (NULL, &e, base, baseprec, x, rnd);
-      mpfr_set_str (y, str, base, rnd);
+      str = mpfr_get_str (NULL, &e, base, baseprec, x, (mp_rnd_t) k);
+      mpfr_set_str (y, str, base, (mp_rnd_t) k);
       MPFR_EXP(y) += logbase * (e - strlen (str));
       if (mpfr_cmp (x, y))
         {
           printf ("mpfr_set_str o mpfr_get_str <> id for rnd_mode=%s\n",
-                  mpfr_print_rnd_mode (rnd));
+                  mpfr_print_rnd_mode ((mp_rnd_t) k));
           printf ("x=");
           mpfr_print_binary (x);
           puts ("");

@@ -343,7 +343,7 @@ main (int argc, char *argv[])
 
   mpfr_set_str_binary (x, "1.1001001000011111101101010100010001000010110100010011");
   test_sin (x, x, GMP_RNDZ);
-  if (mpfr_cmp_str (x, "1.1111111111111111111111111111111111111111111111111111e-1", 2, GMP_RNDN))
+  if (mpfr_cmp_str (x, "1.1111111111111111111111111111111111111111111111111111e-1", 2, 0))
     {
       printf ("Error for x= 1.1001001000011111101101010100010001000010110100010011\nGot ");
       mpfr_dump (x);
@@ -361,7 +361,6 @@ main (int argc, char *argv[])
   check_tiny ();
 
   data_check ("data/sin", mpfr_sin, "mpfr_sin");
-  bad_cases (mpfr_sin, mpfr_asin, "mpfr_sin", 256, -40, 0, 4, 128, 800, 50);
 
   tests_end_mpfr ();
   return 0;

@@ -27,7 +27,7 @@ MA 02110-1301, USA. */
 #include "mpfr-impl.h"
 
 /* Only needed sometimes. */
-#ifdef WANT_GMPFR_LONGDOUBLE_VOLATILE
+#if WANT_GMPFR_LONGDOUBLE_VOLATILE
 long double
 __gmpfr_longdouble_volatile (long double x)
 {

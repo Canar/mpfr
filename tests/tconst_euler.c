@@ -25,17 +25,6 @@ MA 02110-1301, USA. */
 
 #include "mpfr-test.h"
 
-/* Wrapper for tgeneric */
-static int
-my_const_euler (mpfr_ptr x, mpfr_srcptr y, mp_rnd_t r)
-{
-  return mpfr_const_euler (x, r);
-}
-
-#define RAND_FUNCTION(x) mpfr_set_ui ((x), 0, GMP_RNDN)
-#define TEST_FUNCTION my_const_euler
-#include "tgeneric.c"
-
 int
 main (int argc, char *argv[])
 {
@@ -108,8 +97,6 @@ main (int argc, char *argv[])
   mpfr_clear (y);
   mpfr_clear (z);
   mpfr_clear (t);
-
-  test_generic (2, 200, 1);
 
   tests_end_mpfr ();
   return 0;

@@ -234,7 +234,7 @@ check_overflow (void)
   RND_LOOP(r)
     {
       mpfr_clear_overflow ();
-      inex = mpfr_hypot (y, x, x, (mp_rnd_t) r);
+      inex = mpfr_hypot (y, x, x, r);
       if (!mpfr_overflow_p ())
         {
           printf ("No overflow in check_overflow for %s%s\n",

@@ -20,14 +20,14 @@ along with the MPFR Library; see the file COPYING.LIB.  If not, write to
 the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
 MA 02110-1301, USA. */
 
+/*#define DEBUG */
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
 
-/* The computation of log(x) is done using the formula :
+/* The computation of log(a) is done using the formula :
      if we want p bits of the result,
-
                        pi
-          log(x) ~ ------------  -   m log 2
+          log(a) ~ ------------  -   m log 2
                     2 AG(1,4/s)
 
      where s = x 2^m > 2^(p/2)
@@ -139,7 +139,7 @@ mpfr_log (mpfr_ptr r, mpfr_srcptr a, mp_rnd_t rnd_mode)
       if (MPFR_LIKELY (MPFR_IS_PURE_FP (tmp1) && MPFR_IS_PURE_FP (tmp2)))
         {
           cancel = MPFR_GET_EXP (tmp2) - MPFR_GET_EXP (tmp1);
-          MPFR_LOG_MSG (("canceled bits=%ld\n", (long) cancel));
+          MPFR_LOG_MSG (("canceled bits=%ld\n", cancel));
           MPFR_LOG_VAR (tmp1);
           if (MPFR_UNLIKELY (cancel < 0))
             cancel = 0;

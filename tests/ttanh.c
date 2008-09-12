@@ -26,8 +26,6 @@ MA 02110-1301, USA. */
 #include "mpfr-test.h"
 
 #define TEST_FUNCTION mpfr_tanh
-#define TEST_RANDOM_EMIN -36
-#define TEST_RANDOM_EMAX 36
 #include "tgeneric.c"
 
 static void
@@ -130,8 +128,6 @@ main (int argc, char *argv[])
   test_generic (2, 100, 100);
 
   data_check ("data/tanh", mpfr_tanh, "mpfr_tanh");
-  bad_cases (mpfr_tanh, mpfr_atanh, "mpfr_tanh", 256, -128, 0,
-             4, 128, 800, 100);
 
   tests_end_mpfr ();
   return 0;

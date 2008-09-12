@@ -26,8 +26,6 @@ MA 02110-1301, USA. */
 #include "mpfr-test.h"
 
 #define TEST_FUNCTION mpfr_cosh
-#define TEST_RANDOM_EMIN -36
-#define TEST_RANDOM_EMAX 36
 #include "tgeneric.c"
 
 static void
@@ -197,7 +195,6 @@ main (int argc, char *argv[])
   test_generic (2, 100, 100);
 
   data_check ("data/cosh", mpfr_cosh, "mpfr_cosh");
-  bad_cases (mpfr_cosh, mpfr_acosh, "mpfr_cosh", 0, 1, 255, 4, 128, 800, 100);
 
   tests_end_mpfr ();
   return 0;

@@ -171,7 +171,7 @@ compare_exp2_exp3 (mp_prec_t p0, mp_prec_t p1)
       mpfr_set_prec (y, prec);
       mpfr_set_prec (z, prec);
       mpfr_random (x);
-      rnd = RND_RAND ();
+      rnd = (mp_rnd_t) RND_RAND();
       mpfr_exp_2 (y, x, rnd);
       mpfr_exp_3 (z, x, rnd);
       if (mpfr_cmp (y,z))
@@ -214,8 +214,6 @@ check_large (void)
 }
 
 #define TEST_FUNCTION test_exp
-#define TEST_RANDOM_EMIN -36
-#define TEST_RANDOM_EMAX 36
 #include "tgeneric.c"
 
 static void
@@ -532,13 +530,13 @@ overflowed_exp0 (void)
         {
           mpfr_set_si_2exp (x, i, -512 * ABS (i), GMP_RNDN);
           mpfr_clear_flags ();
-          inex = mpfr_exp (x, x, (mp_rnd_t) rnd);
+          inex = mpfr_exp (x, x, rnd);
           if ((i >= 0 || emax < 0 || rnd == GMP_RNDN || rnd == GMP_RNDU) &&
               ! mpfr_overflow_p ())
             {
               printf ("Error in overflowed_exp0 (i = %d, rnd = %s):\n"
                       "  The overflow flag is not set.\n",
-                      i, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                      i, mpfr_print_rnd_mode (rnd));
               err = 1;
             }
           if (rnd == GMP_RNDZ || rnd == GMP_RNDD)
@@ -547,13 +545,13 @@ overflowed_exp0 (void)
                 {
                   printf ("Error in overflowed_exp0 (i = %d, rnd = %s):\n"
                           "  The inexact value must be negative.\n",
-                          i, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                          i, mpfr_print_rnd_mode (rnd));
                   err = 1;
                 }
               if (! mpfr_equal_p (x, y))
                 {
                   printf ("Error in overflowed_exp0 (i = %d, rnd = %s):\n"
-                          "  Got ", i, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                          "  Got ", i, mpfr_print_rnd_mode (rnd));
                   mpfr_print_binary (x);
                   printf (" instead of 0.11111111E%d.\n", emax);
                   err = 1;
@@ -565,13 +563,13 @@ overflowed_exp0 (void)
                 {
                   printf ("Error in overflowed_exp0 (i = %d, rnd = %s):\n"
                           "  The inexact value must be positive.\n",
-                          i, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                          i, mpfr_print_rnd_mode (rnd));
                   err = 1;
                 }
               if (! (mpfr_inf_p (x) && MPFR_SIGN (x) > 0))
                 {
                   printf ("Error in overflowed_exp0 (i = %d, rnd = %s):\n"
-                          "  Got ", i, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                          "  Got ", i, mpfr_print_rnd_mode (rnd));
                   mpfr_print_binary (x);
                   printf (" instead of +Inf.\n");
                   err = 1;
@@ -1007,7 +1005,6 @@ main (int argc, char *argv[])
   underflow ();
 
   data_check ("data/exp", mpfr_exp, "mpfr_exp");
-  bad_cases (mpfr_exp, mpfr_log, "mpfr_exp", 0, -256, 255, 4, 128, 800, 50);
 
   tests_end_mpfr ();
   return 0;

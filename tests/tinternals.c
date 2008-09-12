@@ -62,9 +62,9 @@ test_round_near_x (void)
            mpfr_neg (x, x, GMP_RNDN), p++, neg++)
         for (err = 2; err <= 6; err++)
           for (dir = 0; dir <= 1; dir++)
-            RND_LOOP(r)
+            for (r = 0; r < GMP_RND_MAX; r++)
               {
-                inex = mpfr_round_near_x (y, x, err, dir, (mp_rnd_t) r);
+                inex = mpfr_round_near_x (y, x, err, dir, r);
 
                 if (inex == 0 && err < 6)
                   {
@@ -73,8 +73,7 @@ test_round_near_x (void)
                     continue;
                   }
 
-                inex2 = ((dir ^ neg) ? mpfr_add : mpfr_sub)
-                  (z, x, eps, (mp_rnd_t) r);
+                inex2 = ((dir ^ neg) ? mpfr_add : mpfr_sub) (z, x, eps, r);
                 if (inex * inex2 <= 0)
                   printf ("Bad return value (%d instead of %d) for:\n",
                           inex, inex2);
@@ -95,7 +94,7 @@ test_round_near_x (void)
                 printf ("x = %c%c%c%c.%c%c, ", neg ? '-' : '+',
                         p[0], p[1], p[2], p[3], p[4]);
                 printf ("err = %d, dir = %d, r = %s --> inex = %2d",
-                        err, dir, mpfr_print_rnd_mode ((mp_rnd_t) r), inex);
+                        err, dir, mpfr_print_rnd_mode (r), inex);
                 if (inex != 0)
                   {
                     printf (", y = ");

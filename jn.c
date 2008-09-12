@@ -42,36 +42,6 @@ mpfr_j1 (mpfr_ptr res, mpfr_srcptr z, mp_rnd_t r)
   return mpfr_jn (res, 1, z, r);
 }
 
-/* Estimate k0 such that z^2/4 = k0 * (k0 + n)
-   i.e., (sqrt(n^2+z^2)-n)/2 = n/2 * (sqrt(1+(z/n)^2) - 1).
-   Return min(2*k0/log(2), ULONG_MAX).
-*/
-static unsigned long
-mpfr_jn_k0 (long n, mpfr_srcptr z)
-{
-  mpfr_t t, u;
-  unsigned long k0;
-
-  mpfr_init2 (t, 32);
-  mpfr_init2 (u, 32);
-  mpfr_div_si (t, z, n, GMP_RNDN);
-  mpfr_sqr (t, t, GMP_RNDN);
-  mpfr_add_ui (t, t, 1, GMP_RNDN);
-  mpfr_sqrt (t, t, GMP_RNDN);
-  mpfr_sub_ui (t, t, 1, GMP_RNDN);
-  mpfr_mul_si (t, t, n, GMP_RNDN);
-  /* the following is a 32-bit approximation to nearest of log(2) */
-  mpfr_set_str_binary (u, "0.10110001011100100001011111111");
-  mpfr_div (t, t, u, GMP_RNDN);
-  if (mpfr_fits_ulong_p (t, GMP_RNDN))
-    k0 = mpfr_get_ui (t, GMP_RNDN);
-  else
-    k0 = ULONG_MAX;
-  mpfr_clear (t);
-  mpfr_clear (u);
-  return k0;
-}
-
 int
 mpfr_jn (mpfr_ptr res, long n, mpfr_srcptr z, mp_rnd_t r)
 {
@@ -80,7 +50,7 @@ mpfr_jn (mpfr_ptr res, long n, mpfr_srcptr z, mp_rnd_t r)
   mp_prec_t prec, pbound, err;
   mp_exp_t exps, expT;
   mpfr_t y, s, t, absz;
-  unsigned long k, zz, k0;
+  unsigned long k, zz;
   MPFR_ZIV_DECL (loop);
 
   MPFR_LOG_FUNC (("x[%#R]=%R n=%d rnd=%d", z, z, n, r),
@@ -174,11 +144,7 @@ mpfr_jn (mpfr_ptr res, long n, mpfr_srcptr z, mp_rnd_t r)
   mpfr_init (s);
   mpfr_init (t);
 
-  /* the logarithm of the ratio between the largest term in the series
-     and the first one is roughly bounded by k0, which we add to the
-     working precision to take into account this cancellation */
-  k0 = mpfr_jn_k0 (absn, z);
-  prec = MPFR_PREC (res) + k0 + 2 * MPFR_INT_CEIL_LOG2 (MPFR_PREC (res)) + 3;
+  prec = MPFR_PREC (res) + MPFR_INT_CEIL_LOG2 (MPFR_PREC (res)) + 3;
 
   MPFR_ZIV_INIT (loop, prec);
   for (;;)

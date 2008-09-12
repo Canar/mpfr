@@ -20,10 +20,12 @@ dnl  along with the MPFR Library; see the file COPYING.LIB.  If not, write to
 dnl  the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
 dnl  MA 02110-1301, USA.
 
-dnl  autoconf 2.60 is necessary because of the use of AC_PROG_SED.
+dnl  autoconf 2.50 is necessary because of the use of AH_VERBATIM,
+dnl  but it would be better to make the config file compatible with
+dnl  both autoconf 2.13 and autoconf 2.50.
 dnl  The following line allows the autoconf wrapper (when installed)
 dnl  to work as expected.
-AC_PREREQ(2.60)
+AC_PREREQ(2.50)
 
 dnl ------------------------------------------------------------
 dnl You must put in MPFR_CONFIGS everything which configure MPFR
@@ -42,13 +44,8 @@ AC_REQUIRE([AC_CANONICAL_HOST])
 
 AC_CHECK_HEADER([limits.h],, AC_MSG_ERROR([limits.h not found]))
 AC_CHECK_HEADER([float.h],,  AC_MSG_ERROR([float.h not found]))
+AC_CHECK_HEADER([locale.h],, AC_MSG_ERROR([locale.h not found]))
 AC_CHECK_HEADER([string.h],, AC_MSG_ERROR([string.h not found]))
-
-dnl Check for locales
-AC_CHECK_HEADERS([locale.h])
-
-dnl Check for wide characters (wchar_t and wint_t)
-AC_CHECK_HEADERS([wchar.h])
 
 dnl Check for stdargs
 AC_CHECK_HEADER([stdarg.h],[AC_DEFINE([HAVE_STDARG],1,[Define if stdarg])],
@@ -57,27 +54,6 @@ AC_CHECK_HEADER([stdarg.h],[AC_DEFINE([HAVE_STDARG],1,[Define if stdarg])],
 
 dnl sys/fpu.h - MIPS specific
 AC_CHECK_HEADERS([sys/time.h sys/fpu.h])
-
-dnl SIZE_MAX macro
-gl_SIZE_MAX
-
-dnl va_copy macro
-AC_MSG_CHECKING([how to copy va_list])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#include <stdarg.h>
-]], [[
-   va_list ap1, ap2;
-   va_copy(ap1, ap2);
-]])], AC_MSG_RESULT([va_copy]),
-   [AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#include <stdarg.h>
-]], [[
-   va_list ap1, ap2;
-   __va_copy(ap1, ap2);
-]])], [AC_DEFINE([va_copy], [__va_copy]) AC_MSG_RESULT([__va_copy])],
-   [AC_DEFINE([va_copy(dest,src)], [memcpy(&dest,&src,sizeof(va_list))])
-    AC_MSG_RESULT([memcpy])])
-   ])
 
 dnl FIXME: The functions memmove, memset and strtol are really needed by
 dnl MPFR, but if they are implemented as macros, this is also OK (in our
@@ -105,18 +81,6 @@ alpha*-*-*)
     CFLAGS="$saved_CFLAGS $mpfr_cv_ieee_switches"
   fi
 esac
-
-dnl Check for Core2 processor
-case $host in
-x86_64-*linux*)
-  case `sed -n '/^vendor_id/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo` in
-    *Intel*) AC_DEFINE(HAVE_HOST_CORE2,1,[Define if processor is Core 2]) ;;
-  esac
-esac
-
-dnl check for long long
-AC_CHECK_TYPE([long long int],
-   AC_DEFINE(HAVE_LONG_LONG, 1, [Define if compiler supports long long]),,)
 
 AC_CHECK_TYPE( [union fpc_csr],
    AC_DEFINE(HAVE_FPC_CSR,1,[Define if union fpc_csr is available]), ,

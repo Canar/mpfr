@@ -49,8 +49,6 @@ test_expm1 (mpfr_ptr a, mpfr_srcptr b, mp_rnd_t rnd_mode)
 #endif
 
 #define TEST_FUNCTION test_expm1
-#define TEST_RANDOM_EMIN -36
-#define TEST_RANDOM_EMAX 36
 #include "tgeneric.c"
 
 static void
@@ -165,8 +163,6 @@ main (int argc, char *argv[])
   test_generic (2, 100, 100);
 
   data_check ("data/expm1", mpfr_expm1, "mpfr_expm1");
-  bad_cases (mpfr_expm1, mpfr_log1p, "mpfr_expm1", 256, -256, 255,
-             4, 128, 800, 40);
 
   tests_end_mpfr ();
   return 0;

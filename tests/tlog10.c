@@ -49,7 +49,6 @@ test_log10 (mpfr_ptr a, mpfr_srcptr b, mp_rnd_t rnd_mode)
 #endif
 
 #define TEST_FUNCTION test_log10
-#define TEST_RANDOM_POS 8
 #include "tgeneric.c"
 
 int

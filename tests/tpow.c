@@ -56,8 +56,6 @@ test_pow (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode)
 
 #define TEST_FUNCTION test_pow
 #define TWO_ARGS
-#define TEST_RANDOM_POS 16
-#define TGENERIC_NOWARNING 1
 #include "tgeneric.c"
 
 #define TEST_FUNCTION mpfr_pow_ui
@@ -1037,7 +1035,7 @@ x_near_one (void)
 }
 
 static int
-mpfr_pow275 (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t r)
+mpfr_pow275 (mpfr_t y, mpfr_t x, mp_rnd_t r)
 {
   mpfr_t z;
   int inex;

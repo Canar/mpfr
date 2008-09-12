@@ -19,17 +19,9 @@ along with the MPFR Library; see the file COPYING.LIB.  If not, write to
 the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301, USA.
 
-Table of contents:
-1. Documentation
-2. Installation
-3. Changes in existing functions
-4. New functions to implement
-5. Efficiency
-6. Miscellaneous
-7. Portability
 
 ##############################################################################
-1. Documentation
+Documentation:
 ##############################################################################
 
 - add a description of the algorithms used + proof of correctness
@@ -39,14 +31,14 @@ Table of contents:
 
 
 ##############################################################################
-2. Installation
+Installation:
 ##############################################################################
 
 - nothing to do currently :-)
 
 
 ##############################################################################
-3. Changes in existing functions
+Changes in existing functions:
 ##############################################################################
 
 - many functions currently taking into account the precision of the *input*
@@ -84,9 +76,39 @@ Table of contents:
 
 
 ##############################################################################
-4. New functions to implement
+New functions to implement:
 ##############################################################################
 
+- functions operating on mpfr_t and double: mpfr_add_d, mpfr_sub_d,
+  mpfr_d_sub, mpfr_mul_d, mpfr_div_d, mpfr_d_div
+  [suggested by Keith Briggs, 3 Jan 2006]
+- modf (to extract integer and fractional parts), suggested by
+        Dmitry Antipov <dmitry.antipov@mail.ru> Thu, 13 Jun 2002
+- mpfr_fmod (mpfr_t, mpfr_srcptr, mpfr_srcptr, mp_rnd_t)
+  [suggested by Tomas Zahradnicky <tomas@24uSoftware.com>, 29 Nov 2003]
+  Kevin: Might want to be called mpfr_mod, to match mpz_mod.
+  -> we probably want to allow both mpfr_fmod and mpfr_mod.
+  Proposed implementation (apart from special cases):
+  int mpfr_fmod (mpfr_t r, mpfr_t x, mpfr_t y, mpfr_rnd_t r)
+  {
+     mpfr_t q;
+     int inexact;
+
+     /* if 2^(ex-1) <= |x| < 2^ex, and 2^(ey-1) <= |y| < 2^ey, then
+        |x/y| < 2^(ex-ey+1) */
+     mpfr_init2 (q, MAX(MPFR_PREC_MIN, mpfr_get_exp (x)-mpfr_get_exp (y) + 1));
+     mpfr_div (q, x, y, GMP_RNDZ);
+     mpfr_trunc (q, q);
+     mpfr_prec_round (q, mpfr_get_prec (q) + mpfr_get_prec (y), GMP_RNDZ);
+     mpfr_mul (q, q, y, GMP_RNDZ); /* exact */
+     inexact = mpfr_sub (r, x, q, r);
+     mpfr_clear (q);
+     return inexact;
+  }
+- 1/sqrt(x) [Regis Dupont <dupont@lix.polytechnique.fr>, 15 Sep 2004]
+- dilog() [the dilogarithm: dilog(x) =  int(ln(t)/(1-t), t=1..x)]
+- mpfr_printf [Sisyphus <kalinabears@iinet.net.au> Tue, 04 Jan 2005]
+  for example mpfr_printf ("%.2Ff\n", x)
 - wanted for Magma [John Cannon <john@maths.usyd.edu.au>, Tue, 19 Apr 2005]:
   HypergeometricU(a,b,s) = 1/gamma(a)*int(exp(-su)*u^(a-1)*(1+u)^(b-a-1),
                                     u=0..infinity)
@@ -94,8 +116,7 @@ Table of contents:
   PolylogP, PolylogD, PolylogDold: see http://arxiv.org/abs/math.CA/0702243
     and the references herein.
   JBessel(n, x) = BesselJ(n+1/2, x)
-  IncompleteGamma [also wanted by <keith.briggs@bt.com> 4 Feb 2008: Gamma(a,x),
-    gamma(a,x), P(a,x), Q(a,x); see A&S 6.5]
+  IncompleteGamma
   KBessel, KBessel2 [2nd kind]
   JacobiTheta
   LogIntegral
@@ -115,6 +136,7 @@ Table of contents:
     and mmin_seq (mpfr_min and mpfr_max correspond to mmin and mmax);
   + rounding_rest, floor_rest, ceiling_rest (5.2.4);
   + remr (5.2.5): x - round(x/y) y;
+  + rec_sqrt (5.2.6): 1 / sqrt(x);
   + error functions from 5.2.7 (if useful in MPFR);
   + power1pm1 (5.3.6.7): (1 + x)^y - 1;
   + logbase (5.3.6.12): \log_x(y);
@@ -211,13 +233,10 @@ Table of contents:
   Steve Kargl <sgk@troutmask.apl.washington.edu> Sun, 7 Aug 2005
 - mpfr_inp_raw, mpfr_out_raw (cf mail "Serialization of mpfr_t" from Alexey
   and answer from Granlund on mpfr list, May 2007)
-- [maybe useful for SAGE] implement companion frac_* functions to the rint_*
-  functions. For example mpfr_frac_floor(x) = x - floor(x). (The current
-  mpfr_frac function corresponds to mpfr_rint_trunc.)
 
 
 ##############################################################################
-5. Efficiency
+Efficiency:
 ##############################################################################
 
 - fix regression with mpfr_mpz_root (from Keith Briggs, 5 July 2006), for
@@ -225,7 +244,6 @@ Table of contents:
    prec=50000    k=2   k=3   k=10  k=100
    mpz_root      0.036 0.072 0.476 7.628
    mpfr_mpz_root 0.004 0.004 0.036 12.20
-   See also mail from Carl Witty on mpfr list, 09 Oct 2007.
 - implement Mulders algorithm for squaring and division
 - for sparse input (say x=1 with 2 bits), mpfr_exp is not faster than for
         full precision when precision <= MPFR_EXP_THRESHOLD. The reason is
@@ -241,14 +259,12 @@ Table of contents:
   mpfr_random (x); for (i = 0; i < k; i++) mpfr_atan (y, x, GMP_RNDN);
   for precision 300 and k=1000, we get 1070ms, and 500ms only for p=400!
 - improve mpfr_sin on values like ~pi (do not compute sin from cos, because
-  of the cancellation). For instance, reduce the input modulo pi/2 in
-  [-pi/4,pi/4], and define auxiliary functions for which the argument is
-  assumed to be already reduced (so that the sin function can avoid
-  unnecessary computations by calling the auxiliary cos function instead of
-  the full cos function). This will require a native code for sin, for
-  example using the reduction sin(3x)=3sin(x)-4sin(x)^3.
-  See http://websympa.loria.fr/wwsympa/arc/mpfr/2007-08/msg00001.html and
-  the following messages.
+  of the cancellation). For instance, reduce the input to [0,pi/4], and
+  define auxiliary functions for which the argument is assumed to be already
+  reduced (so that the sin function can avoid unnecessary computations by
+  calling the auxiliary cos function instead of the full cos function).
+- combined mpfr_sinh_cosh() [Geoff Bailey, 20 Apr 2005,
+  and Kaveh R. Ghazi, 17 Jan 2007]
 - improve generic.c to work for number of terms <> 2^k
 - rewrite mpfr_greater_p... as native code.
 - inline mpfr_neg? Problems with NAN flags:
@@ -268,24 +284,9 @@ Table of contents:
   possible through stripping low zero bits or limbs could check for
   that (this would be less efficient but easier).
 
-- try the idea of the paper "Reduced Cancellation in the Evaluation of Entire
-  Functions and Applications to the Error Function" by W. Gawronski, J. Mueller
-  and M. Reinhard, to be published in SIAM Journal on Numerical Analysis: to
-  avoid cancellation in say erfc(x) for x large, they compute the Taylor
-  expansion of erfc(x)*exp(x^2/2) instead (which has less cancellation),
-  and then divide by exp(x^2/2) (which is simpler to compute).
-
-- replace the *_THRESHOLD macros by global (TLS) variables that can be
-  changed at run time (via a function, like other variables)? One benefit
-  is that users could use a single MPFR binary on several machines (e.g.,
-  a library provided by binary packages or shared via NFS) with different
-  thresholds. On the default values, this would be a bit less efficient
-  than the current code, but this isn't probably noticeable (this should
-  be tested).
-
 
 ##############################################################################
-6. Miscellaneous
+Miscellaneous:
 ##############################################################################
 
 - [suggested by Tobias Burnus <burnus(at)net-b.de> and
@@ -364,27 +365,9 @@ Table of contents:
 
 - allow generic tests to run with a restricted exponent range.
 
-- add generic bad cases for functions that don't have an inverse
-  function that is implemented (use a single Newton iteration).
-
-- add bad cases for the internal error bound (by using a dichotomy
-  between a bad case for the correct rounding and some input value
-  with fewer Ziv iterations?).
-
-- add an option to use a 32-bit exponent type (int) on LP64 machines,
-  mainly for developers, in order to be able to test the case where the
-  extended exponent range is the same as the default exponent range, on
-  such platforms. This would need to rename all mp_exp_t as mpfr_exp_t
-  and add a typedef either to mp_exp_t (default) or to int (when this
-  option is enabled).
-
-- test underflow/overflow detection of various functions (in particular
-  mpfr_exp) in reduced exponent ranges, including ranges that do not
-  contain 0.
-
 
 ##############################################################################
-7. Portability
+Portability:
 ##############################################################################
 
 - [Kevin about texp.c long strings]
@@ -394,3 +377,33 @@ Table of contents:
   couple of places already.  Arrays of chars are not much fun.
 
 - use http://gcc.gnu.org/viewcvs/trunk/config/stdint.m4 for mpfr-gmp.h
+
+
+##############################################################################
+Possible future MPF / MPFR integration:
+##############################################################################
+
+- mpf routines can become "extern inline"s calling mpfr equivalents,
+  probably just with GMP_RNDZ hard coded, since that's what mpf has
+  always done.
+
+- Want to preserve the mpf_t structure size, for binary compatibility.
+  Breaking compatibility would cause lots of pain and potential subtle
+  breakage for users.  If the fields in mpf_t are not enough then
+  extra space under _mp_d can be used.
+
+- mpf_sgn has been a macro directly accessing the _mp_size field, so a
+  compatible representation would be required.  At worst that field
+  could be maintained for mpf_sgn, but not otherwise used internally.
+
+  mpf_sgn should probably throw an exception if called with NaN, since
+  there's no useful value it can return, so it might want to become a
+  function.  Inlined copies in existing binaries would hopefully never
+  see a NaN, if they only do old-style mpf things.
+
+- mpfr routines replacing mpf routines must be reentrant and thread
+  safe, since of course that's what has been documented for mpf.
+
+- mpfr_random will not be wanted since there's no corresponding
+  mpf_random and new routines should not use the old style global
+  random state.

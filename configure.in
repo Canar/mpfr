@@ -24,7 +24,7 @@ MA 02110-1301, USA.
 
 dnl If MPFR becomes GNU MPFR, change to GNU MPFR in update-version
 dnl Add check-news when it checks for more than 15 lines
-AC_INIT([MPFR],[2.4.0-dev])
+AC_INIT([MPFR],[2.3.2])
 AM_INIT_AUTOMAKE([1.10.1 no-define dist-bzip2 dist-lzma dist-zip])
 dnl AM_MAINTAINER_MODE(enable)
 
@@ -128,32 +128,7 @@ if test -n "$CFLAGS" || test -n "$CC" ; then
 fi
 dnl Autoconf detection
 AC_PROG_CC
-AC_PROG_CPP
-AC_PROG_EGREP
-AC_PROG_SED
 AC_LANG(C)
-
-dnl Check for GMP CFLAGS in gmp.h
-if test -z "$GMP_CFLAGS" -a -z "$user_redefine_cc" ; then
-   AC_MSG_CHECKING(for CC and CFLAGS in gmp.h)
-   # FIXME: Move this in aclocal ?
-   # Get CC
-   echo "#include \"gmp.h\"" >  conftest.c
-   echo "MPFR_OPTION __GMP_CC"           >> conftest.c
-   GMP_CC=$($CPP $CPPFLAGS conftest.c 2> /dev/null | $EGREP "MPFR_OPTION" | $SED -e 's/MPFR_OPTION //g' | $SED -e 's/"//g')
-   #Get CFLAGS
-   echo "#include \"gmp.h\"" >  conftest.c
-   echo "MPFR_OPTION __GMP_CFLAGS"           >> conftest.c
-   GMP_CFLAGS=$($CPP $CPPFLAGS conftest.c 2> /dev/null | $EGREP "MPFR_OPTION" | $SED -e 's/MPFR_OPTION //g'| $SED -e 's/"//g')
-   rm -f conftest*
-   if test "x$GMP_CFLAGS" = "x__GMP_CFLAGS" -o "x$GMP_CC" = "x__GMP_CC" ; then
-      AC_MSG_RESULT(no)
-      GMP_CFLAGS=
-      GMP_CC=
-   else
-      AC_MSG_RESULT(yes [CC=$GMP_CC CFLAGS=$GMP_CFLAGS])
-   fi
-fi
 
 dnl Check for GMP CFLAGS and CC (More optimized for the target)
 dnl But they may be invalid, so we must check them first
@@ -234,15 +209,6 @@ dnl Check if compiler is ICC, and if such a case, disable GCC
 dnl And add some specific flags.
 dnl Don't add Warnings Flags (Otherwise you'll get more than 20000 warnings).
 dnl Add -long_double flags? Don't use -pc64 !
-dnl Notes (VL):
-dnl   * With icc 10.1 20080212 on itanium, the __ICC macro is not defined,
-dnl     even when the -icc option is used (contrary to what is documented
-dnl     on the icc man page).
-dnl   * When ICC is correctly detected (__ICC macro defined), unsetting
-dnl     the GCC variable confuses libtool. See:
-dnl       http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=485421
-dnl   * If need be, the gcc predefined macros __GNUC_* can be disabled
-dnl     thanks to the -no-gcc option.
 AC_MSG_CHECKING(for ICC)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #if !defined(__ICC)
@@ -258,7 +224,7 @@ error
 dnl If compiler is gcc, then use some specific flags.
 dnl But don't touch user other flags.
 if test "$test_CFLAGS" != set && test -n "$GCC"; then
-  CFLAGS="-Wall -Wmissing-prototypes -Wpointer-arith $CFLAGS"
+  CFLAGS="-Wall -Wmissing-prototypes $CFLAGS"
   if test -n "$disable_gcc_format_warning" ; then
    CFLAGS="$CFLAGS -Wno-format"
   fi

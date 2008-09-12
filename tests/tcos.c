@@ -184,13 +184,13 @@ overflowed_cos0 (void)
         {
           mpfr_set_si_2exp (x, i, -512 * ABS (i), GMP_RNDN);
           mpfr_clear_flags ();
-          inex = mpfr_cos (x, x, (mp_rnd_t) rnd);
+          inex = mpfr_cos (x, x, rnd);
           if ((i == 0 || emax < 0 || rnd == GMP_RNDN || rnd == GMP_RNDU) &&
               ! mpfr_overflow_p ())
             {
               printf ("Error in overflowed_cos0 (i = %d, rnd = %s):\n"
                       "  The overflow flag is not set.\n",
-                      i, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                      i, mpfr_print_rnd_mode (rnd));
               err = 1;
             }
           if (rnd == GMP_RNDZ || rnd == GMP_RNDD)
@@ -199,13 +199,13 @@ overflowed_cos0 (void)
                 {
                   printf ("Error in overflowed_cos0 (i = %d, rnd = %s):\n"
                           "  The inexact value must be negative.\n",
-                          i, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                          i, mpfr_print_rnd_mode (rnd));
                   err = 1;
                 }
               if (! mpfr_equal_p (x, y))
                 {
                   printf ("Error in overflowed_cos0 (i = %d, rnd = %s):\n"
-                          "  Got ", i, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                          "  Got ", i, mpfr_print_rnd_mode (rnd));
                   mpfr_print_binary (x);
                   printf (" instead of 0.11111111E%d.\n", emax);
                   err = 1;
@@ -217,13 +217,13 @@ overflowed_cos0 (void)
                 {
                   printf ("Error in overflowed_cos0 (i = %d, rnd = %s):\n"
                           "  The inexact value must be positive.\n",
-                          i, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                          i, mpfr_print_rnd_mode (rnd));
                   err = 1;
                 }
               if (! (mpfr_inf_p (x) && MPFR_SIGN (x) > 0))
                 {
                   printf ("Error in overflowed_cos0 (i = %d, rnd = %s):\n"
-                          "  Got ", i, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                          "  Got ", i, mpfr_print_rnd_mode (rnd));
                   mpfr_print_binary (x);
                   printf (" instead of +Inf.\n");
                   err = 1;
@@ -361,7 +361,6 @@ main (int argc, char *argv[])
   mpfr_clear (y);
 
   data_check ("data/cos", mpfr_cos, "mpfr_cos");
-  bad_cases (mpfr_cos, mpfr_acos, "mpfr_cos", 256, -40, 0, 4, 128, 800, 50);
 
   tests_end_mpfr ();
   return 0;

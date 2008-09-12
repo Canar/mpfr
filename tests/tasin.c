@@ -26,7 +26,6 @@ MA 02110-1301, USA. */
 #include "mpfr-test.h"
 
 #define TEST_FUNCTION mpfr_asin
-#define TEST_RANDOM_EMAX 7
 #include "tgeneric.c"
 
 static void
@@ -227,12 +226,11 @@ main (void)
   special ();
   special_overflow ();
 
-  test_generic (2, 100, 15);
+  test_generic (2, 100, 7);
 
   tests_end_mpfr ();
 
   data_check ("data/asin", mpfr_asin, "mpfr_asin");
-  bad_cases (mpfr_asin, mpfr_sin, "mpfr_asin", 256, -40, 1, 4, 128, 800, 30);
 
   test20071215 ();
 

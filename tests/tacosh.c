@@ -32,8 +32,8 @@ MA 02110-1301, USA. */
 
 #define TEST_FUNCTION mpfr_acosh
 #define TEST_RANDOM_POS 1
-#define TEST_RANDOM_EMIN MPFR_EMAX_MAX
-#define TEST_RANDOM_EMAX MPFR_EMAX_MAX
+#define TEST_RANDOM_EMIN 1073741822
+#define TEST_RANDOM_EMAX 1073741822
 #define test_generic test_generic_huge
 #include "tgeneric.c"
 
@@ -211,8 +211,6 @@ main (int argc, char *argv[])
   test_generic_huge (2, 100, 5);
 
   data_check ("data/acosh", mpfr_acosh, "mpfr_acosh");
-  bad_cases (mpfr_acosh, mpfr_cosh, "mpfr_acosh", 0, -128, 29,
-             4, 128, 800, 40);
 
   tests_end_mpfr ();
   return 0;

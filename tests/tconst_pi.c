@@ -60,17 +60,6 @@ check_large (void)
   mpfr_clears (x, y, z, (mpfr_ptr) 0);
 }
 
-/* Wrapper for tgeneric */
-static int
-my_const_pi (mpfr_ptr x, mpfr_srcptr y, mp_rnd_t r)
-{
-  return mpfr_const_pi (x, r);
-}
-
-#define RAND_FUNCTION(x) mpfr_set_ui ((x), 0, GMP_RNDN)
-#define TEST_FUNCTION my_const_pi
-#include "tgeneric.c"
-
 int
 main (int argc, char *argv[])
 {
@@ -119,8 +108,6 @@ main (int argc, char *argv[])
   mpfr_clear (x);
 
   check_large();
-
-  test_generic (2, 200, 1);
 
   tests_end_mpfr ();
   return 0;

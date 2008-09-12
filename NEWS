@@ -20,30 +20,25 @@ MA 02110-1301, USA.
 
 ##############################################################################
 
-Changes from versions 2.3.* to version 2.4.0:
-- Changes in the behavior of mpfr_strtofr and in its documentation
-  concerning particular cases where the code and the documentation
-  did not match; this change is also present in MPFR 2.3.1.
+Changes from version 2.3.1 to version 2.3.2:
+- Bug fixes; see <http://www.mpfr.org/mpfr-2.3.1/#bugs>.
+- Improved MPFR manual.
 - Behavior of mpfr_check_range changed: if the value is an inexact
-  infinity, the overflow flag is set (in case it was lost); this
-  change is also present in MPFR 2.3.2.
+  infinity, the overflow flag is set (in case it was lost).
 - Function mpfr_init_gmp_rand (only defined when building MPFR without
   the --with-gmp-build configure option) is no longer defined at all.
   This function was private and not documented, and was used only in
   the MPFR test suite. User code that calls it is regarded as broken
   and may fail as a consequence. Running the old test suite against
-  MPFR 2.4.0 may also fail.
-- New functions:
-  * between a MPFR number and a double: mpfr_add_d, mpfr_sub_d,
-    mpfr_d_sub, mpfr_mul_d, mpfr_div_d, mpfr_d_div,
-  * formatted input/output:
-    mpfr_printf, mpfr_fprintf, mpfr_vprintf, mpfr_vfprintf,
-    mpfr_sprintf, mpfr_snprintf, mpfr_vsprintf, mpfr_vsnprintf,
-    mpfr_asprintf, mpfr_vasprintf.
-  * mpfr_sinh_cosh, mpfr_li2, mpfr_modf, mpfr_fmod, mpfr_rec_sqrt.
+  MPFR 2.3.2 may also fail.
+
+Changes from version 2.3.0 to version 2.3.1:
+- Changes in the behavior of mpfr_strtofr and in its documentation
+  concerning particular cases where the code and the documentation
+  did not match.
+- Bug fixes; see <http://www.mpfr.org/mpfr-2.3.0/#bugs>.
 - Configure test for TLS support.
-- Get default $CC and $CFLAGS from gmp.h (__GMP_CC / __GMP_CFLAGS,
-  which are available as of GMP 4.2.3).
+- Improved MPFR manual.
 
 Changes from versions 2.2.* to version 2.3.0:
 - The mpfr.info file is now installed in the share subdirectory

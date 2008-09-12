@@ -31,8 +31,6 @@ MA 02110-1301, USA. */
 #include "tgeneric.c"
 
 #define TEST_FUNCTION mpfr_erfc
-#undef TEST_RANDOM_EMAX
-#define TEST_RANDOM_EMAX 63
 #define test_generic test_generic_erfc
 #include "tgeneric.c"
 

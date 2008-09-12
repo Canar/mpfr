@@ -26,8 +26,6 @@ MA 02110-1301, USA. */
 #include "mpfr-test.h"
 
 #define TEST_FUNCTION mpfr_sech
-#define TEST_RANDOM_EMIN -64
-#define TEST_RANDOM_EMAX 36
 #include "tgeneric.c"
 
 static void
@@ -121,13 +119,13 @@ overflowed_sech0 (void)
           {
             mpfr_set_si_2exp (x, i, -512 * ABS (i), GMP_RNDN);
             mpfr_clear_flags ();
-            inex = mpfr_sech (x, x, (mp_rnd_t) rnd);
+            inex = mpfr_sech (x, x, rnd);
             if ((i == 0 || emax < 0 || rnd == GMP_RNDN || rnd == GMP_RNDU) &&
                 ! mpfr_overflow_p ())
               {
                 printf ("Error in overflowed_sech0 (i = %d, rnd = %s):\n"
                         "  The overflow flag is not set.\n",
-                        i, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                        i, mpfr_print_rnd_mode (rnd));
                 err = 1;
               }
             if (rnd == GMP_RNDZ || rnd == GMP_RNDD)
@@ -136,13 +134,13 @@ overflowed_sech0 (void)
                   {
                     printf ("Error in overflowed_sech0 (i = %d, rnd = %s):\n"
                             "  The inexact value must be negative.\n",
-                            i, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                            i, mpfr_print_rnd_mode (rnd));
                     err = 1;
                   }
                 if (! mpfr_equal_p (x, y))
                   {
                     printf ("Error in overflowed_sech0 (i = %d, rnd = %s):\n"
-                            "  Got ", i, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                            "  Got ", i, mpfr_print_rnd_mode (rnd));
                     mpfr_print_binary (x);
                     printf (" instead of 0.11111111E%d.\n", emax);
                     err = 1;
@@ -154,13 +152,13 @@ overflowed_sech0 (void)
                   {
                     printf ("Error in overflowed_sech0 (i = %d, rnd = %s):\n"
                             "  The inexact value must be positive.\n",
-                            i, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                            i, mpfr_print_rnd_mode (rnd));
                     err = 1;
                   }
                 if (! (mpfr_inf_p (x) && MPFR_SIGN (x) > 0))
                   {
                     printf ("Error in overflowed_sech0 (i = %d, rnd = %s):\n"
-                            "  Got ", i, mpfr_print_rnd_mode ((mp_rnd_t) rnd));
+                            "  Got ", i, mpfr_print_rnd_mode (rnd));
                     mpfr_print_binary (x);
                     printf (" instead of +Inf.\n");
                     err = 1;

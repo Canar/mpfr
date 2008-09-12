@@ -25,7 +25,7 @@ MA 02110-1301, USA. */
 
 /* #define DEBUG */
 
-#ifdef MPFR_WANT_DECIMAL_FLOATS
+#if MPFR_WANT_DECIMAL_FLOATS
 static void
 print_decimal64 (_Decimal64 d)
 {
@@ -231,7 +231,7 @@ main (void)
   tests_start_mpfr ();
   mpfr_test_init ();
 
-#ifdef MPFR_WANT_DECIMAL_FLOATS
+#if MPFR_WANT_DECIMAL_FLOATS
 #ifdef DEBUG
 #ifdef DPD_FORMAT
   printf ("Using DPD format\n");

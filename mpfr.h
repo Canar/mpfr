@@ -27,7 +27,7 @@ MA 02110-1301, USA. */
 #define MPFR_VERSION_MAJOR 2
 #define MPFR_VERSION_MINOR 4
 #define MPFR_VERSION_PATCHLEVEL 0
-#define MPFR_VERSION_STRING "2.4.0-dev"
+#define MPFR_VERSION_STRING "2.4.0"
 
 /* Macros dealing with MPFR VERSION */
 #define MPFR_VERSION_NUM(a,b,c) (((a) << 16L) | ((b) << 8) | (c))
@@ -329,6 +329,7 @@ __MPFR_DECLSPEC void mpfr_get_z _MPFR_PROTO ((mpz_ptr z, mpfr_srcptr f,
 __MPFR_DECLSPEC void mpfr_free_str _MPFR_PROTO ((char *));
 
 
+__MPFR_DECLSPEC void mpfr_random _MPFR_PROTO ((mpfr_ptr));
 __MPFR_DECLSPEC void mpfr_random2 _MPFR_PROTO ((mpfr_ptr,mp_size_t,mp_exp_t));
 __MPFR_DECLSPEC int mpfr_urandomb _MPFR_PROTO ((mpfr_ptr, gmp_randstate_t));
 

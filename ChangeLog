@@ -1,952 +1,1056 @@
 ------------------------------------------------------------------------
-r5817 | vlefevre | 2009-01-15 02:22:45 +0000 (Thu, 15 Jan 2009) | 1 line
+r5890 | thevenyp | 2009-01-26 09:04:38 +0000 (Mon, 26 Jan 2009) | 2 lines
 Changed paths:
-   M /trunk/vasprintf.c
+   M /branches/2.4/VERSION
+   M /branches/2.4/configure.in
+   M /branches/2.4/mpfr.h
+   M /branches/2.4/mpfr.texi
+   M /branches/2.4/version.c
+
+VERSION, version.c, mpfr.h, mpfr.texi, configure.in: Updated version to 2.4.0.
+
+------------------------------------------------------------------------
+r5889 | thevenyp | 2009-01-26 08:56:11 +0000 (Mon, 26 Jan 2009) | 4 lines
+Changed paths:
+   M /branches/2.4/README.dev
+   M /branches/2.4/nightly-test
+
+README.dev: --disable-alloca is a GMP configure option.
+nightly-test: removed --disable-alloca (GMP option)
+[merge r5886:5888 from trunk]
+
+------------------------------------------------------------------------
+r5885 | thevenyp | 2009-01-21 14:30:29 +0000 (Wed, 21 Jan 2009) | 2 lines
+Changed paths:
+   M /branches/2.4/tests/tsprintf.c
+
+tests/tsprintf.c: remove tests against libc's printf with "%a" (not in ISO C90), and with "%p" (implementation defined).
+
+------------------------------------------------------------------------
+r5884 | thevenyp | 2009-01-21 14:25:33 +0000 (Wed, 21 Jan 2009) | 4 lines
+Changed paths:
+   M /branches/2.4/mpfr-impl.h
+
+mpfr-impl.h: avoid a compiler bug under Mac OS X Tiger + Xcode (&x == &x
+is false) that makes tset_d fail; this problem was introduced in r5880.
+[merged -c 5883 from trunk]
+
+------------------------------------------------------------------------
+r5882 | thevenyp | 2009-01-21 10:06:07 +0000 (Wed, 21 Jan 2009) | 10 lines
+Changed paths:
+   M /branches/2.4/mpfr-impl.h
+   M /branches/2.4/tests/tset_ld.c
+
+Fixed bug reported by Chris Saunders: if _GMP_IEEE_FLOATS is defined,
+the build of tset_ld.c fails because DOUBLE_ISNAN expects a lvalue.
+* mpfr-impl.h: documented that for such macros, the argument must
+  be a lvalue, and always make sure that it is a lvalue (so that
+  a failure doesn't depend on the environment).
+* tests/tset_ld.c: fixed the bug.
+tests/tset_ld.c: added explanation of NaN-related failures in case
+MPFR_NANISNAN is defined.
+[merged -r 5877:5880 from trunk]
+
+------------------------------------------------------------------------
+r5881 | thevenyp | 2009-01-21 10:01:26 +0000 (Wed, 21 Jan 2009) | 4 lines
+Changed paths:
+   M /branches/2.4/tests/tversion.c
+
+tests/tversion.c: be more tolerant when checking whether gmp.h version
+and libgmp version are the same (in case patch level is 0).
+[merge -c 5879 from trunk]
+
+------------------------------------------------------------------------
+r5877 | vlefevre | 2009-01-20 00:52:25 +0000 (Tue, 20 Jan 2009) | 1 line
+Changed paths:
+   M /branches/2.4/ChangeLog
+
+ChangeLog update with "LC_ALL=en_US.UTF8 TZ=UTC svn log -rHEAD:0 -v".
+------------------------------------------------------------------------
+r5876 | vlefevre | 2009-01-20 00:45:54 +0000 (Tue, 20 Jan 2009) | 1 line
+Changed paths:
+   M /branches/2.4/tests/tconst_log2.c
+   M /branches/2.4/tests/tests.c
+   M /branches/2.4/tests/texp.c
+   M /branches/2.4/tests/tget_d.c
+   M /branches/2.4/tests/tget_d_2exp.c
+   M /branches/2.4/tests/tget_ld_2exp.c
+   M /branches/2.4/tests/tget_set_d64.c
+   M /branches/2.4/tests/tgmpop.c
+   M /branches/2.4/tests/toutimpl.c
+   M /branches/2.4/tests/tpow.c
+   M /branches/2.4/tests/tset.c
+   M /branches/2.4/tests/tset_sj.c
+   M /branches/2.4/tests/tsi_op.c
+   M /branches/2.4/tests/tsin.c
+   M /branches/2.4/tests/tstrtofr.c
+
+Added missing void's. [svn merge -c5875 .../mpfr/trunk]
+------------------------------------------------------------------------
+r5872 | vlefevre | 2009-01-20 00:32:23 +0000 (Tue, 20 Jan 2009) | 1 line
+Changed paths:
+   M /branches/2.4/vasprintf.c
 
 vasprintf.c: deleted trailing spaces.
 ------------------------------------------------------------------------
-r5816 | vlefevre | 2009-01-15 02:21:57 +0000 (Thu, 15 Jan 2009) | 2 lines
+r5871 | vlefevre | 2009-01-20 00:12:15 +0000 (Tue, 20 Jan 2009) | 1 line
 Changed paths:
-   M /trunk/configure.in
+   M /branches/2.4/ChangeLog
 
-configure.in: be more tolerant when checking whether gmp.h version
-and libgmp version are the same (in case patch level is 0).
+ChangeLog update with "LC_ALL=en_US.UTF8 TZ=UTC svn log -rHEAD:0 -v".
 ------------------------------------------------------------------------
-r5814 | vlefevre | 2009-01-15 01:56:55 +0000 (Thu, 15 Jan 2009) | 3 lines
+r5870 | vlefevre | 2009-01-20 00:10:39 +0000 (Tue, 20 Jan 2009) | 4 lines
 Changed paths:
-   M /trunk/BUGS
-   M /trunk/ChangeLog
-   M /trunk/FAQ.html
-   M /trunk/NEWS
-   M /trunk/README
-   M /trunk/TODO
-   M /trunk/abort_prec_max.c
-   M /trunk/acinclude.m4
-   M /trunk/acos.c
-   M /trunk/acosh.c
-   M /trunk/add.c
-   M /trunk/add1.c
-   M /trunk/add1sp.c
-   M /trunk/add_d.c
-   M /trunk/add_ui.c
-   M /trunk/agm.c
-   M /trunk/asin.c
-   M /trunk/asinh.c
-   M /trunk/atan.c
-   M /trunk/atan2.c
-   M /trunk/atanh.c
-   M /trunk/cache.c
-   M /trunk/cbrt.c
-   M /trunk/check.c
-   M /trunk/clear.c
-   M /trunk/clears.c
-   M /trunk/cmp.c
-   M /trunk/cmp2.c
-   M /trunk/cmp_abs.c
-   M /trunk/cmp_d.c
-   M /trunk/cmp_ld.c
-   M /trunk/cmp_si.c
-   M /trunk/cmp_ui.c
-   M /trunk/comparisons.c
-   M /trunk/configure.in
-   M /trunk/const_catalan.c
-   M /trunk/const_euler.c
-   M /trunk/const_log2.c
-   M /trunk/const_pi.c
-   M /trunk/constant.c
-   M /trunk/copysign.c
-   M /trunk/cos.c
-   M /trunk/cosh.c
-   M /trunk/cot.c
-   M /trunk/coth.c
-   M /trunk/csc.c
-   M /trunk/csch.c
-   M /trunk/d_div.c
-   M /trunk/d_sub.c
-   M /trunk/dim.c
-   M /trunk/div.c
-   M /trunk/div_2exp.c
-   M /trunk/div_2si.c
-   M /trunk/div_2ui.c
-   M /trunk/div_d.c
-   M /trunk/div_ui.c
-   M /trunk/dump.c
-   M /trunk/eint.c
-   M /trunk/eq.c
-   M /trunk/erf.c
-   M /trunk/erfc.c
-   M /trunk/exceptions.c
-   M /trunk/exp.c
-   M /trunk/exp10.c
-   M /trunk/exp2.c
-   M /trunk/exp3.c
-   M /trunk/exp_2.c
-   M /trunk/expm1.c
-   M /trunk/extract.c
-   M /trunk/factorial.c
-   M /trunk/faq.xsl
-   M /trunk/fits_intmax.c
-   M /trunk/fits_s.h
-   M /trunk/fits_sint.c
-   M /trunk/fits_slong.c
-   M /trunk/fits_sshort.c
-   M /trunk/fits_u.h
-   M /trunk/fits_uint.c
-   M /trunk/fits_uintmax.c
-   M /trunk/fits_ulong.c
-   M /trunk/fits_ushort.c
-   M /trunk/fma.c
-   M /trunk/fms.c
-   M /trunk/frac.c
-   M /trunk/free_cache.c
-   M /trunk/gamma.c
-   M /trunk/gen_inverse.h
-   M /trunk/get_d.c
-   M /trunk/get_d64.c
-   M /trunk/get_exp.c
-   M /trunk/get_f.c
-   M /trunk/get_ld.c
-   M /trunk/get_patches.sh
-   M /trunk/get_si.c
-   M /trunk/get_sj.c
-   M /trunk/get_str.c
-   M /trunk/get_ui.c
-   M /trunk/get_uj.c
-   M /trunk/get_z.c
-   M /trunk/get_z_exp.c
-   M /trunk/gmp_op.c
-   M /trunk/hypot.c
-   M /trunk/init.c
-   M /trunk/init2.c
-   M /trunk/inits.c
-   M /trunk/inits2.c
-   M /trunk/inp_str.c
-   M /trunk/int_ceil_log2.c
-   M /trunk/isinf.c
-   M /trunk/isinteger.c
-   M /trunk/isnan.c
-   M /trunk/isnum.c
-   M /trunk/isqrt.c
-   M /trunk/iszero.c
-   M /trunk/jn.c
-   M /trunk/jyn_asympt.c
-   M /trunk/li2.c
-   M /trunk/lngamma.c
-   M /trunk/log.c
-   M /trunk/log10.c
-   M /trunk/log1p.c
-   M /trunk/log2.c
-   M /trunk/logging.c
-   M /trunk/mbench/Makefile
-   M /trunk/mbench/generate.c
-   M /trunk/mbench/mfv5-arprec.cc
-   M /trunk/mbench/mfv5-cln.cc
-   M /trunk/mbench/mfv5-crlibm.cc
-   M /trunk/mbench/mfv5-libc.cc
-   M /trunk/mbench/mfv5-lidia.cc
-   M /trunk/mbench/mfv5-mpf.cc
-   M /trunk/mbench/mfv5-mpfr.cc
-   M /trunk/mbench/mfv5-ntl.cc
-   M /trunk/mbench/mfv5-pari.cc
-   M /trunk/mbench/mfv5-void.cc
-   M /trunk/mbench/mfv5.cc
-   M /trunk/mbench/mfv5.h
-   M /trunk/mbench/mpfr-gfx.c
-   M /trunk/mbench/mpfr-v4.c
-   M /trunk/mbench/mpfr-v6.c
-   M /trunk/mbench/timp.h
-   M /trunk/minmax.c
-   M /trunk/modf.c
-   M /trunk/mp_clz_tab.c
-   M /trunk/mparam_h.in
-   M /trunk/mpf2mpfr.h
-   M /trunk/mpfr-gmp.c
-   M /trunk/mpfr-gmp.h
-   M /trunk/mpfr-impl.h
-   M /trunk/mpfr-thread.h
-   M /trunk/mpfr.h
-   M /trunk/mpn_exp.c
-   M /trunk/mul.c
-   M /trunk/mul_2exp.c
-   M /trunk/mul_2si.c
-   M /trunk/mul_2ui.c
-   M /trunk/mul_d.c
-   M /trunk/mul_ui.c
-   M /trunk/mulders.c
-   M /trunk/neg.c
-   M /trunk/next.c
-   M /trunk/out_str.c
-   M /trunk/pow.c
-   M /trunk/pow_si.c
-   M /trunk/pow_ui.c
-   M /trunk/pow_z.c
-   M /trunk/powerof2.c
-   M /trunk/print_raw.c
-   M /trunk/print_rnd_mode.c
-   M /trunk/printf.c
-   M /trunk/random2.c
-   M /trunk/rec_sqrt.c
-   M /trunk/reldiff.c
-   M /trunk/rem1.c
-   M /trunk/rint.c
-   M /trunk/root.c
-   M /trunk/round_near_x.c
-   M /trunk/round_p.c
-   M /trunk/round_prec.c
-   M /trunk/round_raw_generic.c
-   M /trunk/sec.c
-   M /trunk/sech.c
-   M /trunk/set.c
-   M /trunk/set_d.c
-   M /trunk/set_d64.c
-   M /trunk/set_dfl_prec.c
-   M /trunk/set_exp.c
-   M /trunk/set_f.c
-   M /trunk/set_inf.c
-   M /trunk/set_ld.c
-   M /trunk/set_nan.c
-   M /trunk/set_prc_raw.c
-   M /trunk/set_prec.c
-   M /trunk/set_q.c
-   M /trunk/set_rnd.c
-   M /trunk/set_si.c
-   M /trunk/set_si_2exp.c
-   M /trunk/set_sj.c
-   M /trunk/set_str.c
-   M /trunk/set_str_raw.c
-   M /trunk/set_ui.c
-   M /trunk/set_ui_2exp.c
-   M /trunk/set_uj.c
-   M /trunk/set_z.c
-   M /trunk/setmax.c
-   M /trunk/setmin.c
-   M /trunk/setsign.c
-   M /trunk/sgn.c
-   M /trunk/si_op.c
-   M /trunk/signbit.c
-   M /trunk/sin.c
-   M /trunk/sin_cos.c
-   M /trunk/sinh.c
-   M /trunk/sinh_cosh.c
-   M /trunk/sqr.c
-   M /trunk/sqrt.c
-   M /trunk/sqrt_ui.c
-   M /trunk/stack_interface.c
-   M /trunk/strtofr.c
-   M /trunk/sub.c
-   M /trunk/sub1.c
-   M /trunk/sub1sp.c
-   M /trunk/sub_d.c
-   M /trunk/sub_ui.c
-   M /trunk/subnormal.c
-   M /trunk/sum.c
-   M /trunk/swap.c
-   M /trunk/tan.c
-   M /trunk/tanh.c
-   M /trunk/tests/cmp_str.c
-   M /trunk/tests/data/li2
-   M /trunk/tests/memory.c
-   M /trunk/tests/mpf_compat.c
-   M /trunk/tests/mpf_compat.h
-   M /trunk/tests/mpfr-test.h
-   M /trunk/tests/mpfr_compat.c
-   M /trunk/tests/reuse.c
-   M /trunk/tests/rnd_mode.c
-   M /trunk/tests/tabs.c
-   M /trunk/tests/tacos.c
-   M /trunk/tests/tacosh.c
-   M /trunk/tests/tadd.c
-   M /trunk/tests/tadd1sp.c
-   M /trunk/tests/tadd_d.c
-   M /trunk/tests/tadd_ui.c
-   M /trunk/tests/tagm.c
-   M /trunk/tests/tasin.c
-   M /trunk/tests/tasinh.c
-   M /trunk/tests/tatan.c
-   M /trunk/tests/tatanh.c
-   M /trunk/tests/tcan_round.c
-   M /trunk/tests/tcbrt.c
-   M /trunk/tests/tcheck.c
-   M /trunk/tests/tcmp.c
-   M /trunk/tests/tcmp2.c
-   M /trunk/tests/tcmp_d.c
-   M /trunk/tests/tcmp_ld.c
-   M /trunk/tests/tcmp_ui.c
-   M /trunk/tests/tcmpabs.c
-   M /trunk/tests/tcomparisons.c
-   M /trunk/tests/tconst_catalan.c
-   M /trunk/tests/tconst_euler.c
-   M /trunk/tests/tconst_log2.c
-   M /trunk/tests/tconst_pi.c
-   M /trunk/tests/tcopysign.c
-   M /trunk/tests/tcos.c
-   M /trunk/tests/tcosh.c
-   M /trunk/tests/tcot.c
-   M /trunk/tests/tcoth.c
-   M /trunk/tests/tcsc.c
-   M /trunk/tests/tcsch.c
-   M /trunk/tests/td_div.c
-   M /trunk/tests/td_sub.c
-   M /trunk/tests/tdim.c
-   M /trunk/tests/tdiv.c
-   M /trunk/tests/tdiv_d.c
-   M /trunk/tests/tdiv_ui.c
-   M /trunk/tests/teint.c
-   M /trunk/tests/teq.c
-   M /trunk/tests/terf.c
-   M /trunk/tests/tests.c
-   M /trunk/tests/texceptions.c
-   M /trunk/tests/texp.c
-   M /trunk/tests/texp10.c
-   M /trunk/tests/texp2.c
-   M /trunk/tests/texpm1.c
-   M /trunk/tests/tfactorial.c
-   M /trunk/tests/tfits.c
-   M /trunk/tests/tfma.c
-   M /trunk/tests/tfmod.c
-   M /trunk/tests/tfms.c
-   M /trunk/tests/tfprintf.c
-   M /trunk/tests/tfrac.c
-   M /trunk/tests/tgamma.c
-   M /trunk/tests/tgeneric.c
-   M /trunk/tests/tgeneric_ui.c
-   M /trunk/tests/tget_d.c
-   M /trunk/tests/tget_d_2exp.c
-   M /trunk/tests/tget_f.c
-   M /trunk/tests/tget_ld_2exp.c
-   M /trunk/tests/tget_set_d64.c
-   M /trunk/tests/tget_sj.c
-   M /trunk/tests/tget_str.c
-   M /trunk/tests/tget_z.c
-   M /trunk/tests/tgmpop.c
-   M /trunk/tests/thyperbolic.c
-   M /trunk/tests/thypot.c
-   M /trunk/tests/tinits.c
-   M /trunk/tests/tinp_str.c
-   M /trunk/tests/tinternals.c
-   M /trunk/tests/tisnan.c
-   M /trunk/tests/tisqrt.c
-   M /trunk/tests/tj0.c
-   M /trunk/tests/tj1.c
-   M /trunk/tests/tjn.c
-   M /trunk/tests/tl2b.c
-   M /trunk/tests/tlgamma.c
-   M /trunk/tests/tli2.c
-   M /trunk/tests/tlngamma.c
-   M /trunk/tests/tlog.c
-   M /trunk/tests/tlog10.c
-   M /trunk/tests/tlog1p.c
-   M /trunk/tests/tlog2.c
-   M /trunk/tests/tminmax.c
-   M /trunk/tests/tmodf.c
-   M /trunk/tests/tmul.c
-   M /trunk/tests/tmul_2exp.c
-   M /trunk/tests/tmul_d.c
-   M /trunk/tests/tmul_ui.c
-   M /trunk/tests/tnext.c
-   M /trunk/tests/tout_str.c
-   M /trunk/tests/toutimpl.c
-   M /trunk/tests/tpow.c
-   M /trunk/tests/tpow3.c
-   M /trunk/tests/tpow_all.c
-   M /trunk/tests/tpow_z.c
-   M /trunk/tests/tprintf.c
-   M /trunk/tests/trandom.c
-   M /trunk/tests/trec_sqrt.c
-   M /trunk/tests/tremquo.c
-   M /trunk/tests/trint.c
-   M /trunk/tests/troot.c
-   M /trunk/tests/tround_prec.c
-   M /trunk/tests/tsec.c
-   M /trunk/tests/tsech.c
-   M /trunk/tests/tset.c
-   M /trunk/tests/tset_d.c
-   M /trunk/tests/tset_exp.c
-   M /trunk/tests/tset_f.c
-   M /trunk/tests/tset_ld.c
-   M /trunk/tests/tset_q.c
-   M /trunk/tests/tset_si.c
-   M /trunk/tests/tset_sj.c
-   M /trunk/tests/tset_str.c
-   M /trunk/tests/tset_z.c
-   M /trunk/tests/tsgn.c
-   M /trunk/tests/tsi_op.c
-   M /trunk/tests/tsin.c
-   M /trunk/tests/tsin_cos.c
-   M /trunk/tests/tsinh.c
-   M /trunk/tests/tsinh_cosh.c
-   M /trunk/tests/tsprintf.c
-   M /trunk/tests/tsqr.c
-   M /trunk/tests/tsqrt.c
-   M /trunk/tests/tsqrt_ui.c
-   M /trunk/tests/tstckintc.c
-   M /trunk/tests/tstrtofr.c
-   M /trunk/tests/tsub.c
-   M /trunk/tests/tsub1sp.c
-   M /trunk/tests/tsub_d.c
-   M /trunk/tests/tsub_ui.c
-   M /trunk/tests/tsubnormal.c
-   M /trunk/tests/tsum.c
-   M /trunk/tests/tswap.c
-   M /trunk/tests/ttan.c
-   M /trunk/tests/ttanh.c
-   M /trunk/tests/ttrunc.c
-   M /trunk/tests/tui_div.c
-   M /trunk/tests/tui_pow.c
-   M /trunk/tests/tui_sub.c
-   M /trunk/tests/tversion.c
-   M /trunk/tests/ty0.c
-   M /trunk/tests/ty1.c
-   M /trunk/tests/tyn.c
-   M /trunk/tests/tzeta.c
-   M /trunk/tests/tzeta_ui.c
-   M /trunk/tuneup.c
-   M /trunk/uceil_exp2.c
-   M /trunk/uceil_log2.c
-   M /trunk/ufloor_log2.c
-   M /trunk/ui_div.c
-   M /trunk/ui_pow.c
-   M /trunk/ui_pow_ui.c
-   M /trunk/ui_sub.c
-   M /trunk/urandomb.c
-   M /trunk/vasprintf.c
-   M /trunk/version.c
-   M /trunk/volatile.c
-   M /trunk/yn.c
-   M /trunk/zeta.c
-   M /trunk/zeta_ui.c
+   M /branches/2.4/INSTALL
+   M /branches/2.4/acinclude.m4
+   M /branches/2.4/mpfr-impl.h
+   M /branches/2.4/tests/tcmp_d.c
+   M /branches/2.4/tests/tcmp_ld.c
+   M /branches/2.4/tests/tset_d.c
+   M /branches/2.4/tests/tset_ld.c
+
+Added warning messages related to the NAN != NAN test, and improved the
+tests when gcc -ffast-math is used (DOUBLE_ISNAN from mpfr-impl.h and
+Isnan_ld from tests/tset_ld.c were incorrect) in order to avoid spurious
+failures and undetected ones. [svn merge -r5861:5869 .../mpfr/trunk]
+------------------------------------------------------------------------
+r5861 | thevenyp | 2009-01-19 20:01:44 +0000 (Mon, 19 Jan 2009) | 2 lines
+Changed paths:
+   M /branches/2.4/ChangeLog
+
+ChangeLog: ChangeLog update (with LC_ALL=en_US.UTF8 TZ=UTC svn log -rHEAD:0 -v).
+
+------------------------------------------------------------------------
+r5859 | thevenyp | 2009-01-19 19:58:00 +0000 (Mon, 19 Jan 2009) | 3 lines
+Changed paths:
+   M /branches/2.4/tests/tcmp_d.c
+   M /branches/2.4/tests/tcmp_ld.c
+   M /branches/2.4/tests/tests.c
+   M /branches/2.4/tests/tset_d.c
+
+tcmp_d.c tset_d.c tcmp_ld.c: Remove tests with NaN when MPFR_NANISNAN is defined.
+tests.c: Add a warning in a comment that Isnan always returns 0 on systems where MPFR_NANISNAN is defined.
+
+------------------------------------------------------------------------
+r5858 | thevenyp | 2009-01-19 18:46:39 +0000 (Mon, 19 Jan 2009) | 2 lines
+Changed paths:
+   M /branches/2.4/ChangeLog
+
+ChangeLog: ChangeLog update (with LC_ALL=en_US.UTF8 TZ=UTC svn log -rHEAD:0 -v).
+
+------------------------------------------------------------------------
+r5857 | thevenyp | 2009-01-19 18:44:32 +0000 (Mon, 19 Jan 2009) | 2 lines
+Changed paths:
+   M /branches/2.4/VERSION
+   M /branches/2.4/configure.in
+   M /branches/2.4/mpfr.h
+   M /branches/2.4/mpfr.texi
+   M /branches/2.4/version.c
+
+VERSION, version.c, mpfr.h, mpfr.texi, configure.in: Updated version to 2.4.0-rc3.
+
+------------------------------------------------------------------------
+r5856 | thevenyp | 2009-01-19 18:31:25 +0000 (Mon, 19 Jan 2009) | 17 lines
+Changed paths:
+   M /branches/2.4/README.dev
+   M /branches/2.4/acinclude.m4
+   M /branches/2.4/configure.in
+   M /branches/2.4/mpfr.texi
+   M /branches/2.4/tests/tfprintf.c
+   M /branches/2.4/tests/tprintf.c
+   M /branches/2.4/tests/tsprintf.c
+   M /branches/2.4/vasprintf.c
+
+mpfr.texi: updated references to the GMP manual.
+mpfr.texi: improved "Formatted Output" Section.
+configure.in: Add MPFR_CHECK_PRINTF_SPEC when we can link with a gmp library.
+acinclude.m4: no quad_t detection.
+acinclude.m4: Check if the system supports intmax_t.
+acinclude.m4: Check if gmp_printf supports 'j', 'L' and 't'.
+README.dev: Remove HAVE_QUAD_T from the list of symbol.
+vasprintf.c: include header needed for intmax_t in the same way as gmp.
+vasprintf.c: no longer quad_t support.
+vasprintf.c: 'j' support if the system supports intmax_t and if the symbol NPRINTF_J is not defined.
+vasprintf.c: 'L' support if the symbol NPRINTF_L is not defined.
+vasprintf.c: 't' support if the symbol NPRINTF_T is not defined.
+tests/tsprintf.c: Do not check with long double if NPRINTF_L is defined.
+tests/tfprintf.c: Do not check with quad_t, do no check optional length modifiers.
+tests/tprintf.c:  Do not check with quad_t, do no check optional length modifiers.
+[merge -r 5800:5855 from trunk]
+
+------------------------------------------------------------------------
+r5854 | thevenyp | 2009-01-19 17:49:24 +0000 (Mon, 19 Jan 2009) | 7 lines
+Changed paths:
+   M /branches/2.4/mpfr.texi
+
+mpfr.texi: don't -> do not, doesn't -> does not, won't -> will not.
+mpfr.texi: added a reference to a texinfo bug in a comment.
+mpfr.texi: added .info extension in cross-references, to avoid the bug
+reported here: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=484740
+mpfr.texi: typo in comment.
+[merge 5839 5841 5842 5843 from trunk]
+
+------------------------------------------------------------------------
+r5850 | thevenyp | 2009-01-19 16:34:42 +0000 (Mon, 19 Jan 2009) | 3 lines
+Changed paths:
+   M /branches/2.4/tests/tsprintf.c
+
+tests/tsprintf.c: check if native types are really processed by libc printf.
+[merge -c 5837 from trunk]
+
+------------------------------------------------------------------------
+r5849 | thevenyp | 2009-01-19 16:32:36 +0000 (Mon, 19 Jan 2009) | 4 lines
+Changed paths:
+   M /branches/2.4/INSTALL
+   M /branches/2.4/configure.in
+
+INSTALL: Warn that --with-gmp, --with-gmp-include/--with-gmp-lib, and --with-gmp-build options are mutually exclusive.
+configure.in: Check and fail if --with-gmp, --with-gmp-include/--with-gmp-lib, or --with-gmp-build are use simultaneously.
+[merge -c 5834 from trunk]
+
+------------------------------------------------------------------------
+r5848 | thevenyp | 2009-01-19 16:26:29 +0000 (Mon, 19 Jan 2009) | 3 lines
+Changed paths:
+   M /branches/2.4/tests/tests.c
+
+tests/tests.c: include <sys/fpu.h> only if need be.
+[merge -c 5833 from trunk]
+
+------------------------------------------------------------------------
+r5847 | thevenyp | 2009-01-19 16:21:14 +0000 (Mon, 19 Jan 2009) | 3 lines
+Changed paths:
+   M /branches/2.4/fits_intmax.c
+   M /branches/2.4/fits_uintmax.c
+   M /branches/2.4/get_sj.c
+   M /branches/2.4/get_uj.c
+   M /branches/2.4/set_sj.c
+   M /branches/2.4/set_uj.c
+   M /branches/2.4/tests/tfits.c
+   M /branches/2.4/tests/tset_sj.c
+
+get_uj.c get_sj.c tests/tset_sj.c tests/tfits.c fits_intmax.c fits_uintmax.c set_uj.c set_sj.c: Use the same #include order for intmax_t as in gmp.
+[partial merge of r5825]
+
+------------------------------------------------------------------------
+r5846 | thevenyp | 2009-01-19 16:07:41 +0000 (Mon, 19 Jan 2009) | 3 lines
+Changed paths:
+   M /branches/2.4/tests/tadd1sp.c
+   M /branches/2.4/tests/tsub1sp.c
+
+tests/tadd1sp.c, tests/tsub1sp.c: fixed function prototypes.
+[merge -c 5812 from trunk]
+
+------------------------------------------------------------------------
+r5845 | thevenyp | 2009-01-19 16:06:12 +0000 (Mon, 19 Jan 2009) | 2 lines
+Changed paths:
+   M /branches/2.4/tests/tcan_round.c
+   M /branches/2.4/tests/tcmp2.c
+   M /branches/2.4/tests/teq.c
+   M /branches/2.4/tests/tests.c
+   M /branches/2.4/tests/texp.c
+   M /branches/2.4/tests/tfprintf.c
+   M /branches/2.4/tests/tgamma.c
+   M /branches/2.4/tests/tpow.c
+   M /branches/2.4/tests/tpow_z.c
+   M /branches/2.4/tests/tset_str.c
+   M /branches/2.4/tests/tsqrt.c
+
+Fixed printf format strings. [merge 5809 5810 5811 5813 from trunk]
+
+------------------------------------------------------------------------
+r5832 | thevenyp | 2009-01-16 16:20:29 +0000 (Fri, 16 Jan 2009) | 5 lines
+Changed paths:
+   M /branches/2.4/mpfr.texi
+
+[mpfr.texi] fixed order -> kind (typo found by Luis Rivera, thanks)
+[mpfr.texi] made difference between mpfr_set_str and mpfr_strtofr clearer
+            (after remark from Luis Rivera)
+[merge -c 5829:5831 from trunk]
+
+------------------------------------------------------------------------
+r5829 | thevenyp | 2009-01-16 13:51:32 +0000 (Fri, 16 Jan 2009) | 3 lines
+Changed paths:
+   M /branches/2.4/tests/tfprintf.c
+   M /branches/2.4/tests/tprintf.c
+
+tfprintf.c tprintf.c: Test double with "%f" instead of "%e" so as to avoid failure due to exponent "e+000" on MS Windows.
+[merge -c 5828]
+
+------------------------------------------------------------------------
+r5824 | thevenyp | 2009-01-15 13:29:06 +0000 (Thu, 15 Jan 2009) | 3 lines
+Changed paths:
+   M /branches/2.4/tests/tfprintf.c
+   M /branches/2.4/tests/tprintf.c
+
+tfprintf.c tprintf.c: Fix included headers, type intmax_t may be defined in inttypes.h or in stdint.h (see autoconf manual 5.6.1 Portability of Headers) and remove tests with u_quad_t (on Solaris 10, quad_t exists but u_quad_t doesn't, bug reported by Michael Abshoff).
+[merge r5822 5823 from trunk]
+
+------------------------------------------------------------------------
+r5820 | thevenyp | 2009-01-15 09:37:19 +0000 (Thu, 15 Jan 2009) | 2 lines
+Changed paths:
+   M /branches/2.4/ChangeLog
+
+ChangeLog: ChangeLog update (with LC_ALL=en_US.UTF8 TZ=UTC svn log -rHEAD:0 -v).
+
+------------------------------------------------------------------------
+r5819 | vlefevre | 2009-01-15 02:27:11 +0000 (Thu, 15 Jan 2009) | 3 lines
+Changed paths:
+   M /branches/2.4/BUGS
+   M /branches/2.4/ChangeLog
+   M /branches/2.4/FAQ.html
+   M /branches/2.4/NEWS
+   M /branches/2.4/README
+   M /branches/2.4/TODO
+   M /branches/2.4/abort_prec_max.c
+   M /branches/2.4/acinclude.m4
+   M /branches/2.4/acos.c
+   M /branches/2.4/acosh.c
+   M /branches/2.4/add.c
+   M /branches/2.4/add1.c
+   M /branches/2.4/add1sp.c
+   M /branches/2.4/add_d.c
+   M /branches/2.4/add_ui.c
+   M /branches/2.4/agm.c
+   M /branches/2.4/asin.c
+   M /branches/2.4/asinh.c
+   M /branches/2.4/atan.c
+   M /branches/2.4/atan2.c
+   M /branches/2.4/atanh.c
+   M /branches/2.4/cache.c
+   M /branches/2.4/cbrt.c
+   M /branches/2.4/check.c
+   M /branches/2.4/clear.c
+   M /branches/2.4/clears.c
+   M /branches/2.4/cmp.c
+   M /branches/2.4/cmp2.c
+   M /branches/2.4/cmp_abs.c
+   M /branches/2.4/cmp_d.c
+   M /branches/2.4/cmp_ld.c
+   M /branches/2.4/cmp_si.c
+   M /branches/2.4/cmp_ui.c
+   M /branches/2.4/comparisons.c
+   M /branches/2.4/configure.in
+   M /branches/2.4/const_catalan.c
+   M /branches/2.4/const_euler.c
+   M /branches/2.4/const_log2.c
+   M /branches/2.4/const_pi.c
+   M /branches/2.4/constant.c
+   M /branches/2.4/copysign.c
+   M /branches/2.4/cos.c
+   M /branches/2.4/cosh.c
+   M /branches/2.4/cot.c
+   M /branches/2.4/coth.c
+   M /branches/2.4/csc.c
+   M /branches/2.4/csch.c
+   M /branches/2.4/d_div.c
+   M /branches/2.4/d_sub.c
+   M /branches/2.4/dim.c
+   M /branches/2.4/div.c
+   M /branches/2.4/div_2exp.c
+   M /branches/2.4/div_2si.c
+   M /branches/2.4/div_2ui.c
+   M /branches/2.4/div_d.c
+   M /branches/2.4/div_ui.c
+   M /branches/2.4/dump.c
+   M /branches/2.4/eint.c
+   M /branches/2.4/eq.c
+   M /branches/2.4/erf.c
+   M /branches/2.4/erfc.c
+   M /branches/2.4/exceptions.c
+   M /branches/2.4/exp.c
+   M /branches/2.4/exp10.c
+   M /branches/2.4/exp2.c
+   M /branches/2.4/exp3.c
+   M /branches/2.4/exp_2.c
+   M /branches/2.4/expm1.c
+   M /branches/2.4/extract.c
+   M /branches/2.4/factorial.c
+   M /branches/2.4/faq.xsl
+   M /branches/2.4/fits_intmax.c
+   M /branches/2.4/fits_s.h
+   M /branches/2.4/fits_sint.c
+   M /branches/2.4/fits_slong.c
+   M /branches/2.4/fits_sshort.c
+   M /branches/2.4/fits_u.h
+   M /branches/2.4/fits_uint.c
+   M /branches/2.4/fits_uintmax.c
+   M /branches/2.4/fits_ulong.c
+   M /branches/2.4/fits_ushort.c
+   M /branches/2.4/fma.c
+   M /branches/2.4/fms.c
+   M /branches/2.4/frac.c
+   M /branches/2.4/free_cache.c
+   M /branches/2.4/gamma.c
+   M /branches/2.4/gen_inverse.h
+   M /branches/2.4/get_d.c
+   M /branches/2.4/get_d64.c
+   M /branches/2.4/get_exp.c
+   M /branches/2.4/get_f.c
+   M /branches/2.4/get_ld.c
+   M /branches/2.4/get_patches.sh
+   M /branches/2.4/get_si.c
+   M /branches/2.4/get_sj.c
+   M /branches/2.4/get_str.c
+   M /branches/2.4/get_ui.c
+   M /branches/2.4/get_uj.c
+   M /branches/2.4/get_z.c
+   M /branches/2.4/get_z_exp.c
+   M /branches/2.4/gmp_op.c
+   M /branches/2.4/hypot.c
+   M /branches/2.4/init.c
+   M /branches/2.4/init2.c
+   M /branches/2.4/inits.c
+   M /branches/2.4/inits2.c
+   M /branches/2.4/inp_str.c
+   M /branches/2.4/int_ceil_log2.c
+   M /branches/2.4/isinf.c
+   M /branches/2.4/isinteger.c
+   M /branches/2.4/isnan.c
+   M /branches/2.4/isnum.c
+   M /branches/2.4/isqrt.c
+   M /branches/2.4/iszero.c
+   M /branches/2.4/jn.c
+   M /branches/2.4/jyn_asympt.c
+   M /branches/2.4/li2.c
+   M /branches/2.4/lngamma.c
+   M /branches/2.4/log.c
+   M /branches/2.4/log10.c
+   M /branches/2.4/log1p.c
+   M /branches/2.4/log2.c
+   M /branches/2.4/logging.c
+   M /branches/2.4/mbench/Makefile
+   M /branches/2.4/mbench/generate.c
+   M /branches/2.4/mbench/mfv5-arprec.cc
+   M /branches/2.4/mbench/mfv5-cln.cc
+   M /branches/2.4/mbench/mfv5-crlibm.cc
+   M /branches/2.4/mbench/mfv5-libc.cc
+   M /branches/2.4/mbench/mfv5-lidia.cc
+   M /branches/2.4/mbench/mfv5-mpf.cc
+   M /branches/2.4/mbench/mfv5-mpfr.cc
+   M /branches/2.4/mbench/mfv5-ntl.cc
+   M /branches/2.4/mbench/mfv5-pari.cc
+   M /branches/2.4/mbench/mfv5-void.cc
+   M /branches/2.4/mbench/mfv5.cc
+   M /branches/2.4/mbench/mfv5.h
+   M /branches/2.4/mbench/mpfr-gfx.c
+   M /branches/2.4/mbench/mpfr-v4.c
+   M /branches/2.4/mbench/mpfr-v6.c
+   M /branches/2.4/mbench/timp.h
+   M /branches/2.4/minmax.c
+   M /branches/2.4/modf.c
+   M /branches/2.4/mp_clz_tab.c
+   M /branches/2.4/mparam_h.in
+   M /branches/2.4/mpf2mpfr.h
+   M /branches/2.4/mpfr-gmp.c
+   M /branches/2.4/mpfr-gmp.h
+   M /branches/2.4/mpfr-impl.h
+   M /branches/2.4/mpfr-thread.h
+   M /branches/2.4/mpfr.h
+   M /branches/2.4/mpn_exp.c
+   M /branches/2.4/mul.c
+   M /branches/2.4/mul_2exp.c
+   M /branches/2.4/mul_2si.c
+   M /branches/2.4/mul_2ui.c
+   M /branches/2.4/mul_d.c
+   M /branches/2.4/mul_ui.c
+   M /branches/2.4/mulders.c
+   M /branches/2.4/neg.c
+   M /branches/2.4/next.c
+   M /branches/2.4/out_str.c
+   M /branches/2.4/pow.c
+   M /branches/2.4/pow_si.c
+   M /branches/2.4/pow_ui.c
+   M /branches/2.4/pow_z.c
+   M /branches/2.4/powerof2.c
+   M /branches/2.4/print_raw.c
+   M /branches/2.4/print_rnd_mode.c
+   M /branches/2.4/printf.c
+   M /branches/2.4/random.c
+   M /branches/2.4/random2.c
+   M /branches/2.4/rec_sqrt.c
+   M /branches/2.4/reldiff.c
+   M /branches/2.4/rem1.c
+   M /branches/2.4/rint.c
+   M /branches/2.4/root.c
+   M /branches/2.4/round_near_x.c
+   M /branches/2.4/round_p.c
+   M /branches/2.4/round_prec.c
+   M /branches/2.4/round_raw_generic.c
+   M /branches/2.4/sec.c
+   M /branches/2.4/sech.c
+   M /branches/2.4/set.c
+   M /branches/2.4/set_d.c
+   M /branches/2.4/set_d64.c
+   M /branches/2.4/set_dfl_prec.c
+   M /branches/2.4/set_exp.c
+   M /branches/2.4/set_f.c
+   M /branches/2.4/set_inf.c
+   M /branches/2.4/set_ld.c
+   M /branches/2.4/set_nan.c
+   M /branches/2.4/set_prc_raw.c
+   M /branches/2.4/set_prec.c
+   M /branches/2.4/set_q.c
+   M /branches/2.4/set_rnd.c
+   M /branches/2.4/set_si.c
+   M /branches/2.4/set_si_2exp.c
+   M /branches/2.4/set_sj.c
+   M /branches/2.4/set_str.c
+   M /branches/2.4/set_str_raw.c
+   M /branches/2.4/set_ui.c
+   M /branches/2.4/set_ui_2exp.c
+   M /branches/2.4/set_uj.c
+   M /branches/2.4/set_z.c
+   M /branches/2.4/setmax.c
+   M /branches/2.4/setmin.c
+   M /branches/2.4/setsign.c
+   M /branches/2.4/sgn.c
+   M /branches/2.4/si_op.c
+   M /branches/2.4/signbit.c
+   M /branches/2.4/sin.c
+   M /branches/2.4/sin_cos.c
+   M /branches/2.4/sinh.c
+   M /branches/2.4/sinh_cosh.c
+   M /branches/2.4/sqr.c
+   M /branches/2.4/sqrt.c
+   M /branches/2.4/sqrt_ui.c
+   M /branches/2.4/stack_interface.c
+   M /branches/2.4/strtofr.c
+   M /branches/2.4/sub.c
+   M /branches/2.4/sub1.c
+   M /branches/2.4/sub1sp.c
+   M /branches/2.4/sub_d.c
+   M /branches/2.4/sub_ui.c
+   M /branches/2.4/subnormal.c
+   M /branches/2.4/sum.c
+   M /branches/2.4/swap.c
+   M /branches/2.4/tan.c
+   M /branches/2.4/tanh.c
+   M /branches/2.4/tests/cmp_str.c
+   M /branches/2.4/tests/data/li2
+   M /branches/2.4/tests/memory.c
+   M /branches/2.4/tests/mpf_compat.c
+   M /branches/2.4/tests/mpf_compat.h
+   M /branches/2.4/tests/mpfr-test.h
+   M /branches/2.4/tests/mpfr_compat.c
+   M /branches/2.4/tests/reuse.c
+   M /branches/2.4/tests/rnd_mode.c
+   M /branches/2.4/tests/tabs.c
+   M /branches/2.4/tests/tacos.c
+   M /branches/2.4/tests/tacosh.c
+   M /branches/2.4/tests/tadd.c
+   M /branches/2.4/tests/tadd1sp.c
+   M /branches/2.4/tests/tadd_d.c
+   M /branches/2.4/tests/tadd_ui.c
+   M /branches/2.4/tests/tagm.c
+   M /branches/2.4/tests/tasin.c
+   M /branches/2.4/tests/tasinh.c
+   M /branches/2.4/tests/tatan.c
+   M /branches/2.4/tests/tatanh.c
+   M /branches/2.4/tests/tcan_round.c
+   M /branches/2.4/tests/tcbrt.c
+   M /branches/2.4/tests/tcheck.c
+   M /branches/2.4/tests/tcmp.c
+   M /branches/2.4/tests/tcmp2.c
+   M /branches/2.4/tests/tcmp_d.c
+   M /branches/2.4/tests/tcmp_ld.c
+   M /branches/2.4/tests/tcmp_ui.c
+   M /branches/2.4/tests/tcmpabs.c
+   M /branches/2.4/tests/tcomparisons.c
+   M /branches/2.4/tests/tconst_catalan.c
+   M /branches/2.4/tests/tconst_euler.c
+   M /branches/2.4/tests/tconst_log2.c
+   M /branches/2.4/tests/tconst_pi.c
+   M /branches/2.4/tests/tcopysign.c
+   M /branches/2.4/tests/tcos.c
+   M /branches/2.4/tests/tcosh.c
+   M /branches/2.4/tests/tcot.c
+   M /branches/2.4/tests/tcoth.c
+   M /branches/2.4/tests/tcsc.c
+   M /branches/2.4/tests/tcsch.c
+   M /branches/2.4/tests/td_div.c
+   M /branches/2.4/tests/td_sub.c
+   M /branches/2.4/tests/tdim.c
+   M /branches/2.4/tests/tdiv.c
+   M /branches/2.4/tests/tdiv_d.c
+   M /branches/2.4/tests/tdiv_ui.c
+   M /branches/2.4/tests/teint.c
+   M /branches/2.4/tests/teq.c
+   M /branches/2.4/tests/terf.c
+   M /branches/2.4/tests/tests.c
+   M /branches/2.4/tests/texceptions.c
+   M /branches/2.4/tests/texp.c
+   M /branches/2.4/tests/texp10.c
+   M /branches/2.4/tests/texp2.c
+   M /branches/2.4/tests/texpm1.c
+   M /branches/2.4/tests/tfactorial.c
+   M /branches/2.4/tests/tfits.c
+   M /branches/2.4/tests/tfma.c
+   M /branches/2.4/tests/tfmod.c
+   M /branches/2.4/tests/tfms.c
+   M /branches/2.4/tests/tfprintf.c
+   M /branches/2.4/tests/tfrac.c
+   M /branches/2.4/tests/tgamma.c
+   M /branches/2.4/tests/tgeneric.c
+   M /branches/2.4/tests/tgeneric_ui.c
+   M /branches/2.4/tests/tget_d.c
+   M /branches/2.4/tests/tget_d_2exp.c
+   M /branches/2.4/tests/tget_f.c
+   M /branches/2.4/tests/tget_ld_2exp.c
+   M /branches/2.4/tests/tget_set_d64.c
+   M /branches/2.4/tests/tget_sj.c
+   M /branches/2.4/tests/tget_str.c
+   M /branches/2.4/tests/tget_z.c
+   M /branches/2.4/tests/tgmpop.c
+   M /branches/2.4/tests/thyperbolic.c
+   M /branches/2.4/tests/thypot.c
+   M /branches/2.4/tests/tinits.c
+   M /branches/2.4/tests/tinp_str.c
+   M /branches/2.4/tests/tinternals.c
+   M /branches/2.4/tests/tisnan.c
+   M /branches/2.4/tests/tisqrt.c
+   M /branches/2.4/tests/tj0.c
+   M /branches/2.4/tests/tj1.c
+   M /branches/2.4/tests/tjn.c
+   M /branches/2.4/tests/tl2b.c
+   M /branches/2.4/tests/tlgamma.c
+   M /branches/2.4/tests/tli2.c
+   M /branches/2.4/tests/tlngamma.c
+   M /branches/2.4/tests/tlog.c
+   M /branches/2.4/tests/tlog10.c
+   M /branches/2.4/tests/tlog1p.c
+   M /branches/2.4/tests/tlog2.c
+   M /branches/2.4/tests/tminmax.c
+   M /branches/2.4/tests/tmodf.c
+   M /branches/2.4/tests/tmul.c
+   M /branches/2.4/tests/tmul_2exp.c
+   M /branches/2.4/tests/tmul_d.c
+   M /branches/2.4/tests/tmul_ui.c
+   M /branches/2.4/tests/tnext.c
+   M /branches/2.4/tests/tout_str.c
+   M /branches/2.4/tests/toutimpl.c
+   M /branches/2.4/tests/tpow.c
+   M /branches/2.4/tests/tpow3.c
+   M /branches/2.4/tests/tpow_all.c
+   M /branches/2.4/tests/tpow_z.c
+   M /branches/2.4/tests/tprintf.c
+   M /branches/2.4/tests/trandom.c
+   M /branches/2.4/tests/trec_sqrt.c
+   M /branches/2.4/tests/tremquo.c
+   M /branches/2.4/tests/trint.c
+   M /branches/2.4/tests/troot.c
+   M /branches/2.4/tests/tround_prec.c
+   M /branches/2.4/tests/tsec.c
+   M /branches/2.4/tests/tsech.c
+   M /branches/2.4/tests/tset.c
+   M /branches/2.4/tests/tset_d.c
+   M /branches/2.4/tests/tset_exp.c
+   M /branches/2.4/tests/tset_f.c
+   M /branches/2.4/tests/tset_ld.c
+   M /branches/2.4/tests/tset_q.c
+   M /branches/2.4/tests/tset_si.c
+   M /branches/2.4/tests/tset_sj.c
+   M /branches/2.4/tests/tset_str.c
+   M /branches/2.4/tests/tset_z.c
+   M /branches/2.4/tests/tsgn.c
+   M /branches/2.4/tests/tsi_op.c
+   M /branches/2.4/tests/tsin.c
+   M /branches/2.4/tests/tsin_cos.c
+   M /branches/2.4/tests/tsinh.c
+   M /branches/2.4/tests/tsinh_cosh.c
+   M /branches/2.4/tests/tsprintf.c
+   M /branches/2.4/tests/tsqr.c
+   M /branches/2.4/tests/tsqrt.c
+   M /branches/2.4/tests/tsqrt_ui.c
+   M /branches/2.4/tests/tstckintc.c
+   M /branches/2.4/tests/tstrtofr.c
+   M /branches/2.4/tests/tsub.c
+   M /branches/2.4/tests/tsub1sp.c
+   M /branches/2.4/tests/tsub_d.c
+   M /branches/2.4/tests/tsub_ui.c
+   M /branches/2.4/tests/tsubnormal.c
+   M /branches/2.4/tests/tsum.c
+   M /branches/2.4/tests/tswap.c
+   M /branches/2.4/tests/ttan.c
+   M /branches/2.4/tests/ttanh.c
+   M /branches/2.4/tests/ttrunc.c
+   M /branches/2.4/tests/tui_div.c
+   M /branches/2.4/tests/tui_pow.c
+   M /branches/2.4/tests/tui_sub.c
+   M /branches/2.4/tests/tversion.c
+   M /branches/2.4/tests/ty0.c
+   M /branches/2.4/tests/ty1.c
+   M /branches/2.4/tests/tyn.c
+   M /branches/2.4/tests/tzeta.c
+   M /branches/2.4/tests/tzeta_ui.c
+   M /branches/2.4/tuneup.c
+   M /branches/2.4/uceil_exp2.c
+   M /branches/2.4/uceil_log2.c
+   M /branches/2.4/ufloor_log2.c
+   M /branches/2.4/ui_div.c
+   M /branches/2.4/ui_pow.c
+   M /branches/2.4/ui_pow_ui.c
+   M /branches/2.4/ui_sub.c
+   M /branches/2.4/urandomb.c
+   M /branches/2.4/vasprintf.c
+   M /branches/2.4/version.c
+   M /branches/2.4/volatile.c
+   M /branches/2.4/yn.c
+   M /branches/2.4/zeta.c
+   M /branches/2.4/zeta_ui.c
 
 Copyright notice update: added 2009 with
   perl -pi -e 's/2008 Free Software/2008, 2009 Free Software/' **/*(^/)
 under zsh.
 ------------------------------------------------------------------------
-r5813 | vlefevre | 2009-01-14 00:46:45 +0000 (Wed, 14 Jan 2009) | 1 line
+r5818 | vlefevre | 2009-01-15 02:24:48 +0000 (Thu, 15 Jan 2009) | 3 lines
 Changed paths:
-   M /trunk/tests/tcan_round.c
-   M /trunk/tests/texp.c
-   M /trunk/tests/tfprintf.c
-   M /trunk/tests/tgamma.c
-   M /trunk/tests/tpow.c
-   M /trunk/tests/tpow_z.c
-   M /trunk/tests/tsqrt.c
+   M /branches/2.4/configure.in
 
-Fixed remaining printf format strings.
+configure.in: be more tolerant when checking whether gmp.h version
+and libgmp version are the same (in case patch level is 0).
+[merged changeset 5816 from the trunk]
 ------------------------------------------------------------------------
-r5812 | vlefevre | 2009-01-14 00:27:06 +0000 (Wed, 14 Jan 2009) | 1 line
+r5807 | thevenyp | 2009-01-13 14:04:51 +0000 (Tue, 13 Jan 2009) | 2 lines
 Changed paths:
-   M /trunk/tests/tadd1sp.c
-   M /trunk/tests/tsub1sp.c
+   M /branches/2.4/ChangeLog
 
-tests/tadd1sp.c, tests/tsub1sp.c: fixed function prototypes.
+ChangeLog: ChangeLog update (with LC_ALL=en_US.UTF8 TZ=UTC svn log -rHEAD:0 -v).
+
 ------------------------------------------------------------------------
-r5811 | vlefevre | 2009-01-14 00:23:44 +0000 (Wed, 14 Jan 2009) | 1 line
+r5806 | thevenyp | 2009-01-13 13:40:19 +0000 (Tue, 13 Jan 2009) | 2 lines
 Changed paths:
-   M /trunk/tests/teq.c
-   M /trunk/tests/tests.c
+   M /branches/2.4/NEWS
 
-tests/teq.c, tests/tests.c: fixed printf format strings.
+NEWS: Update coverage rate (since r5767, mpfr_asprintf is no more covered by default tests).
+
 ------------------------------------------------------------------------
-r5810 | vlefevre | 2009-01-14 00:06:00 +0000 (Wed, 14 Jan 2009) | 1 line
+r5805 | thevenyp | 2009-01-13 12:29:07 +0000 (Tue, 13 Jan 2009) | 7 lines
 Changed paths:
-   M /trunk/tests/tcmp2.c
+   M /branches/2.4/mpfr.texi
 
-tests/tcmp2.c: fixed printf format strings.
-------------------------------------------------------------------------
-r5809 | vlefevre | 2009-01-13 23:59:17 +0000 (Tue, 13 Jan 2009) | 1 line
-Changed paths:
-   M /trunk/tests/tset_str.c
-
-tests/tset_str.c: fixed printf format string.
-------------------------------------------------------------------------
-r5804 | vlefevre | 2009-01-12 17:30:00 +0000 (Mon, 12 Jan 2009) | 4 lines
-Changed paths:
-   M /trunk/mpfr.texi
-
+mpfr.texi: typo.
 mpfr.texi: consistency changes and corrections concerning the "erange"
 flag (do not use @code{} as this is not an identifier, @emph{} is used
 as this is not an English word -- but @emph{} should probably be used
 too for the other flag names).
-------------------------------------------------------------------------
-r5803 | vlefevre | 2009-01-12 17:18:45 +0000 (Mon, 12 Jan 2009) | 1 line
-Changed paths:
-   M /trunk/mpfr.texi
-
-mpfr.texi: typo.
-------------------------------------------------------------------------
-r5801 | thevenyp | 2009-01-12 16:01:14 +0000 (Mon, 12 Jan 2009) | 5 lines
-Changed paths:
-   M /trunk/acinclude.m4
-   M /trunk/configure.in
-   M /trunk/tests/tfprintf.c
-   M /trunk/tests/tprintf.c
-   M /trunk/vasprintf.c
-
-acinclude.m4: New macro MPFR_CHECK_PRINTF_SPEC looking for support of the "%jd", "%qd", and "%td" conversion specifications in printf and gmp_printf.
-configure.in: Call MPFR_CHECK_PRINTF_SPEC when we can link against a suitable gmp library and run test programs at compile time, otherwise (for instance, when cross compiling), everything is enable by default.
-vasprintf.c: Disable support for length modifiers not supported by libc's printf ('j' and 'q' for this time).
-tests/tprintf.c, tests/tfprintf.c: Disable tests for length modifiers not supported by gmp_printf ('j', 'q', and 't' for this time).
+[merge -r 5802:5804]
 
 ------------------------------------------------------------------------
-r5800 | thevenyp | 2009-01-12 14:16:22 +0000 (Mon, 12 Jan 2009) | 2 lines
+r5802 | thevenyp | 2009-01-12 16:08:14 +0000 (Mon, 12 Jan 2009) | 2 lines
 Changed paths:
-   M /trunk/mpfr.texi
+   M /branches/2.4/mpfr.texi
 
-mpfr.texi: Fix typo.
+mpfr.texi: Fix typo. [merge -c 5800]
 
 ------------------------------------------------------------------------
-r5795 | vlefevre | 2009-01-08 15:36:55 +0000 (Thu, 08 Jan 2009) | 1 line
+r5799 | thevenyp | 2009-01-08 16:19:05 +0000 (Thu, 08 Jan 2009) | 4 lines
 Changed paths:
-   M /trunk/mpfr.texi
-
-mpfr.texi: update to January 2009.
-------------------------------------------------------------------------
-r5794 | vlefevre | 2009-01-08 15:34:27 +0000 (Thu, 08 Jan 2009) | 2 lines
-Changed paths:
-   M /trunk/tests/tfprintf.c
-   M /trunk/tests/tsprintf.c
+   M /branches/2.4/tests/tfprintf.c
+   M /branches/2.4/tests/tsprintf.c
 
 Removed useless #include of gmp.h from tests/tfprintf.c and
 tests/tsprintf.c for consistency.
-------------------------------------------------------------------------
-r5788 | thevenyp | 2009-01-08 11:56:10 +0000 (Thu, 08 Jan 2009) | 4 lines
-Changed paths:
-   M /trunk/mpfr.texi
-   M /trunk/tests/tfprintf.c
-   M /trunk/vasprintf.c
-
-tests/tfprintf.c: Make tests with 'M' specifier optional.
-mpfr.texi: Add a warning that gmp may not support 'M' specifier.
-vasprintf.c: Add warning comment about 'M' specifier.
+[merge -c 5794]
 
 ------------------------------------------------------------------------
-r5787 | thevenyp | 2009-01-08 11:52:52 +0000 (Thu, 08 Jan 2009) | 2 lines
+r5798 | thevenyp | 2009-01-08 16:14:33 +0000 (Thu, 08 Jan 2009) | 2 lines
 Changed paths:
-   M /trunk/mpfr.texi
+   M /branches/2.4/README.dev
 
-mpfr.texi: Fix wrong definition of rounding specifiers.
+README.dev: suggest "-Wformat=2". [merge -c 5785]
 
 ------------------------------------------------------------------------
-r5786 | vlefevre | 2008-12-30 13:57:11 +0000 (Tue, 30 Dec 2008) | 1 line
+r5797 | thevenyp | 2009-01-08 16:12:42 +0000 (Thu, 08 Jan 2009) | 8 lines
 Changed paths:
-   M /trunk/out_str.c
-
-out_str.c: added assert (check that base is in the required range).
-------------------------------------------------------------------------
-r5785 | vlefevre | 2008-12-26 14:10:24 +0000 (Fri, 26 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/README.dev
-
-README.dev: suggest "-Wformat=2".
-------------------------------------------------------------------------
-r5784 | vlefevre | 2008-12-26 14:02:55 +0000 (Fri, 26 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/zeta.c
-
-zeta.c: fixed types for printf when DEBUG is defined.
-------------------------------------------------------------------------
-r5783 | vlefevre | 2008-12-26 13:57:32 +0000 (Fri, 26 Dec 2008) | 2 lines
-Changed paths:
-   M /trunk/sub1sp.c
-
-sub1sp.c: fixed types for printf when WANT_ASSERT >= 2 and
-when DEBUG is defined.
-------------------------------------------------------------------------
-r5782 | vlefevre | 2008-12-26 13:50:14 +0000 (Fri, 26 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/sub1.c
-
-sub1.c: fixed types for printf when DEBUG is defined.
-------------------------------------------------------------------------
-r5781 | vlefevre | 2008-12-26 13:44:28 +0000 (Fri, 26 Dec 2008) | 2 lines
-Changed paths:
-   M /trunk/set_d64.c
-
-set_d64.c: set T[] to unsigned int (instead of int) since its values
-are printed with %u.
-------------------------------------------------------------------------
-r5780 | vlefevre | 2008-12-26 13:36:13 +0000 (Fri, 26 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/add1sp.c
-
-add1sp.c: fixed types for printf when DEBUG is defined.
-------------------------------------------------------------------------
-r5779 | vlefevre | 2008-12-26 13:33:05 +0000 (Fri, 26 Dec 2008) | 2 lines
-Changed paths:
-   M /trunk/mpfr-impl.h
-
-mpfr-impl.h: fixed MPFR_UNSIGNED_MINUS_MODULO logic and added missing
-parentheses.
-------------------------------------------------------------------------
-r5778 | vlefevre | 2008-12-26 13:06:14 +0000 (Fri, 26 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/div.c
+   M /branches/2.4/add1sp.c
+   M /branches/2.4/div.c
+   M /branches/2.4/sub1.c
+   M /branches/2.4/sub1sp.c
+   M /branches/2.4/zeta.c
 
 div.c: fixed types for fprintf when DEBUG and/or DEBUG2 is defined.
-------------------------------------------------------------------------
-r5777 | vlefevre | 2008-12-26 12:56:09 +0000 (Fri, 26 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/div.c
+add1sp.c: fixed types for printf when DEBUG is defined.
+sub1.c: fixed types for printf when DEBUG is defined.
+sub1sp.c: fixed types for printf when WANT_ASSERT >= 2 and
+when DEBUG is defined.
+zeta.c: fixed types for printf when DEBUG is defined.
+[merge from trunk r5777 r5778 r5780 r5782 r5783 r5784]
 
-div.c: fixed #ifdef.
 ------------------------------------------------------------------------
-r5775 | vlefevre | 2008-12-26 12:39:03 +0000 (Fri, 26 Dec 2008) | 2 lines
+r5796 | thevenyp | 2009-01-08 16:02:26 +0000 (Thu, 08 Jan 2009) | 2 lines
 Changed paths:
-   M /trunk/round_p.c
+   M /branches/2.4/mpfr.texi
 
-round_p.c: fixed types for fprintf when WANT_ASSERT >= 2 (since
-mp_prec_t is unsigned, it's better to use unsigned long).
+mpfr.texi: update copyright notice to 2009.
+
 ------------------------------------------------------------------------
-r5774 | vlefevre | 2008-12-26 12:02:07 +0000 (Fri, 26 Dec 2008) | 1 line
+r5793 | thevenyp | 2009-01-08 14:39:29 +0000 (Thu, 08 Jan 2009) | 2 lines
 Changed paths:
-   M /trunk/round_p.c
+   M /branches/2.4/VERSION
+   M /branches/2.4/configure.in
+   M /branches/2.4/mpfr.h
+   M /branches/2.4/mpfr.texi
+   M /branches/2.4/version.c
+
+VERSION, version.c, mpfr.h, mpfr.texi, configure.in: Updated version to 2.4.0.
+
+------------------------------------------------------------------------
+r5792 | thevenyp | 2009-01-08 12:57:37 +0000 (Thu, 08 Jan 2009) | 6 lines
+Changed paths:
+   M /branches/2.4/mpfr.texi
+   M /branches/2.4/tests/tfprintf.c
+   M /branches/2.4/vasprintf.c
+
+mpfr.texi: Fix wrong definition of rounding specifiers.
+mpfr.texi: Add a warning that gmp may not support 'M' specifier.
+tests/tfprintf.c: Make tests with 'M' specifier optional.
+vasprintf.c: Add warning comment about 'M' specifier.
+[merge from trunk r5787 r5788]
+
+------------------------------------------------------------------------
+r5791 | thevenyp | 2009-01-08 12:51:29 +0000 (Thu, 08 Jan 2009) | 2 lines
+Changed paths:
+   M /branches/2.4/out_str.c
+
+out_str.c: added assert (check that base is in the required range). [merge -c 5786]
+
+------------------------------------------------------------------------
+r5790 | thevenyp | 2009-01-08 12:48:22 +0000 (Thu, 08 Jan 2009) | 3 lines
+Changed paths:
+   M /branches/2.4/set_d64.c
+
+set_d64.c: set T[] to unsigned int (instead of int) since its values
+are printed with %u. [merge -c 5781]
+
+------------------------------------------------------------------------
+r5789 | thevenyp | 2009-01-08 12:41:17 +0000 (Thu, 08 Jan 2009) | 3 lines
+Changed paths:
+   M /branches/2.4/mpfr-impl.h
+
+mpfr-impl.h: fixed MPFR_UNSIGNED_MINUS_MODULO logic and added missing
+parentheses. [merge -c 5779]
+
+------------------------------------------------------------------------
+r5776 | vlefevre | 2008-12-26 12:44:35 +0000 (Fri, 26 Dec 2008) | 1 line
+Changed paths:
+   M /branches/2.4/round_p.c
 
 round_p.c: fixed types for fprintf when WANT_ASSERT >= 2.
 ------------------------------------------------------------------------
-r5772 | zimmerma | 2008-12-22 10:40:24 +0000 (Mon, 22 Dec 2008) | 2 lines
+r5773 | vlefevre | 2008-12-22 17:17:24 +0000 (Mon, 22 Dec 2008) | 1 line
 Changed paths:
-   M /trunk/mpfr.texi
+   M /branches/2.4/mpfr.texi
 
-[mpfr.tex] improve documentation of %P
+mpfr.texi: improved documentation of %Pu in mpfr_printf. [merged -c5772]
+------------------------------------------------------------------------
+r5771 | thevenyp | 2008-12-19 15:15:01 +0000 (Fri, 19 Dec 2008) | 2 lines
+Changed paths:
+   M /branches/2.4/ChangeLog
+
+ChangeLog: ChangeLog update (with LC_ALL=en_US.UTF8 TZ=UTC svn log -rHEAD:0 -v).
 
 ------------------------------------------------------------------------
-r5768 | vlefevre | 2008-12-18 15:59:55 +0000 (Thu, 18 Dec 2008) | 1 line
+r5770 | thevenyp | 2008-12-19 15:12:51 +0000 (Fri, 19 Dec 2008) | 2 lines
 Changed paths:
-   M /trunk/tests/tfprintf.c
-   M /trunk/tests/tprintf.c
+   M /branches/2.4/VERSION
+   M /branches/2.4/configure.in
+   M /branches/2.4/mpfr.h
+   M /branches/2.4/mpfr.texi
+   M /branches/2.4/version.c
+
+VERSION, version.c, mpfr.h, mpfr.texi, configure.in: Updated version to 2.4.0-rc2.
+
+------------------------------------------------------------------------
+r5769 | vlefevre | 2008-12-18 16:00:58 +0000 (Thu, 18 Dec 2008) | 1 line
+Changed paths:
+   M /branches/2.4/tests/tfprintf.c
+   M /branches/2.4/tests/tprintf.c
 
 Deleted trailing spaces.
 ------------------------------------------------------------------------
-r5762 | thevenyp | 2008-12-17 16:07:32 +0000 (Wed, 17 Dec 2008) | 2 lines
+r5767 | thevenyp | 2008-12-18 14:26:15 +0000 (Thu, 18 Dec 2008) | 19 lines
 Changed paths:
-   M /trunk/tests/tsprintf.c
+   M /branches/2.4/INSTALL
+   M /branches/2.4/README.dev
+   M /branches/2.4/acinclude.m4
+   M /branches/2.4/mpfr.texi
+   M /branches/2.4/nightly-test
+   M /branches/2.4/printf.c
+   M /branches/2.4/tests/tfprintf.c
+   M /branches/2.4/tests/tprintf.c
+   M /branches/2.4/tests/tsprintf.c
+   M /branches/2.4/vasprintf.c
 
-tests/tsprintf.c: clean-up code, improve comment, and put optional tests in tail so that they fail last.
-
-------------------------------------------------------------------------
-r5761 | thevenyp | 2008-12-17 15:55:20 +0000 (Wed, 17 Dec 2008) | 2 lines
-Changed paths:
-   M /trunk/tests/tsprintf.c
-
-tests/tsprintf.c: Add two regression tests.
-
-------------------------------------------------------------------------
-r5760 | thevenyp | 2008-12-16 15:56:42 +0000 (Tue, 16 Dec 2008) | 2 lines
-Changed paths:
-   M /trunk/acinclude.m4
-   M /trunk/mpfr.texi
-   M /trunk/tests/tfprintf.c
-   M /trunk/tests/tprintf.c
-   M /trunk/vasprintf.c
-
-acinclude.m4, vasprintf.c, tests/tfprintf.c, tests/tprintf.c, mpfr.texi: quad_t support
-
-------------------------------------------------------------------------
-r5759 | thevenyp | 2008-12-16 15:51:59 +0000 (Tue, 16 Dec 2008) | 4 lines
-Changed paths:
-   M /trunk/tests/tfprintf.c
-   M /trunk/tests/tprintf.c
-
-tests/tfprintf.c: code clean-up and output improvement.
-tests/tprintf.c: code clean-up.
-Note that unsigned long long variable is not set to 1 instead of -1 which was architecture dependant.
-
-------------------------------------------------------------------------
-r5758 | vlefevre | 2008-12-16 13:56:28 +0000 (Tue, 16 Dec 2008) | 3 lines
-Changed paths:
-   M /trunk/tests/tprintf.c
-
-tests/tprintf.c:
-  * stdout_redirect is a boolean (i.e., 0 or 1).
-  * output freopen(..., stdout) error message to stderr.
-------------------------------------------------------------------------
-r5757 | thevenyp | 2008-12-16 13:10:05 +0000 (Tue, 16 Dec 2008) | 3 lines
-Changed paths:
-   M /trunk/tests/tfprintf.c
-   M /trunk/tests/tprintf.c
-
-tfprintf.c: more user-friendly messages.
-tprintf.c: more user-friendly messages. Warning: because stdout might be redirected, error messages are printed to stderr.
-
-------------------------------------------------------------------------
-r5756 | vlefevre | 2008-12-15 23:38:21 +0000 (Mon, 15 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/mpfr.texi
-
+printf.c, vasprintf.c: include config.h if HAVE_CONFIG_H is defined, to solve
+  problem noticed by Brian Gladman
+vasprintf.c: Accept length modifier 'q' if HAVE_QUAD_T is defined (instead of
+  HAVE_LONG_LONG).
+acinclude.m4: Check for quad_t.
+tfprintf.c: more user-friendly messages and quad_t tests.
+tests/tsprintf.c: move bugs 20080610 and 20081214 outside the function
+  random_double and tests against libc's sprintf function are no more executed
+  unless the MPFR_CHECK_LIBC_PRINTF is defined. Add two regression tests.
+tests/tprintf.c: _MPFR_H_HAVE_INTMAX_T -> HAVE_STDINT_H for <stdint.h>. More
+  user-friendly messages. Warning: because stdout might be redirected, error
+  messages are printed to stderr. Add quad_t tests.
+README.dev: Add notice for new HAVE_QUAD_T macro.
 mpfr.texi: more explanations on the precision field for mpfr_printf.
-------------------------------------------------------------------------
-r5755 | vlefevre | 2008-12-15 17:37:05 +0000 (Mon, 15 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/INSTALL
-   M /trunk/tests/tsprintf.c
+nightly-test: added MPFR_CHECK_LIBC_PRINTF
+INSTALL: untabify and remove trailing spaces
 
-untabify and remove trailing spaces
-------------------------------------------------------------------------
-r5754 | thevenyp | 2008-12-15 17:07:40 +0000 (Mon, 15 Dec 2008) | 2 lines
-Changed paths:
-   M /trunk/mpfr.texi
-
-mpfr.texi: more explanations on the precision field.
+(merge from trunk -r5732:5762)
 
 ------------------------------------------------------------------------
-r5753 | thevenyp | 2008-12-15 16:19:26 +0000 (Mon, 15 Dec 2008) | 5 lines
+r5766 | thevenyp | 2008-12-18 13:48:42 +0000 (Thu, 18 Dec 2008) | 3 lines
 Changed paths:
-   M /trunk/acinclude.m4
-   M /trunk/mpfr.texi
-   M /trunk/tests/tfprintf.c
-   M /trunk/tests/tprintf.c
-   M /trunk/vasprintf.c
-
-mpfr.texi: Clearly mention that the length modifier 'q' is unsupported by mpfr-*printf.
-vasprintf.c: Do not take quad_t as a long long but as an insupported length modifier.
-acinclude.m4: Remove check for quad_t.
-tests/tprintf.c tests/tfprintf.c: Remove tests with 'q' length modifier.
-
-------------------------------------------------------------------------
-r5751 | vlefevre | 2008-12-15 14:52:54 +0000 (Mon, 15 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/tests/tstrtofr.c
+   M /branches/2.4/tests/tstrtofr.c
 
 tests/tstrtofr.c: fixed a test (in case |res| > 1).
-------------------------------------------------------------------------
-r5750 | vlefevre | 2008-12-15 14:35:01 +0000 (Mon, 15 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/tests/tstrtofr.c
-
-tests/tstrtofr.c: fixed alignment bug in error message.
-------------------------------------------------------------------------
-r5749 | zimmerma | 2008-12-15 13:44:25 +0000 (Mon, 15 Dec 2008) | 2 lines
-Changed paths:
-   M /trunk/nightly-test
-
-[nightly-test] added MPFR_CHECK_LIBC_PRINTF
+(merge from trunk -r5749:5751)
 
 ------------------------------------------------------------------------
-r5748 | thevenyp | 2008-12-15 13:43:52 +0000 (Mon, 15 Dec 2008) | 4 lines
+r5765 | thevenyp | 2008-12-18 13:37:10 +0000 (Thu, 18 Dec 2008) | 2 lines
 Changed paths:
-   M /trunk/README.dev
-   M /trunk/acinclude.m4
-   M /trunk/vasprintf.c
+   M /branches/2.4/mpfr.texi
 
-acinclude.m4: Check for quad_t.
-vasprintf.c: Accept length modifier 'q' if HAVE_QUAD_T is defined (instead of HAVE_LONG_LONG).
-README.dev: Add notice for new HAVE_QUAD_T macro.
+mpfr.texi: update from trunk (r5747).
 
 ------------------------------------------------------------------------
-r5747 | zimmerma | 2008-12-15 13:43:40 +0000 (Mon, 15 Dec 2008) | 2 lines
+r5764 | thevenyp | 2008-12-18 13:33:39 +0000 (Thu, 18 Dec 2008) | 2 lines
 Changed paths:
-   M /trunk/mpfr.texi
+   M /branches/2.4/configure.in
 
-[mpfr.texi] added warning about usage of mpfr_init
+configure.in: update from trunk (r5739).
 
 ------------------------------------------------------------------------
-r5746 | vlefevre | 2008-12-15 13:39:35 +0000 (Mon, 15 Dec 2008) | 1 line
+r5763 | thevenyp | 2008-12-18 13:28:08 +0000 (Thu, 18 Dec 2008) | 2 lines
 Changed paths:
-   M /trunk/tests/tprintf.c
+   M /branches/2.4/INSTALL
 
-tests/tprintf.c: _MPFR_H_HAVE_INTMAX_T -> HAVE_STDINT_H for <stdint.h>.
-------------------------------------------------------------------------
-r5745 | thevenyp | 2008-12-15 13:33:22 +0000 (Mon, 15 Dec 2008) | 2 lines
-Changed paths:
-   M /trunk/tests/tsprintf.c
-
-tests/tsprintf.c: Tests against libc's sprintf function are no more executed unless the MPFR_CHECK_LIBC_PRINTF is defined.
+INSTALL: update from trunk (r 5729:5742).
 
 ------------------------------------------------------------------------
-r5744 | thevenyp | 2008-12-15 13:27:49 +0000 (Mon, 15 Dec 2008) | 2 lines
+r5729 | vlefevre | 2008-12-12 16:05:29 +0000 (Fri, 12 Dec 2008) | 1 line
 Changed paths:
-   M /trunk/tests/tsprintf.c
+   M /branches/2.4/NEWS
 
-tests/tsprintf.c: move bugs 20080610 and 20081214 outside the function random_double.
+NEWS: added the release name.
+------------------------------------------------------------------------
+r5728 | vlefevre | 2008-12-12 16:03:13 +0000 (Fri, 12 Dec 2008) | 1 line
+Changed paths:
+   M /branches/2.4/README
+
+README: update from the trunk (added "compile").
+------------------------------------------------------------------------
+r5726 | thevenyp | 2008-12-12 14:50:13 +0000 (Fri, 12 Dec 2008) | 2 lines
+Changed paths:
+   M /branches/2.4/ChangeLog
+
+ChangeLog: Updated.
 
 ------------------------------------------------------------------------
-r5743 | vlefevre | 2008-12-15 12:49:58 +0000 (Mon, 15 Dec 2008) | 1 line
+r5725 | thevenyp | 2008-12-12 14:45:07 +0000 (Fri, 12 Dec 2008) | 6 lines
 Changed paths:
-   M /trunk/tests/tsprintf.c
+   M /branches/2.4/configure.in
+   M /branches/2.4/set_ld.c
+   M /branches/2.4/tests/tests.c
+   M /branches/2.4/tests/tgeneric.c
+   M /branches/2.4/tests/tset_ld.c
+   M /branches/2.4/vasprintf.c
 
-tests/tsprintf.c: completed comment about the sign of a null exponent.
-------------------------------------------------------------------------
-r5742 | vlefevre | 2008-12-15 12:44:09 +0000 (Mon, 15 Dec 2008) | 2 lines
-Changed paths:
-   M /trunk/INSTALL
-
-INSTALL: added a note saying the L modifier was added in C89 (source:
-C99 rationale, Section 7.19.6.1).
-------------------------------------------------------------------------
-r5741 | zimmerma | 2008-12-15 12:17:46 +0000 (Mon, 15 Dec 2008) | 2 lines
-Changed paths:
-   M /trunk/INSTALL
-
-[INSTALL] more Windows-related changes
+set_ld.c: rewrote exp computation.
+vasprintf.c: avoid a possible gcc 4.1.2 bug with -ftrapv.
+configure.in: remove line 'GCC='
+tests/tset_ld.c tests/tgeneric.c tests/tests.c: Code clean-up
+[merged -r5713:5722 from trunk]
 
 ------------------------------------------------------------------------
-r5740 | zimmerma | 2008-12-15 11:02:17 +0000 (Mon, 15 Dec 2008) | 2 lines
+r5724 | vlefevre | 2008-12-12 14:08:44 +0000 (Fri, 12 Dec 2008) | 2 lines
 Changed paths:
-   M /trunk/INSTALL
-
-[INSTALL] update on Windows (from Brian Gladman)
-
-------------------------------------------------------------------------
-r5739 | zimmerma | 2008-12-15 09:47:46 +0000 (Mon, 15 Dec 2008) | 2 lines
-Changed paths:
-   M /trunk/configure.in
-
-[configure.in] removed useless comment
-
-------------------------------------------------------------------------
-r5738 | vlefevre | 2008-12-14 15:28:17 +0000 (Sun, 14 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/INSTALL
-
-INSTALL: references to ISO (international) instead of ANSI (American).
-------------------------------------------------------------------------
-r5737 | vlefevre | 2008-12-14 15:18:54 +0000 (Sun, 14 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/tests/tsprintf.c
-
-tests/tsprintf.c: corrected a comment.
-------------------------------------------------------------------------
-r5736 | zimmerma | 2008-12-14 09:43:40 +0000 (Sun, 14 Dec 2008) | 3 lines
-Changed paths:
-   M /trunk/printf.c
-   M /trunk/vasprintf.c
-
-[printf.c,vasprintf.c] include config.h if HAVE_CONFIG_H is defined, to
-		       solve problem noticed by Brian Gladman
-
-------------------------------------------------------------------------
-r5735 | vlefevre | 2008-12-14 09:37:05 +0000 (Sun, 14 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/tests/tsprintf.c
-
-tests/tsprintf.c: untabified.
-------------------------------------------------------------------------
-r5734 | zimmerma | 2008-12-14 09:27:08 +0000 (Sun, 14 Dec 2008) | 2 lines
-Changed paths:
-   M /trunk/INSTALL
-
-[INSTALL] added hint for using the MinGW runtime
-
-------------------------------------------------------------------------
-r5733 | zimmerma | 2008-12-14 08:36:37 +0000 (Sun, 14 Dec 2008) | 3 lines
-Changed paths:
-   M /trunk/tests/tsprintf.c
-
-[tsprintf.c] added new hard-coded test (needs work to overcome error in
-	system asprintf)
-
-------------------------------------------------------------------------
-r5732 | zimmerma | 2008-12-14 08:24:42 +0000 (Sun, 14 Dec 2008) | 3 lines
-Changed paths:
-   M /trunk/tests/tsprintf.c
-
-[tsprintf.c] fixed hard-coded test (spec was missing), and print values of
-             xi,yi,spec in case of error
-
-------------------------------------------------------------------------
-r5731 | vlefevre | 2008-12-14 00:05:20 +0000 (Sun, 14 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/INSTALL
-
-INSTALL: corrections on r5730.
-------------------------------------------------------------------------
-r5730 | zimmerma | 2008-12-13 10:19:25 +0000 (Sat, 13 Dec 2008) | 2 lines
-Changed paths:
-   M /trunk/INSTALL
-
-[INSTALL] added notes on Windows Vista 64 problem
-
-------------------------------------------------------------------------
-r5727 | vlefevre | 2008-12-12 15:00:33 +0000 (Fri, 12 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/README
-
-README: added "compile" since it is distributed in the tarball.
-------------------------------------------------------------------------
-r5723 | vlefevre | 2008-12-12 14:07:19 +0000 (Fri, 12 Dec 2008) | 2 lines
-Changed paths:
-   M /trunk
+   M /branches/2.4
 
 Added "compile" to svn:ignore property (this file is installed by
 "automake --add-missing" due to AM_PROG_CC_C_O, added in r5710).
 ------------------------------------------------------------------------
-r5722 | vlefevre | 2008-12-12 14:01:33 +0000 (Fri, 12 Dec 2008) | 1 line
+r5715 | thevenyp | 2008-12-12 10:20:23 +0000 (Fri, 12 Dec 2008) | 4 lines
 Changed paths:
-   M /trunk/vasprintf.c
+   M /branches/2.4/vasprintf.c
 
-vasprintf.c: avoid an abort if field width or precision is > INT_MAX.
-------------------------------------------------------------------------
-r5721 | thevenyp | 2008-12-12 14:00:33 +0000 (Fri, 12 Dec 2008) | 2 lines
-Changed paths:
-   M /trunk/tests/tests.c
-   M /trunk/tests/tgeneric.c
-   M /trunk/tests/tset_ld.c
-
-tests.c, tset_ld.c, tgeneric.c: Code clean-up based on icc warnings (as in r5492): Use #ifdef BOOL_MACRO instead of #if BOOL_MACRO.
+vasprintf.c: patch to MPFR_ASSERTN(...) call to avoid failure with gcc -ftrapv
+	     with gcc 4.1.2 (probably compiler error)
+[merged r5713 from trunk]
 
 ------------------------------------------------------------------------
-r5720 | thevenyp | 2008-12-12 13:54:37 +0000 (Fri, 12 Dec 2008) | 2 lines
+r5714 | thevenyp | 2008-12-12 10:05:59 +0000 (Fri, 12 Dec 2008) | 3 lines
 Changed paths:
-   M /trunk/configure.in
-
-configure.in: remove line 'GCC=' in icc tests which seems to confuse libtool. 
-
-------------------------------------------------------------------------
-r5719 | vlefevre | 2008-12-12 12:54:10 +0000 (Fri, 12 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/set_ld.c
-
-set_ld.c: rewrote exp computation.
-------------------------------------------------------------------------
-r5718 | vlefevre | 2008-12-12 12:12:11 +0000 (Fri, 12 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/vasprintf.c
-
-vasprintf.c: avoid a possible gcc 4.1.2 bug with -ftrapv.
-------------------------------------------------------------------------
-r5717 | vlefevre | 2008-12-12 11:57:37 +0000 (Fri, 12 Dec 2008) | 1 line
-Changed paths:
-   M /trunk/vasprintf.c
-
-vasprintf.c: revert incorrect change in r5713.
-------------------------------------------------------------------------
-r5716 | zimmerma | 2008-12-12 11:47:52 +0000 (Fri, 12 Dec 2008) | 8 lines
-Changed paths:
-   M /trunk/set_ld.c
-
-[set_ld.c] fixed problem with CC=g++ on 64-bit computer:
-$ g++ -v
-Using built-in specs.
-Target: x86_64-linux-gnu
-Configured with: ../src/configure -v --enable-languages=c,c++,fortran,objc,obj-c++,treelang --prefix=/usr --enable-shared --with-system-zlib --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --enable-nls --program-suffix=-4.1 --enable-__cxa_atexit --enable-clocale=gnu --enable-libstdcxx-debug --enable-mpfr --enable-checking=release x86_64-linux-gnu
-Thread model: posix
-gcc version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)
-
-------------------------------------------------------------------------
-r5713 | zimmerma | 2008-12-12 10:05:49 +0000 (Fri, 12 Dec 2008) | 3 lines
-Changed paths:
-   M /trunk/vasprintf.c
-
-[vasprintf.c] patch to MPFR_ASSERTN(...) call to avoid failure with gcc -ftrapv
-	      with gcc 4.1.2 (probably compiler error)
-
-------------------------------------------------------------------------
-r5712 | thevenyp | 2008-12-12 09:20:14 +0000 (Fri, 12 Dec 2008) | 2 lines
-Changed paths:
-   M /trunk/tests/Makefile.am
-   M /trunk/tests/tmul.c
+   M /branches/2.4/tests/Makefile.am
+   M /branches/2.4/tests/tmul.c
 
 Makefile.am, tmul.c: Rename macro __SRCDIR to MPFR_SRCDIR.
+[merged -c 5712 from trunk]
 
 ------------------------------------------------------------------------
-r5710 | thevenyp | 2008-12-11 15:20:56 +0000 (Thu, 11 Dec 2008) | 4 lines
+r5711 | thevenyp | 2008-12-11 15:41:13 +0000 (Thu, 11 Dec 2008) | 5 lines
 Changed paths:
-   M /trunk/configure.in
-   M /trunk/tests/Makefile.am
-   M /trunk/tests/tmul.c
+   M /branches/2.4/configure.in
+   M /branches/2.4/tests/Makefile.am
+   M /branches/2.4/tests/tmul.c
 
 configure.in: Add AM_PROG_CC_C_O needed by tmul_CPPFLAGS.
 tests/Makefile.am: Add tmul.dat in EXTRA_DIST and pass srcdir to tmul.c through tmul_CPPFLAGS.
 tests/tmul.c: Add path to tmul.dat.
+[merged -c 5710 from trunk]
+
+------------------------------------------------------------------------
+r5709 | thevenyp | 2008-12-11 10:44:37 +0000 (Thu, 11 Dec 2008) | 2 lines
+Changed paths:
+   M /branches/2.4/ChangeLog
+
+ChangeLog: Updated.
+
+------------------------------------------------------------------------
+r5708 | thevenyp | 2008-12-11 10:36:57 +0000 (Thu, 11 Dec 2008) | 2 lines
+Changed paths:
+   M /branches/2.4/NEWS
+
+NEWS: Add test coverage.
+
+------------------------------------------------------------------------
+r5707 | thevenyp | 2008-12-11 10:32:06 +0000 (Thu, 11 Dec 2008) | 3 lines
+Changed paths:
+   M /branches/2.4/Makefile.am
+   M /branches/2.4/VERSION
+   M /branches/2.4/configure.in
+   M /branches/2.4/mpfr.h
+   M /branches/2.4/mpfr.texi
+   M /branches/2.4/version.c
+
+VERSION Makefile.am version.c mpfr.h configure.in:Update version.
+mpfr.texi: Update version and date.
+
+------------------------------------------------------------------------
+r5706 | thevenyp | 2008-12-11 08:39:41 +0000 (Thu, 11 Dec 2008) | 2 lines
+Changed paths:
+   M /branches/2.4/random.c
+
+random.c: This is now GNU MPFR!
+
+------------------------------------------------------------------------
+r5705 | thevenyp | 2008-12-10 18:20:10 +0000 (Wed, 10 Dec 2008) | 2 lines
+Changed paths:
+   M /branches/2.4/Makefile.am
+   M /branches/2.4/mpfr.h
+   M /branches/2.4/mpfr.texi
+   A /branches/2.4/random.c (from /trunk/random.c:5639)
+
+Partial revert of r5640: resurrect random.c but don't use it in tests.
+
+------------------------------------------------------------------------
+r5704 | thevenyp | 2008-12-10 17:44:37 +0000 (Wed, 10 Dec 2008) | 2 lines
+Changed paths:
+   A /branches/2.4 (from /trunk:5703)
+
+Created new 2.4 branch from the trunk.
 
 ------------------------------------------------------------------------
 r5703 | vlefevre | 2008-12-09 16:46:13 +0000 (Tue, 09 Dec 2008) | 2 lines

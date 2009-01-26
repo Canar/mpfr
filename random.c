@@ -1,6 +1,6 @@
-/* mpfr_get_version -- MPFR version
+/* mpfr_random -- generate a random floating-point number
 
-Copyright 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the GNU MPFR Library.
@@ -22,8 +22,12 @@ MA 02110-1301, USA. */
 
 #include "mpfr-impl.h"
 
-const char *
-mpfr_get_version (void)
+/* Computes a random mpfr in [0, 1[ with precision MPFR_PREC */
+
+#undef mpfr_random
+
+void
+mpfr_random (mpfr_ptr x)
 {
-  return "2.4.0";
+  mpfr_urandomb (x, RANDS);
 }

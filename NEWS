@@ -20,7 +20,16 @@ MA 02110-1301, USA.
 
 ##############################################################################
 
+Changes from version 2.4.0 to version 2.4.1:
+- Security fix in mpfr_snprintf and mpfr_vsnprintf (buffer overflow).
+- Configure: new checks for length modifiers 'hh' and 'll' (new in C99)
+  as 'hh' is absent on alpha-OSF1-V5.
+- Miscellaneous corrections in the MPFR manual. In particular,
+  mpfr_inits, mpfr_inits2, mpfr_clears and MPFR_DECL_INIT have been
+  in the public API since MPFR 2.4.0.
+
 Changes from versions 2.3.* to version 2.4.0:
+- The "andouillette sauce moutarde" release.
 - MPFR is now a GNU package.
 - Changes in the behavior of mpfr_strtofr and in its documentation
   concerning particular cases where the code and the documentation
@@ -49,6 +58,7 @@ Changes from versions 2.3.* to version 2.4.0:
   suppressed in the next release, and that the specification of
   mpfr_eq may change in the next release (for compatibility with
   the mpf layer of GMP).
+- Test coverage: 96.7% lines of code
 - Bug fixes.
 
 Changes from versions 2.2.* to version 2.3.0:

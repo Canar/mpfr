@@ -213,19 +213,6 @@ main ()
 
   mpf_random2 (x, 17, 17);
 
-  /* Conversion to mpz */
-  mpz_init (z);
-  mpf_set_ui (x, 17);
-  mpz_set_f (z, x);
-  mpf_set_z (x, z);
-  mpz_clear (z);
-  if (mpf_cmp_ui (x, 17) != 0)
-    {
-      fprintf (stderr, "Error in conversion to/from mpz\n");
-      fprintf (stderr, "expected 17, got %1.16e\n", mpf_get_d (x));
-      exit (1);
-    }
-
   /* clear all variables */
   mpf_clear (y);
   mpf_clear (x);

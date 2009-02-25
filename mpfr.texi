@@ -2,7 +2,7 @@
 @c %**start of header
 @setfilename mpfr.info
 @documentencoding ISO-8859-1
-@set VERSION 2.5.0-dev
+@set VERSION 2.4.1
 @set UPDATED-MONTH February 2009
 @settitle GNU MPFR @value{VERSION}
 @synindex tp fn
@@ -408,7 +408,7 @@ specific to MPFR). Problems are also mentioned in the FAQ
 Please report problems to @samp{mpfr@@loria.fr}.
 @xref{Reporting Bugs}.
 Some bug fixes are available on the
-MPFR 2.5.0 web page @url{http://www.mpfr.org/mpfr-2.5.0/}.
+MPFR 2.4.1 web page @url{http://www.mpfr.org/mpfr-2.4.1/}.
 
 @section Getting the Latest Version of MPFR
 
@@ -423,7 +423,7 @@ The latest version of MPFR is available from
 @comment Warning! Do not split "MPFR ... @url{...}" across several lines
 @comment as this needs to be updated with update-version.
 If you think you have found a bug in the MPFR library, first have a look
-on the MPFR 2.5.0 web page @url{http://www.mpfr.org/mpfr-2.5.0/} and the
+on the MPFR 2.4.1 web page @url{http://www.mpfr.org/mpfr-2.4.1/} and the
 FAQ @url{http://www.mpfr.org/faq.html}:
 perhaps this bug is already known, in which case you may find there
 a workaround for it. Otherwise, please investigate and report it.
@@ -1110,7 +1110,7 @@ is a valid number in base @var{base}; otherwise it returns @minus{}1, and
 
 Read a floating-point number from a string @var{nptr} in base @var{base},
 rounded in the direction @var{rnd}; @var{base} must be either 0 (to
-detect the base, as described below) or a number from 2 to 62 (otherwise
+detect the base, as described below) or a number from 2 to 36 (otherwise
 the behavior is undefined). If @var{nptr} starts with valid data, the
 result is stored in @var{rop} and @code{*@var{endptr}} points to the
 character just after the valid data (if @var{endptr} is not a null pointer);
@@ -1119,32 +1119,31 @@ in the location referenced by @var{endptr} (if @var{endptr} is not a null
 pointer). The usual ternary value is returned.
 
 Parsing follows the standard C @code{strtod} function with some extensions.
-After optional leading whitespace, one has a subject sequence consisting of an
-optional sign (@code{+} or @code{-}), and either numeric data or special
-data. The subject sequence is defined as the longest initial subsequence of
-the input string, starting with the first non-whitespace character, that is of
-the expected form.
+Case is ignored. After optional leading whitespace, one has a subject
+sequence consisting of an optional sign (@code{+} or @code{-}), and either
+numeric data or special data. The subject sequence is defined as the
+longest initial subsequence of the input string, starting with the first
+non-whitespace character, that is of the expected form.
 
-The form of numeric data is a non-empty sequence of significand digits with an
-optional decimal point, and an optional exponent consisting of an exponent
-prefix followed by an optional sign and a non-empty sequence of decimal
-digits. A significand digit is either a decimal digit or a Latin letter (62
-possible characters), with @code{A} = 10, @code{B} = 11, @dots{}, @code{Z} =
-35; case is ignored in bases less or equal to 36, in bases larger than 36,
-the letters in lower case represent values from 36 to 61. The value of a
-significand digit must be strictly less than the base.  The decimal point can
-be either the one defined by the current locale or the period (the first one
-is accepted for consistency with the C standard and the practice, the second
-one is accepted to allow the programmer to provide MPFR numbers from strings
-in a way that does not depend on the current locale).
+The form of numeric data is a non-empty sequence of significand digits
+with an optional decimal point, and an optional exponent consisting of
+an exponent prefix followed by an optional sign and a non-empty sequence
+of decimal digits. A significand digit is either a decimal digit or a
+Latin letter (62 possible characters), with @code{a} = 10, @code{b} = 11,
+@dots{}, @code{z} = 35; its value must be strictly less than the base.
+The decimal point can be either the one defined by the current locale or
+the period (the first one is accepted for consistency with the C standard
+and the practice, the second one is accepted to allow the programmer to
+provide MPFR numbers from strings in a way that does not depend on the
+current locale).
 The exponent prefix can be @code{e} or @code{E} for bases up to 10, or
 @code{@@} in any base; it indicates a multiplication by a power of the
-base. In bases 2 and 16, the exponent prefix can also be @code{p} or @code{P},
-in which case it introduces a binary exponent: it indicates a multiplication
-by a power of 2 (there is a difference only for base 16).
+base. In bases 2 and 16, the exponent prefix can also be @code{p} or
+@code{P}, in which case it introduces a binary exponent: it indicates a
+multiplication by a power of 2 (there is a difference only for base 16).
 The value of an exponent is always written in base 10.
-In base 2, the significand can start with @code{0b} or @code{0B}, and in base
-16, it can start with @code{0x} or @code{0X}.
+In base 2, the significand can start with @code{0b} or @code{0B}, and
+in base 16, it can start with @code{0x} or @code{0X}.
 
 If the argument @var{base} is 0, then the base is automatically detected
 as follows. If the significand starts with @code{0b} or @code{0B}, base 2
@@ -2369,6 +2368,14 @@ which case @var{rop} is set to NaN and a non-zero value is returned (this
 should never happen in practice, except in very specific cases). The
 second argument is a @code{gmp_randstate_t} structure which should be
 created using the GMP @code{gmp_randinit} function, see the GMP manual.
+@end deftypefun
+
+@deftypefun void mpfr_random (mpfr_t @var{rop})
+Generate a uniformly distributed random float in the interval
+@math{0 @le{} @var{rop} < 1}.
+
+This function is deprecated and will be suppressed in the next release;
+@code{mpfr_urandomb} should be used instead.
 @end deftypefun
 
 @deftypefun void mpfr_random2 (mpfr_t @var{rop}, mp_size_t @var{size}, mp_exp_t @var{exp})

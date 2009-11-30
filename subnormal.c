@@ -8,7 +8,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -17,13 +17,13 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include "mpfr-impl.h"
 
-/* For MPFR_RNDN, we can have a problem of double rounding.
+/* For GMP_RNDN, we can have a problem of double rounding.
    In such a case, this table helps to conclude what to do (y positive):
      Rounding Bit |  Sticky Bit | inexact  | Action    | new inexact
      0            |   ?         |  ?       | Trunc     | sticky
@@ -37,7 +37,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 */
 
 int
-mpfr_subnormalize (mpfr_ptr y, int old_inexact, mpfr_rnd_t rnd)
+mpfr_subnormalize (mpfr_ptr y, int old_inexact, mp_rnd_t rnd)
 {
   int inexact = 0;
 
@@ -59,7 +59,7 @@ mpfr_subnormalize (mpfr_ptr y, int old_inexact, mpfr_rnd_t rnd)
          Assuming Y is the real value and y the approximation
          and since y is not a power of 2:  0.5*2^emin < Y < 1*2^emin
          We also know the direction of the error thanks to inexact flag */
-      else if (rnd == MPFR_RNDN)
+      else if (rnd == GMP_RNDN)
         {
           mp_limb_t *mant, rb ,sb;
           mp_size_t s;
@@ -120,7 +120,7 @@ mpfr_subnormalize (mpfr_ptr y, int old_inexact, mpfr_rnd_t rnd)
                         MPFR_SET_EXP (dest, MPFR_GET_EXP (dest)+1));
       if (MPFR_LIKELY (old_inexact != 0))
         {
-          if (MPFR_UNLIKELY(rnd == MPFR_RNDN && (inexact == MPFR_EVEN_INEX
+          if (MPFR_UNLIKELY(rnd == GMP_RNDN && (inexact == MPFR_EVEN_INEX
                                                || inexact == -MPFR_EVEN_INEX)))
             {
               /* if both roundings are in the same direction, we have to go

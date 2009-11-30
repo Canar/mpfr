@@ -90,9 +90,8 @@ To make a release (for the MPFR team):
 
   *** Please read this section entirely before making any release. ***
 
-  0) Make sure that the mpfr-longlong.h file (from GMP's longlong.h) and
-     the libtool-related files (config.guess, etc.) are up-to-date. An
-     "autoreconf -f -i" may be necessary.
+  0) Make sure that the libtool-related files (config.guess, etc.) are
+     up-to-date. An "autoreconf -f -i" may be necessary.
 
   1) Generate the tuning parameters on different architectures
      and put them in mparam_h.in. For each architecture:
@@ -135,8 +134,7 @@ To make a release (for the MPFR team):
      Update the libtool version too (see Makefile.am).
      Update the date in mpfr.texi.
 
-  3) Update the NEWS file, in particular say if the the release is binary
-     and/or API compatible (or not) with previous releases.
+  3) Update the NEWS file.
      Update the FAQ.html file with update-faq (and check it).
 
   4) Update the ChangeLog file with "TZ=UTC svn log -rHEAD:0 -v" in
@@ -198,13 +196,6 @@ To make a release (for the MPFR team):
 
   8) Update the version with the update-version script to indicate the
      next version (use the "dev" suffix).
-
-  9) Create a web page for the MPFR release, update the mpfr-current
-     symbolic link and the history page. Upload the tarballs and the
-     signatures to the MPFR web server, to INRIAGforge and to the GNU
-     FTP site. Announce the release in the mpfr, gmp-discuss and gcc
-     mailing-lists, and on INRIAGforge. In case of a new patchlevel
-     release, add a link from the web page of the previous release.
 
 For major or minor releases (but not patchlevels), a branch may be
 created first to allow new features to be committed to the trunk.

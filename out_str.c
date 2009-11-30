@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,21 +16,21 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include "mpfr-impl.h"
 
 size_t
 mpfr_out_str (FILE *stream, int base, size_t n_digits, mpfr_srcptr op,
-              mpfr_rnd_t rnd_mode)
+              mp_rnd_t rnd_mode)
 {
   char *s, *s0;
   size_t l;
   mp_exp_t e;
 
-  MPFR_ASSERTN (base >= 2 && base <= 62);
+  MPFR_ASSERTN (base >= 2 && base <= 36);
 
   /* when stream=NULL, output to stdout */
   if (stream == NULL)

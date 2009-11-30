@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
@@ -28,7 +28,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
  */
 
 int
-mpfr_expm1 (mpfr_ptr y, mpfr_srcptr x , mpfr_rnd_t rnd_mode)
+mpfr_expm1 (mpfr_ptr y, mpfr_srcptr x , mp_rnd_t rnd_mode)
 {
   int inexact;
   mp_exp_t ex;
@@ -82,13 +82,13 @@ mpfr_expm1 (mpfr_ptr y, mpfr_srcptr x , mpfr_rnd_t rnd_mode)
 
       mpfr_init2 (minus_one, 2);
       mpfr_init2 (t, 64);
-      mpfr_set_si (minus_one, -1, MPFR_RNDN);
-      mpfr_const_log2 (t, MPFR_RNDU); /* round upward since x is negative */
-      mpfr_div (t, x, t, MPFR_RNDU); /* > x / ln(2) */
+      mpfr_set_si (minus_one, -1, GMP_RNDN);
+      mpfr_const_log2 (t, GMP_RNDU); /* round upward since x is negative */
+      mpfr_div (t, x, t, GMP_RNDU); /* > x / ln(2) */
       err = mpfr_cmp_si (t, MPFR_EMIN_MIN >= -LONG_MAX ?
                          MPFR_EMIN_MIN : -LONG_MAX) <= 0 ?
         - (MPFR_EMIN_MIN >= -LONG_MAX ? MPFR_EMIN_MIN : -LONG_MAX) :
-        - mpfr_get_si (t, MPFR_RNDU);
+        - mpfr_get_si (t, GMP_RNDU);
       /* exp(x) = 2^(x/ln(2))
                <= 2^max(MPFR_EMIN_MIN,-LONG_MAX,ceil(x/ln(2)+epsilon))
          with epsilon > 0 */
@@ -127,7 +127,7 @@ mpfr_expm1 (mpfr_ptr y, mpfr_srcptr x , mpfr_rnd_t rnd_mode)
         MPFR_BLOCK_DECL (flags);
 
         /* exp(x) may overflow and underflow */
-        MPFR_BLOCK (flags, mpfr_exp (t, x, MPFR_RNDN));
+        MPFR_BLOCK (flags, mpfr_exp (t, x, GMP_RNDN));
         if (MPFR_OVERFLOW (flags))
           {
             inexact = mpfr_overflow (y, rnd_mode, MPFR_SIGN_POS);
@@ -148,7 +148,7 @@ mpfr_expm1 (mpfr_ptr y, mpfr_srcptr x , mpfr_rnd_t rnd_mode)
           }
 
         exp_te = MPFR_GET_EXP (t);         /* FIXME: exp(x) may overflow! */
-        mpfr_sub_ui (t, t, 1, MPFR_RNDN);   /* exp(x)-1 */
+        mpfr_sub_ui (t, t, 1, GMP_RNDN);   /* exp(x)-1 */
 
         /* error estimate */
         /*err=Nt-(__gmpfr_ceil_log2(1+pow(2,MPFR_EXP(te)-MPFR_EXP(t))));*/

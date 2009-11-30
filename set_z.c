@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,16 +16,16 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
 
 /* set f to the integer z */
 int
-mpfr_set_z (mpfr_ptr f, mpz_srcptr z, mpfr_rnd_t rnd_mode)
+mpfr_set_z (mpfr_ptr f, mpz_srcptr z, mp_rnd_t rnd_mode)
 {
   mp_size_t fn, zn, dif;
   int k, sign_z, inex;
@@ -64,8 +64,8 @@ mpfr_set_z (mpfr_ptr f, mpz_srcptr z, mpfr_rnd_t rnd_mode)
   if (MPFR_UNLIKELY (exp > __gmpfr_emax))
     return mpfr_overflow (f, rnd_mode, sign_z);
   if (MPFR_UNLIKELY (exp + 1 < __gmpfr_emin))
-    return mpfr_underflow (f, rnd_mode == MPFR_RNDN ? MPFR_RNDZ : rnd_mode,
-                           sign_z);
+    return mpfr_underflow(f, rnd_mode == GMP_RNDN ? GMP_RNDZ : rnd_mode,
+                              sign_z);
 
   if (MPFR_LIKELY (dif >= 0))
     {
@@ -118,7 +118,7 @@ mpfr_set_z (mpfr_ptr f, mpz_srcptr z, mpfr_rnd_t rnd_mode)
         }
 
       /* Rounding */
-      if (MPFR_LIKELY (rnd_mode == MPFR_RNDN))
+      if (MPFR_LIKELY (rnd_mode == GMP_RNDN))
         {
           if (rb == 0 || MPFR_UNLIKELY (sb == 0 && (fp[0] & ulp) == 0))
             goto trunc;
@@ -128,7 +128,7 @@ mpfr_set_z (mpfr_ptr f, mpz_srcptr z, mpfr_rnd_t rnd_mode)
       else /* Not Nearest */
         {
           if (MPFR_LIKELY (MPFR_IS_LIKE_RNDZ (rnd_mode, sign_z < 0))
-              || MPFR_UNLIKELY ( (sb | rb) == 0 ))
+              || MPFR_UNLIKELY ( (sb|rb) == 0 ))
             goto trunc;
           else
             goto addoneulp;
@@ -164,12 +164,13 @@ mpfr_set_z (mpfr_ptr f, mpz_srcptr z, mpfr_rnd_t rnd_mode)
 
   if (MPFR_UNLIKELY (exp < __gmpfr_emin))
     {
-      if (rnd_mode == MPFR_RNDN && inex == 0 && mpfr_powerof2_raw (f))
-        rnd_mode = MPFR_RNDZ;
-      return mpfr_underflow (f, rnd_mode, sign_z);
+      if (rnd_mode == GMP_RNDN && inex == 0 && mpfr_powerof2_raw (f))
+        rnd_mode = GMP_RNDZ;
+      return mpfr_underflow(f, rnd_mode, sign_z);
     }
 
   MPFR_SET_EXP (f, exp);
   MPFR_SET_SIGN (f, sign_z);
   MPFR_RET (inex*sign_z);
 }
+

@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,14 +16,14 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include "mpfr-impl.h"
 
 int
-mpfr_sqrt (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
+mpfr_sqrt (mpfr_ptr r, mpfr_srcptr u, mp_rnd_t rnd_mode)
 {
   mp_size_t rsize; /* number of limbs of r */
   mp_size_t rrsize;
@@ -80,6 +80,7 @@ mpfr_sqrt (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
       MPFR_SET_NAN(r);
       MPFR_RET_NAN;
     }
+  MPFR_CLEAR_FLAGS(r);
   MPFR_SET_POS(r);
 
   rsize = MPFR_LIMB_SIZE(r); /* number of limbs of r */
@@ -142,12 +143,12 @@ mpfr_sqrt (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
 
   expr = (MPFR_GET_EXP(u) + odd_exp) / 2;  /* exact */
 
-  if (rnd_mode == MPFR_RNDZ || rnd_mode == MPFR_RNDD || sticky == MPFR_LIMB_ZERO)
+  if (rnd_mode == GMP_RNDZ || rnd_mode == GMP_RNDD || sticky == MPFR_LIMB_ZERO)
     {
       inexact = (sticky == MPFR_LIMB_ZERO) ? 0 : -1;
       goto truncate;
     }
-  else if (rnd_mode == MPFR_RNDN)
+  else if (rnd_mode == GMP_RNDN)
     {
       /* if sh>0, the round bit is bit (sh-1) of sticky1
                   and the sticky bit is formed by the low sh-1 bits from

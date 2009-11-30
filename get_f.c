@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,20 +16,18 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include "mpfr-impl.h"
 
-/* Since MPFR-3.0, return the usual inexact value.
-   The erange flag is set if an error occurred in the conversion
-   (y is NaN, +Inf, or -Inf that have no equivalent in mpf)
+/* return value is 0 iff no error occurred in the conversion
+   (1 for NaN, +Inf, -Inf that have no equivalent in mpf)
 */
 int
-mpfr_get_f (mpf_ptr x, mpfr_srcptr y, mpfr_rnd_t rnd_mode)
+mpfr_get_f (mpf_ptr x, mpfr_srcptr y, mp_rnd_t rnd_mode)
 {
-  int inex;
   mp_size_t sx, sy;
   mp_prec_t precx, precy;
   mp_limb_t *xp;
@@ -42,37 +40,8 @@ mpfr_get_f (mpf_ptr x, mpfr_srcptr y, mpfr_rnd_t rnd_mode)
           mpf_set_ui (x, 0);
           return 0;
         }
-      else if (MPFR_IS_NAN (y))
-        {
-          MPFR_SET_ERANGE ();
-          return 0;
-        }
-      else /* y is plus infinity (resp. minus infinity), set x to the maximum
-              value (resp. the minimum value) in precision PREC(x) */
-        {
-          int i;
-          mp_limb_t *xp;
-
-          MPFR_SET_ERANGE ();
-
-          /* To this day, mp_exp_t and mp_size_t are #defined as the same
-             type */
-          EXP (x) = MP_SIZE_T_MAX;
-
-          sx = PREC (x);
-          SIZ (x) = sx;
-          xp = LIMBS (x);
-          for (i = 0; i < sx; i++)
-            xp[i] = MP_LIMB_T_MAX;
-
-          if (MPFR_IS_POS (y))
-            return -1;
-          else
-            {
-              mpf_neg (x, x);
-              return +1;
-            }
-        }
+      else /* NaN or Inf */
+        return 1;
     }
 
   sx = PREC(x); /* number of limbs of the mantissa of x */
@@ -108,35 +77,35 @@ mpfr_get_f (mpf_ptr x, mpfr_srcptr y, mpfr_rnd_t rnd_mode)
       if (ds > 0)
         MPN_ZERO (xp, ds);
       EXP(x) = (MPFR_GET_EXP(y) + sh) / BITS_PER_MP_LIMB;
-      inex = 0;
     }
   else /* we have to round to precx - sh bits */
     {
       mpfr_t z;
-      mp_size_t sz;
+      mp_size_t sz, ds;
 
-      /* Recall that precx = (mp_prec_t) sx * BITS_PER_MP_LIMB, thus removing
-         sh bits (sh < BITS_PER_MP_LIMBS) won't reduce the number of limbs. */
+      /* Recall that precx = (mp_prec_t) sx * BITS_PER_MP_LIMB */
       mpfr_init2 (z, precx - sh);
       sz = MPFR_LIMB_SIZE (z);
-      MPFR_ASSERTN (sx == sz);
-
-      inex = mpfr_set (z, y, rnd_mode);
+      mpfr_set (z, y, rnd_mode);
       /* warning, sh may change due to rounding, but then z is a power of two,
          thus we can safely ignore its last bit which is 0 */
       sh = MPFR_GET_EXP(z) % BITS_PER_MP_LIMB;
       sh = sh <= 0 ? - sh : BITS_PER_MP_LIMB - sh;
-      MPFR_ASSERTD (sh >= 0);
+      MPFR_ASSERTD (sx >= sz);
+      ds = sx - sz;
+      MPFR_ASSERTD (sh >= 0 && ds <= 1);
       if (sh != 0)
         {
           mp_limb_t out;
-          out = mpn_rshift (xp, MPFR_MANT(z), sz, sh);
+          out = mpn_rshift (xp + ds, MPFR_MANT(z), sz, sh);
           /* If sh hasn't changed, it is the number of the non-significant
              bits in the lowest limb of z. Therefore out == 0. */
           MPFR_ASSERTD (out == 0);
         }
       else
-        MPN_COPY (xp, MPFR_MANT(z), sz);
+        MPN_COPY (xp + ds, MPFR_MANT(z), sz);
+      if (ds != 0)
+        xp[0] = 0;
       EXP(x) = (MPFR_GET_EXP(z) + sh) / BITS_PER_MP_LIMB;
       mpfr_clear (z);
     }
@@ -144,5 +113,5 @@ mpfr_get_f (mpf_ptr x, mpfr_srcptr y, mpfr_rnd_t rnd_mode)
   /* set size and sign */
   SIZ(x) = (MPFR_FROM_SIGN_TO_INT(MPFR_SIGN(y)) < 0) ? -sx : sx;
 
-  return inex;
+  return 0;
 }

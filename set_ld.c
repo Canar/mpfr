@@ -8,7 +8,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -17,9 +17,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include <float.h>
 
@@ -49,7 +49,7 @@ static const union {
 
 /* Generic code */
 int
-mpfr_set_ld (mpfr_ptr r, long double d, mpfr_rnd_t rnd_mode)
+mpfr_set_ld (mpfr_ptr r, long double d, mp_rnd_t rnd_mode)
 {
   mpfr_t t, u;
   int inexact, shift_exp;
@@ -173,9 +173,9 @@ mpfr_set_ld (mpfr_ptr r, long double d, mpfr_rnd_t rnd_mode)
             }
           else
             {
-              inexact = mpfr_set_d (u, (double) x, MPFR_RNDZ);
+              inexact = mpfr_set_d (u, (double) x, GMP_RNDZ);
               MPFR_ASSERTD (inexact == 0);
-              if (mpfr_add (t, t, u, MPFR_RNDZ) != 0)
+              if (mpfr_add (t, t, u, GMP_RNDZ) != 0)
                 {
                   if (!mpfr_number_p (t))
                     break;
@@ -200,9 +200,9 @@ mpfr_set_ld (mpfr_ptr r, long double d, mpfr_rnd_t rnd_mode)
                       rb_mask = MPFR_LIMB_ONE <<
                         (BITS_PER_MP_LIMB - 1 -
                          (MPFR_PREC (r) & (BITS_PER_MP_LIMB - 1)));
-                      if (rnd_mode == MPFR_RNDN)
+                      if (rnd_mode == GMP_RNDN)
                         rnd_mode = (*tp & rb_mask) ^ MPFR_IS_NEG (t) ?
-                          MPFR_RNDU : MPFR_RNDD;
+                          GMP_RNDU : GMP_RNDD;
                       *tp |= rb_mask;
                       break;
                     }
@@ -226,7 +226,7 @@ mpfr_set_ld (mpfr_ptr r, long double d, mpfr_rnd_t rnd_mode)
 #else /* IEEE Extended Little Endian Code */
 
 int
-mpfr_set_ld (mpfr_ptr r, long double d, mpfr_rnd_t rnd_mode)
+mpfr_set_ld (mpfr_ptr r, long double d, mp_rnd_t rnd_mode)
 {
   int inexact, i, k, cnt;
   mpfr_t tmp;

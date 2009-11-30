@@ -8,7 +8,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -17,9 +17,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
@@ -28,16 +28,16 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
               j(n,-z) = (-1)^n j(n,z)
 */
 
-static int mpfr_jn_asympt (mpfr_ptr, long, mpfr_srcptr, mpfr_rnd_t);
+static int mpfr_jn_asympt (mpfr_ptr, long, mpfr_srcptr, mp_rnd_t);
 
 int
-mpfr_j0 (mpfr_ptr res, mpfr_srcptr z, mpfr_rnd_t r)
+mpfr_j0 (mpfr_ptr res, mpfr_srcptr z, mp_rnd_t r)
 {
   return mpfr_jn (res, 0, z, r);
 }
 
 int
-mpfr_j1 (mpfr_ptr res, mpfr_srcptr z, mpfr_rnd_t r)
+mpfr_j1 (mpfr_ptr res, mpfr_srcptr z, mp_rnd_t r)
 {
   return mpfr_jn (res, 1, z, r);
 }
@@ -54,17 +54,17 @@ mpfr_jn_k0 (long n, mpfr_srcptr z)
 
   mpfr_init2 (t, 32);
   mpfr_init2 (u, 32);
-  mpfr_div_si (t, z, n, MPFR_RNDN);
-  mpfr_sqr (t, t, MPFR_RNDN);
-  mpfr_add_ui (t, t, 1, MPFR_RNDN);
-  mpfr_sqrt (t, t, MPFR_RNDN);
-  mpfr_sub_ui (t, t, 1, MPFR_RNDN);
-  mpfr_mul_si (t, t, n, MPFR_RNDN);
+  mpfr_div_si (t, z, n, GMP_RNDN);
+  mpfr_sqr (t, t, GMP_RNDN);
+  mpfr_add_ui (t, t, 1, GMP_RNDN);
+  mpfr_sqrt (t, t, GMP_RNDN);
+  mpfr_sub_ui (t, t, 1, GMP_RNDN);
+  mpfr_mul_si (t, t, n, GMP_RNDN);
   /* the following is a 32-bit approximation to nearest of log(2) */
   mpfr_set_str_binary (u, "0.10110001011100100001011111111");
-  mpfr_div (t, t, u, MPFR_RNDN);
-  if (mpfr_fits_ulong_p (t, MPFR_RNDN))
-    k0 = mpfr_get_ui (t, MPFR_RNDN);
+  mpfr_div (t, t, u, GMP_RNDN);
+  if (mpfr_fits_ulong_p (t, GMP_RNDN))
+    k0 = mpfr_get_ui (t, GMP_RNDN);
   else
     k0 = ULONG_MAX;
   mpfr_clear (t);
@@ -73,7 +73,7 @@ mpfr_jn_k0 (long n, mpfr_srcptr z)
 }
 
 int
-mpfr_jn (mpfr_ptr res, long n, mpfr_srcptr z, mpfr_rnd_t r)
+mpfr_jn (mpfr_ptr res, long n, mpfr_srcptr z, mp_rnd_t r)
 {
   int inex;
   unsigned long absn;
@@ -149,13 +149,13 @@ mpfr_jn (mpfr_ptr res, long n, mpfr_srcptr z, mpfr_rnd_t r)
       /* the following is an upper 32-bit approximation of exp(1)/2 */
       mpfr_set_str_binary (y, "1.0101101111110000101010001011001");
       if (MPFR_SIGN(z) > 0)
-        mpfr_mul (y, y, z, MPFR_RNDU);
+        mpfr_mul (y, y, z, GMP_RNDU);
       else
         {
-          mpfr_mul (y, y, z, MPFR_RNDD);
-          mpfr_neg (y, y, MPFR_RNDU);
+          mpfr_mul (y, y, z, GMP_RNDD);
+          mpfr_neg (y, y, GMP_RNDU);
         }
-      mpfr_div_ui (y, y, absn, MPFR_RNDU);
+      mpfr_div_ui (y, y, absn, GMP_RNDU);
       /* now y is an upper approximation of |ze/2n|: y < 2^EXP(y),
          thus |j(n,z)| < 1/2*y^n < 2^(n*EXP(y)-1).
          If n*EXP(y) < __gmpfr_emin then we have an underflow.
@@ -165,7 +165,7 @@ mpfr_jn (mpfr_ptr res, long n, mpfr_srcptr z, mpfr_rnd_t r)
               MPFR_EXP(y) < __gmpfr_emin / (mp_exp_t) absn))
         {
           mpfr_clear (y);
-          return mpfr_underflow (res, (r == MPFR_RNDN) ? MPFR_RNDZ : r,
+          return mpfr_underflow (res, (r == GMP_RNDN) ? GMP_RNDZ : r,
                          (n % 2) ? ((n > 0) ? MPFR_SIGN(z) : -MPFR_SIGN(z))
                                  : MPFR_SIGN_POS);
         }
@@ -186,33 +186,33 @@ mpfr_jn (mpfr_ptr res, long n, mpfr_srcptr z, mpfr_rnd_t r)
       mpfr_set_prec (y, prec);
       mpfr_set_prec (s, prec);
       mpfr_set_prec (t, prec);
-      mpfr_pow_ui (t, z, absn, MPFR_RNDN); /* z^|n| */
-      mpfr_mul (y, z, z, MPFR_RNDN);       /* z^2 */
-      zz = mpfr_get_ui (y, MPFR_RNDU);
+      mpfr_pow_ui (t, z, absn, GMP_RNDN); /* z^|n| */
+      mpfr_mul (y, z, z, GMP_RNDN);       /* z^2 */
+      zz = mpfr_get_ui (y, GMP_RNDU);
       MPFR_ASSERTN (zz < ULONG_MAX);
-      mpfr_div_2ui (y, y, 2, MPFR_RNDN);   /* z^2/4 */
-      mpfr_fac_ui (s, absn, MPFR_RNDN);    /* |n|! */
-      mpfr_div (t, t, s, MPFR_RNDN);
+      mpfr_div_2ui (y, y, 2, GMP_RNDN);   /* z^2/4 */
+      mpfr_fac_ui (s, absn, GMP_RNDN);    /* |n|! */
+      mpfr_div (t, t, s, GMP_RNDN);
       if (absn > 0)
-        mpfr_div_2ui (t, t, absn, MPFR_RNDN);
-      mpfr_set (s, t, MPFR_RNDN);
+        mpfr_div_2ui (t, t, absn, GMP_RNDN);
+      mpfr_set (s, t, GMP_RNDN);
       exps = MPFR_EXP (s);
       expT = exps;
       for (k = 1; ; k++)
         {
-          mpfr_mul (t, t, y, MPFR_RNDN);
-          mpfr_neg (t, t, MPFR_RNDN);
+          mpfr_mul (t, t, y, GMP_RNDN);
+          mpfr_neg (t, t, GMP_RNDN);
           if (k + absn <= ULONG_MAX / k)
-            mpfr_div_ui (t, t, k * (k + absn), MPFR_RNDN);
+            mpfr_div_ui (t, t, k * (k + absn), GMP_RNDN);
           else
             {
-              mpfr_div_ui (t, t, k, MPFR_RNDN);
-              mpfr_div_ui (t, t, k + absn, MPFR_RNDN);
+              mpfr_div_ui (t, t, k, GMP_RNDN);
+              mpfr_div_ui (t, t, k + absn, GMP_RNDN);
             }
           exps = MPFR_EXP (t);
           if (exps > expT)
             expT = exps;
-          mpfr_add (s, s, t, MPFR_RNDN);
+          mpfr_add (s, s, t, GMP_RNDN);
           exps = MPFR_EXP (s);
           if (exps > expT)
             expT = exps;

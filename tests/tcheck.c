@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -50,18 +50,18 @@ main (void)
       MPFR_SET_ZERO(a);
       if (!mpfr_check(a)) ERROR("for zero");
       /* Check var */
-      mpfr_set_ui(a, 2, MPFR_RNDN);
+      mpfr_set_ui(a, 2, GMP_RNDN);
       if (!mpfr_check(a)) ERROR("for set_ui");
       mpfr_clear_overflow();
       max = 1000; /* Allows max 2^1000 bits for the exponent */
       while ((!mpfr_overflow_p()) && (max>0))
         {
-          mpfr_mul(a, a, a, MPFR_RNDN);
+          mpfr_mul(a, a, a, GMP_RNDN);
           if (!mpfr_check(a)) ERROR("for mul");
           max--;
         }
       if (max==0) ERROR("can't reach overflow");
-      mpfr_set_ui(a, 2137, MPFR_RNDN);
+      mpfr_set_ui(a, 2137, GMP_RNDN);
       /* Corrupt a and check for it */
       MPFR_SIGN(a) = 2;
       if (mpfr_check(a))  ERROR("sgn");
@@ -105,7 +105,7 @@ main (void)
       MPFR_MANT(a)[MPFR_LIMB_SIZE(a)-1] &= MPFR_LIMB_MASK (BITS_PER_MP_LIMB-1);
       if (mpfr_check(a))  ERROR("last bits non 0");
       /* Final */
-      mpfr_set_ui(a, 2137, MPFR_RNDN);
+      mpfr_set_ui(a, 2137, GMP_RNDN);
       if (!mpfr_check(a)) ERROR("after last set");
       mpfr_clear (a);
       if (mpfr_check(a))  ERROR("after clear");

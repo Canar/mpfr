@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,15 +16,15 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
 
 int
-mpfr_tanh (mpfr_ptr y, mpfr_srcptr xt , mpfr_rnd_t rnd_mode)
+mpfr_tanh (mpfr_ptr y, mpfr_srcptr xt , mp_rnd_t rnd_mode)
 {
   /****** Declaration ******/
   mpfr_t x;
@@ -102,13 +102,13 @@ mpfr_tanh (mpfr_ptr y, mpfr_srcptr xt , mpfr_rnd_t rnd_mode)
     MPFR_ZIV_INIT (loop, Nt);
     for (;;) {
       /* tanh = (exp(2x)-1)/(exp(2x)+1) */
-      mpfr_mul_2ui (te, x, 1, MPFR_RNDN);  /* 2x */
+      mpfr_mul_2ui (te, x, 1, GMP_RNDN);  /* 2x */
       /* since x > 0, we can only have an overflow */
-      mpfr_exp (te, te, MPFR_RNDN);        /* exp(2x) */
+      mpfr_exp (te, te, GMP_RNDN);        /* exp(2x) */
       if (MPFR_UNLIKELY (MPFR_IS_INF (te))) {
       set_one:
         inexact = MPFR_FROM_SIGN_TO_INT (sign);
-        mpfr_set4 (y, __gmpfr_one, MPFR_RNDN, sign);
+        mpfr_set4 (y, __gmpfr_one, GMP_RNDN, sign);
         if (MPFR_IS_LIKE_RNDZ (rnd_mode, MPFR_IS_NEG_SIGN (sign)))
           {
             inexact = -inexact;
@@ -117,10 +117,10 @@ mpfr_tanh (mpfr_ptr y, mpfr_srcptr xt , mpfr_rnd_t rnd_mode)
         break;
       }
       d = MPFR_GET_EXP (te);              /* For Error calculation */
-      mpfr_add_ui (t, te, 1, MPFR_RNDD);   /* exp(2x) + 1*/
-      mpfr_sub_ui (te, te, 1, MPFR_RNDU);  /* exp(2x) - 1*/
+      mpfr_add_ui (t, te, 1, GMP_RNDD);   /* exp(2x) + 1*/
+      mpfr_sub_ui (te, te, 1, GMP_RNDU);  /* exp(2x) - 1*/
       d = d - MPFR_GET_EXP (te);
-      mpfr_div (t, te, t, MPFR_RNDN);      /* (exp(2x)-1)/(exp(2x)+1)*/
+      mpfr_div (t, te, t, GMP_RNDN);      /* (exp(2x)-1)/(exp(2x)+1)*/
 
       /* Calculation of the error */
       d = MAX(3, d + 1);

@@ -5,25 +5,28 @@ Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the GNU MPFR Library.
 
-The GNU MPFR Library is free software; you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+The GNU MPFR Library is free software; you can redistribute
+it and/or modify it under the terms of the GNU Lesser
+General Public License as published by the Free Software
+Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
-The GNU MPFR Library is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+The GNU MPFR Library is distributed in the hope that it will
+be useful, but WITHOUT ANY WARRANTY; without even the
+implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
-You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+You should have received a copy of the GNU Lesser
+General Public License along with the GNU MPFR Library; see
+the file COPYING.LIB.  If not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include "mpfr-impl.h"
 
 int
-mpfr_sqr (mpfr_ptr a, mpfr_srcptr b, mpfr_rnd_t rnd_mode)
+mpfr_sqr (mpfr_ptr a, mpfr_srcptr b, mp_rnd_t rnd_mode)
 {
   int cc, inexact;
   mp_exp_t  ax;
@@ -51,6 +54,7 @@ mpfr_sqr (mpfr_ptr a, mpfr_srcptr b, mpfr_rnd_t rnd_mode)
         ( MPFR_ASSERTD(MPFR_IS_ZERO(b)), MPFR_SET_ZERO(a) );
       MPFR_RET(0);
     }
+  MPFR_CLEAR_FLAGS(a);
   ax = 2 * MPFR_GET_EXP (b);
   bq = MPFR_PREC(b);
 
@@ -95,9 +99,9 @@ mpfr_sqr (mpfr_ptr a, mpfr_srcptr b, mpfr_rnd_t rnd_mode)
            result (i.e. before rounding, i.e. without taking cc into account)
            is < __gmpfr_emin - 1 or the exact result is a power of 2 (i.e. if
            both arguments are powers of 2), then round to zero. */
-        if (rnd_mode == MPFR_RNDN &&
+        if (rnd_mode == GMP_RNDN &&
             (ax + (mp_exp_t) b1 < __gmpfr_emin || mpfr_powerof2_raw (b)))
-          rnd_mode = MPFR_RNDZ;
+          rnd_mode = GMP_RNDZ;
         return mpfr_underflow (a, rnd_mode, MPFR_SIGN_POS);
       }
     MPFR_SET_EXP (a, ax2);

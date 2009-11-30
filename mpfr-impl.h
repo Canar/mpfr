@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #ifndef __MPFR_IMPL_H__
 #define __MPFR_IMPL_H__
@@ -208,7 +208,7 @@ __MPFR_DECLSPEC extern MPFR_THREAD_ATTR mpfr_cache_t __gmpfr_cache_const_log2;
 __MPFR_DECLSPEC extern MPFR_THREAD_ATTR mpfr_cache_t __gmpfr_cache_const_euler;
 __MPFR_DECLSPEC extern MPFR_THREAD_ATTR mpfr_cache_t __gmpfr_cache_const_catalan;
 
-#define BASE_MAX 62
+#define BASE_MAX 36
 __MPFR_DECLSPEC extern const __mpfr_struct __gmpfr_l2b[BASE_MAX-1][2];
 
 /* Note: do not use the following values when they can be outside the
@@ -381,11 +381,6 @@ __MPFR_DECLSPEC extern const mpfr_t __gmpfr_four;
 #define IEEE_DBL_MANT_DIG 53
 #endif
 #define MPFR_LIMBS_PER_DOUBLE ((IEEE_DBL_MANT_DIG-1)/BITS_PER_MP_LIMB+1)
-
-#ifndef IEEE_FLT_MANT_DIG
-#define IEEE_FLT_MANT_DIG 24
-#endif
-#define MPFR_LIMBS_PER_FLT ((IEEE_FLT_MANT_DIG-1)/BITS_PER_MP_LIMB+1)
 
 /* Visual C++ doesn't support +1.0/.00, -1.0/0.0 and 0.0/0.0
    at compile time. */
@@ -653,6 +648,8 @@ typedef intmax_t mpfr_eexp_t;
 # define MPFR_EXP_NAN  (MPFR_EXP_MIN+2)
 # define MPFR_EXP_INF  (MPFR_EXP_MIN+3)
 
+#define MPFR_CLEAR_FLAGS(x)
+
 #define MPFR_IS_NAN(x)   (MPFR_EXP(x) == MPFR_EXP_NAN)
 #define MPFR_SET_NAN(x)  (MPFR_EXP(x) =  MPFR_EXP_NAN)
 #define MPFR_IS_INF(x)   (MPFR_EXP(x) == MPFR_EXP_INF)
@@ -728,42 +725,27 @@ typedef intmax_t mpfr_eexp_t;
  ******************************************************/
 
 /* We want to test this :
- *  (rnd == MPFR_RNDU && test) || (rnd == RNDD && !test)
+ *  (rnd == GMP_RNDU && test) || (rnd == RNDD && !test)
  * ie it transforms RNDU or RNDD to Away or Zero according to the sign */
 #define MPFR_IS_RNDUTEST_OR_RNDDNOTTEST(rnd, test) \
-  (((rnd) + (test)) == MPFR_RNDD)
+  (((rnd) + (test)) == GMP_RNDD)
 
 /* We want to test if rnd = Zero, or Away.
-   'test' is 1 if negative, and 0 if positive. */
+   'test' is true iff negative. */
 #define MPFR_IS_LIKE_RNDZ(rnd, test) \
-  ((rnd==MPFR_RNDZ) || MPFR_IS_RNDUTEST_OR_RNDDNOTTEST (rnd, test))
+  ((rnd==GMP_RNDZ) || MPFR_IS_RNDUTEST_OR_RNDDNOTTEST (rnd, test))
 
-#define MPFR_IS_LIKE_RNDU(rnd, sign) \
-  ((rnd==MPFR_RNDU) || (rnd==MPFR_RNDZ && sign<0) || (rnd==MPFR_RNDA && sign>0))
+/* Invert a rounding mode */
+#define MPFR_INVERT_RND(rnd) ((rnd == GMP_RNDU) ? GMP_RNDD : \
+                             ((rnd == GMP_RNDD) ? GMP_RNDU : rnd))
 
-#define MPFR_IS_LIKE_RNDD(rnd, sign) \
-  ((rnd==MPFR_RNDD) || (rnd==MPFR_RNDZ && sign>0) || (rnd==MPFR_RNDA && sign<0))
-
-/* Invert a rounding mode, RNDZ and RNDA are unchanged */
-#define MPFR_INVERT_RND(rnd) ((rnd == MPFR_RNDU) ? MPFR_RNDD : \
-                             ((rnd == MPFR_RNDD) ? MPFR_RNDU : rnd))
-
-/* Transform RNDU and RNDD to RNDZ according to test */
+/* Transform RNDU and RNDD to RNDA or RNDZ */
 #define MPFR_UPDATE_RND_MODE(rnd, test)                            \
   do {                                                             \
     if (MPFR_UNLIKELY(MPFR_IS_RNDUTEST_OR_RNDDNOTTEST(rnd, test))) \
-      rnd = MPFR_RNDZ;                                              \
+      rnd = GMP_RNDZ;                                              \
   } while (0)
 
-/* Transform RNDU and RNDD to RNDZ or RNDA according to sign,
-   leave the other modes unchanged */
-#define MPFR_UPDATE2_RND_MODE(rnd, sign)        \
-  do {                                          \
-  if (rnd == MPFR_RNDU)                          \
-    rnd = (sign > 0) ? MPFR_RNDA : MPFR_RNDZ;     \
-  else if (rnd == MPFR_RNDD)                     \
-    rnd = (sign < 0) ? MPFR_RNDA : MPFR_RNDZ;     \
-  } while (0)
 
 
 /******************************************************
@@ -1163,7 +1145,7 @@ typedef struct {
             _ulp = MPFR_LIMB_ONE;                                           \
           }                                                                 \
         /* Rounding */                                                      \
-        if (MPFR_LIKELY (rnd == MPFR_RNDN))                                  \
+        if (MPFR_LIKELY (rnd == GMP_RNDN))                                  \
           {                                                                 \
             if (_rb == 0)                                                   \
               {                                                             \
@@ -1250,7 +1232,7 @@ typedef struct {
    error at most 'error' */
 #define MPFR_CAN_ROUND(b,err,prec,rnd)                                       \
  (!MPFR_IS_SINGULAR (b) && mpfr_round_p (MPFR_MANT (b), MPFR_LIMB_SIZE (b),  \
-                                         (err), (prec) + ((rnd)==MPFR_RNDN)))
+                                         (err), (prec) + ((rnd)==GMP_RNDN)))
 
 /* TODO: fix this description (see round_near_x.c). */
 /* Assuming that the function has a Taylor expansion which looks like:
@@ -1583,19 +1565,19 @@ struct mpfr_group_t {
 extern "C" {
 #endif
 
-__MPFR_DECLSPEC int mpfr_underflow _MPFR_PROTO ((mpfr_ptr, mpfr_rnd_t, int));
-__MPFR_DECLSPEC int mpfr_overflow _MPFR_PROTO ((mpfr_ptr, mpfr_rnd_t, int));
+__MPFR_DECLSPEC int mpfr_underflow _MPFR_PROTO ((mpfr_ptr, mp_rnd_t, int));
+__MPFR_DECLSPEC int mpfr_overflow _MPFR_PROTO ((mpfr_ptr, mp_rnd_t, int));
 
 __MPFR_DECLSPEC int mpfr_add1 _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
-                                            mpfr_srcptr, mpfr_rnd_t));
+                                            mpfr_srcptr, mp_rnd_t));
 __MPFR_DECLSPEC int mpfr_sub1 _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
-                                            mpfr_srcptr, mpfr_rnd_t));
+                                            mpfr_srcptr, mp_rnd_t));
 __MPFR_DECLSPEC int mpfr_add1sp _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
-                                              mpfr_srcptr, mpfr_rnd_t));
+                                              mpfr_srcptr, mp_rnd_t));
 __MPFR_DECLSPEC int mpfr_sub1sp _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
-                                              mpfr_srcptr, mpfr_rnd_t));
+                                              mpfr_srcptr, mp_rnd_t));
 __MPFR_DECLSPEC int mpfr_can_round_raw _MPFR_PROTO ((const mp_limb_t *,
-                    mp_size_t, int, mp_exp_t, mpfr_rnd_t, mpfr_rnd_t, mp_prec_t));
+                    mp_size_t, int, mp_exp_t, mp_rnd_t, mp_rnd_t, mp_prec_t));
 
 __MPFR_DECLSPEC int mpfr_cmp2 _MPFR_PROTO ((mpfr_srcptr, mpfr_srcptr,
                                             mp_prec_t *));
@@ -1607,12 +1589,12 @@ __MPFR_DECLSPEC unsigned long __gmpfr_isqrt     _MPFR_PROTO ((unsigned long));
 __MPFR_DECLSPEC unsigned long __gmpfr_cuberoot  _MPFR_PROTO ((unsigned long));
 __MPFR_DECLSPEC int       __gmpfr_int_ceil_log2 _MPFR_PROTO ((unsigned long));
 
-__MPFR_DECLSPEC int mpfr_exp_2 _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_exp_3 _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,mpfr_rnd_t));
+__MPFR_DECLSPEC int mpfr_exp_2 _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,mp_rnd_t));
+__MPFR_DECLSPEC int mpfr_exp_3 _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,mp_rnd_t));
 __MPFR_DECLSPEC int mpfr_powerof2_raw _MPFR_PROTO ((mpfr_srcptr));
 
 __MPFR_DECLSPEC int mpfr_pow_general _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
-                           mpfr_srcptr, mpfr_rnd_t, int, mpfr_save_expo_t *));
+                           mpfr_srcptr, mp_rnd_t, int, mpfr_save_expo_t *));
 
 __MPFR_DECLSPEC void mpfr_setmax _MPFR_PROTO ((mpfr_ptr, mp_exp_t));
 __MPFR_DECLSPEC void mpfr_setmin _MPFR_PROTO ((mpfr_ptr, mp_exp_t));
@@ -1629,13 +1611,13 @@ __MPFR_DECLSPEC void mpfr_print_mant_binary _MPFR_PROTO ((const char*,
 __MPFR_DECLSPEC void mpfr_set_str_binary _MPFR_PROTO((mpfr_ptr, const char*));
 
 __MPFR_DECLSPEC int mpfr_round_raw _MPFR_PROTO ((mp_limb_t *,
-       const mp_limb_t *, mp_prec_t, int, mp_prec_t, mpfr_rnd_t, int *));
+       const mp_limb_t *, mp_prec_t, int, mp_prec_t, mp_rnd_t, int *));
 __MPFR_DECLSPEC int mpfr_round_raw_2 _MPFR_PROTO ((const mp_limb_t *,
-             mp_prec_t, int, mp_prec_t, mpfr_rnd_t));
+             mp_prec_t, int, mp_prec_t, mp_rnd_t));
 __MPFR_DECLSPEC int mpfr_round_raw_3 _MPFR_PROTO ((const mp_limb_t *,
-             mp_prec_t, int, mp_prec_t, mpfr_rnd_t, int *));
+             mp_prec_t, int, mp_prec_t, mp_rnd_t, int *));
 __MPFR_DECLSPEC int mpfr_round_raw_4 _MPFR_PROTO ((mp_limb_t *,
-       const mp_limb_t *, mp_prec_t, int, mp_prec_t, mpfr_rnd_t));
+       const mp_limb_t *, mp_prec_t, int, mp_prec_t, mp_rnd_t));
 
 #define mpfr_round_raw2(xp, xn, neg, r, prec) \
   mpfr_round_raw_2((xp),(xn)*BITS_PER_MP_LIMB,(neg),(prec),(r))
@@ -1650,10 +1632,10 @@ __MPFR_DECLSPEC int mpfr_get_cputime _MPFR_PROTO ((void));
 __MPFR_DECLSPEC void mpfr_nexttozero _MPFR_PROTO ((mpfr_ptr));
 __MPFR_DECLSPEC void mpfr_nexttoinf _MPFR_PROTO ((mpfr_ptr));
 
-__MPFR_DECLSPEC int mpfr_const_pi_internal _MPFR_PROTO ((mpfr_ptr,mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_const_log2_internal _MPFR_PROTO((mpfr_ptr,mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_const_euler_internal _MPFR_PROTO((mpfr_ptr, mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_const_catalan_internal _MPFR_PROTO((mpfr_ptr, mpfr_rnd_t));
+__MPFR_DECLSPEC int mpfr_const_pi_internal _MPFR_PROTO ((mpfr_ptr,mp_rnd_t));
+__MPFR_DECLSPEC int mpfr_const_log2_internal _MPFR_PROTO((mpfr_ptr,mp_rnd_t));
+__MPFR_DECLSPEC int mpfr_const_euler_internal _MPFR_PROTO((mpfr_ptr, mp_rnd_t));
+__MPFR_DECLSPEC int mpfr_const_catalan_internal _MPFR_PROTO((mpfr_ptr, mp_rnd_t));
 
 #if 0
 __MPFR_DECLSPEC void mpfr_init_cache _MPFR_PROTO ((mpfr_cache_t,
@@ -1676,18 +1658,9 @@ __MPFR_DECLSPEC void mpfr_dump_mant _MPFR_PROTO ((const mp_limb_t *,
 
 __MPFR_DECLSPEC int mpfr_round_near_x _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
                                                     mpfr_uexp_t, int,
-                                                    mpfr_rnd_t));
+                                                    mp_rnd_t));
 __MPFR_DECLSPEC void mpfr_abort_prec_max _MPFR_PROTO ((void))
        MPFR_NORETURN_ATTR;
-
-__MPFR_DECLSPEC void mpfr_rand_raw _MPFR_PROTO((mp_ptr, gmp_randstate_t,
-                                                unsigned long));
-
-__MPFR_DECLSPEC mpz_t* mpfr_bernoulli_internal _MPFR_PROTO((mpz_t*,
-                                                            unsigned long));
-
-__MPFR_DECLSPEC int mpfr_sincos_fast _MPFR_PROTO((mpfr_t, mpfr_t,
-                                                  mpfr_srcptr, mpfr_rnd_t));
 
 #if defined (__cplusplus)
 }

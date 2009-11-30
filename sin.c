@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,25 +16,15 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
 
-static int
-mpfr_sin_fast (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
-{
-  int inex;
-
-  inex = mpfr_sincos_fast (y, NULL, x, rnd_mode);
-  inex = inex & 3; /* 0: exact, 1: rounded up, 2: rounded down */
-  return (inex == 2) ? -1 : inex;
-}
-
 int
-mpfr_sin (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
+mpfr_sin (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
 {
   mpfr_t c, xr;
   mpfr_srcptr xx;
@@ -72,10 +62,6 @@ mpfr_sin (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
 
   /* Compute initial precision */
   precy = MPFR_PREC (y);
-
-  if (precy >= MPFR_SINCOS_THRESHOLD)
-    return mpfr_sin_fast (y, x, rnd_mode);
-
   m = precy + MPFR_INT_CEIL_LOG2 (precy) + 13;
   expx = MPFR_GET_EXP (x);
 
@@ -98,20 +84,20 @@ mpfr_sin (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
           MPFR_ASSERTN (expx + m - 1 <= MPFR_PREC_MAX);
           mpfr_set_prec (c, expx + m - 1);
           mpfr_set_prec (xr, m);
-          mpfr_const_pi (c, MPFR_RNDN);
-          mpfr_mul_2ui (c, c, 1, MPFR_RNDN);
-          mpfr_remainder (xr, x, c, MPFR_RNDN);
+          mpfr_const_pi (c, GMP_RNDN);
+          mpfr_mul_2ui (c, c, 1, GMP_RNDN);
+          mpfr_remainder (xr, x, c, GMP_RNDN);
           /* The analysis is similar to that of cos.c:
              |xr - x - 2kPi| <= 2^(2-m). Thus we can decide the sign
              of sin(x) if xr is at distance at least 2^(2-m) of both
              0 and +/-Pi. */
-          mpfr_div_2ui (c, c, 1, MPFR_RNDN);
+          mpfr_div_2ui (c, c, 1, GMP_RNDN);
           /* Since c approximates Pi with an error <= 2^(2-expx-m) <= 2^(-m),
              it suffices to check that c - |xr| >= 2^(2-m). */
           if (MPFR_SIGN (xr) > 0)
-            mpfr_sub (c, c, xr, MPFR_RNDZ);
+            mpfr_sub (c, c, xr, GMP_RNDZ);
           else
-            mpfr_add (c, c, xr, MPFR_RNDZ);
+            mpfr_add (c, c, xr, GMP_RNDZ);
           if (MPFR_IS_ZERO(xr) || MPFR_EXP(xr) < (mp_exp_t) 3 - (mp_exp_t) m
               || MPFR_EXP(c) < (mp_exp_t) 3 - (mp_exp_t) m)
             goto ziv_next;
@@ -128,11 +114,11 @@ mpfr_sin (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
       sign = MPFR_SIGN(xx);
       /* now that the argument is reduced, precision m is enough */
       mpfr_set_prec (c, m);
-      mpfr_cos (c, xx, MPFR_RNDZ);    /* can't be exact */
+      mpfr_cos (c, xx, GMP_RNDZ);    /* can't be exact */
       mpfr_nexttoinf (c);           /* now c = cos(x) rounded away */
-      mpfr_mul (c, c, c, MPFR_RNDU); /* away */
-      mpfr_ui_sub (c, 1, c, MPFR_RNDZ);
-      mpfr_sqrt (c, c, MPFR_RNDZ);
+      mpfr_mul (c, c, c, GMP_RNDU); /* away */
+      mpfr_ui_sub (c, 1, c, GMP_RNDZ);
+      mpfr_sqrt (c, c, GMP_RNDZ);
       if (MPFR_IS_NEG_SIGN(sign))
         MPFR_CHANGE_SIGN(c);
 

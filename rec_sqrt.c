@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -416,7 +416,7 @@ mpfr_mpn_rec_sqrt (mp_ptr x, mp_prec_t p,
 }
 
 int
-mpfr_rec_sqrt (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
+mpfr_rec_sqrt (mpfr_ptr r, mpfr_srcptr u, mp_rnd_t rnd_mode)
 {
   mp_prec_t rp, up, wp;
   mp_size_t rn, wn;
@@ -466,6 +466,7 @@ mpfr_rec_sqrt (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
       MPFR_RET_NAN;
     }
 
+  MPFR_CLEAR_FLAGS(r);
   MPFR_SET_POS(r);
 
   rp = MPFR_PREC(r); /* output precision */
@@ -503,7 +504,7 @@ mpfr_rec_sqrt (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
          if the input was truncated, the error is at most two ulps
          (see algorithms.tex). */
       if (MPFR_LIKELY (mpfr_round_p (x, wn, wp - (wp < up),
-                                     rp + (rnd_mode == MPFR_RNDN))))
+                                     rp + (rnd_mode == GMP_RNDN))))
         break;
 
       /* We detect only now the exact case where u=2^(2e), to avoid

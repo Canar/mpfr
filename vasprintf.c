@@ -8,7 +8,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -17,9 +17,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -174,7 +174,7 @@ struct printf_spec
   int prec;                     /* Precision */
 
   enum arg_t arg_type;          /* Type of argument */
-  mpfr_rnd_t rnd_mode;            /* Rounding mode */
+  mp_rnd_t rnd_mode;            /* Rounding mode */
   char spec;                    /* Conversion specifier */
 
   char pad;                     /* Padding character */
@@ -191,7 +191,7 @@ specinfo_init (struct printf_spec *specinfo)
   specinfo->width = 0;
   specinfo->prec = 0;
   specinfo->arg_type = NONE;
-  specinfo->rnd_mode = MPFR_RNDN;
+  specinfo->rnd_mode = GMP_RNDN;
   specinfo->spec = '\0';
   specinfo->pad = ' ';
 }
@@ -510,7 +510,7 @@ typedef wint_t mpfr_va_wint;
         MPFR_TMP_DECL (marker);                                         \
         char *fmt_copy;                                                 \
         MPFR_TMP_MARK (marker);                                         \
-        fmt_copy = (char*) MPFR_TMP_ALLOC (n + 1);                      \
+        fmt_copy = (char*) MPFR_TMP_ALLOC ((n + 1) * sizeof(char));     \
         strncpy (fmt_copy, (start), n);                                 \
         fmt_copy[n] = '\0';                                             \
         if (sprntf_gmp ((buf_ptr), (fmt_copy), (ap)) == -1)             \
@@ -548,10 +548,10 @@ static void
 buffer_widen (struct string_buffer *b, size_t len)
 {
   const size_t pos = b->curr - b->start;
-  const size_t n = 0x1000 + (len & ~((size_t) 0xfff));
+  const size_t n = sizeof (char) * (0x1000 + (len & ~((size_t) 0xfff)));
   MPFR_ASSERTD (pos < b->size);
 
-  MPFR_ASSERTN ((len & ~((size_t) 4095)) <= (size_t)(SIZE_MAX - 4096));
+  MPFR_ASSERTN ((len & ~((size_t) 4095)) <= SIZE_MAX / sizeof (char) - 4096);
   MPFR_ASSERTN (b->size < SIZE_MAX - n);
 
   b->start =
@@ -790,9 +790,9 @@ next_base_power_p (mpfr_srcptr x, int base, mpfr_rnd_t rnd)
      representation. */
   nbits = base == 2 ? 1 : 4;
 
-  if (rnd == MPFR_RNDZ
-      || (rnd == MPFR_RNDD && MPFR_IS_POS (x))
-      || (rnd == MPFR_RNDU && MPFR_IS_NEG (x))
+  if (rnd == GMP_RNDZ
+      || (rnd == GMP_RNDD && MPFR_IS_POS (x))
+      || (rnd == GMP_RNDU && MPFR_IS_NEG (x))
       || MPFR_PREC (x) <= nbits)
     /* no rounding when printing x with 1 digit */
     return 0;
@@ -803,7 +803,7 @@ next_base_power_p (mpfr_srcptr x, int base, mpfr_rnd_t rnd)
     /* do no round up if some of the nbits first bits are 0s. */
     return 0;
 
-  if (rnd == MPFR_RNDN)
+  if (rnd == GMP_RNDN)
     /* mask for rounding bit */
     pm = (MPFR_LIMB_ONE << (BITS_PER_MP_LIMB - nbits - 1));
 
@@ -846,16 +846,16 @@ round_to_10_power (mp_exp_t *e, mpfr_srcptr x, mp_prec_t p, mpfr_rnd_t r)
   if (m < 2)
     m = 2;
   mpfr_init2 (f, m);
-  mpfr_log10 (f, y, MPFR_RNDD);
+  mpfr_log10 (f, y, GMP_RNDD);
   mpfr_floor (f, f);
 
   /* In most cases, the output exponent is f. */
   if (e != NULL)
-    *e = (mp_exp_t)mpfr_get_si (f, MPFR_RNDD);
+    *e = (mp_exp_t)mpfr_get_si (f, GMP_RNDD);
 
-  if (r == MPFR_RNDZ
-      || (MPFR_IS_POS (x) && r == MPFR_RNDD)
-      || (MPFR_IS_NEG (x) && r == MPFR_RNDU))
+  if (r == GMP_RNDZ
+      || (MPFR_IS_POS (x) && r == GMP_RNDD)
+      || (MPFR_IS_NEG (x) && r == GMP_RNDU))
     /* If rounding toward zero, the exponent is f */
     {
       mpfr_clear (f);
@@ -882,8 +882,8 @@ round_to_10_power (mp_exp_t *e, mpfr_srcptr x, mp_prec_t p, mpfr_rnd_t r)
         /* u = o(10^(f+1)) rounding toward -infinity
            error (u) < 1 ulp(u)
            error(u) = 0 if inex_u = 0 */
-        mpfr_add_ui (u, f, 1, MPFR_RNDN);
-        inex_u = mpfr_ui_pow (u, 10, u, MPFR_RNDD);
+        mpfr_add_ui (u, f, 1, GMP_RNDN);
+        inex_u = mpfr_ui_pow (u, 10, u, GMP_RNDD);
         exp_u = MPFR_EXP (u);
 
         /* if r = rounding to nearest
@@ -893,17 +893,17 @@ round_to_10_power (mp_exp_t *e, mpfr_srcptr x, mp_prec_t p, mpfr_rnd_t r)
 
            error(v) < 1 ulp(v)
            error(v) = 0 if inex_v = 0 */
-        mpfr_sub_ui (v, f, p, MPFR_RNDN);
-        inex_v = mpfr_ui_pow (v, 10, v, MPFR_RNDU);
-        if (r == MPFR_RNDN)
-          mpfr_div_2ui (v, v, 1, MPFR_RNDN);
+        mpfr_sub_ui (v, f, p, GMP_RNDN);
+        inex_v = mpfr_ui_pow (v, 10, v, GMP_RNDU);
+        if (r == GMP_RNDN)
+          mpfr_div_2ui (v, v, 1, GMP_RNDN);
         exp_v = MPFR_EXP (v);
 
         /* w = o(u-v) rounding toward -infinity
            w is an approximation of 10^(f+1) - v with
            error(w) < 1 ulp(w) + error(u) + error(v)
            error(w) = 0 iff inex_u = inex_v = inex_diff = 0 */
-        inex_w = mpfr_sub (u, u, v, MPFR_RNDD);
+        inex_w = mpfr_sub (u, u, v, GMP_RNDD);
         exp_w = MPFR_EXP (u);
 
         cmp = mpfr_cmp (y, u);
@@ -926,19 +926,19 @@ round_to_10_power (mp_exp_t *e, mpfr_srcptr x, mp_prec_t p, mpfr_rnd_t r)
 
           /* compare |x| with w + error(w) */
         if (inex_u)
-          mpfr_set_ui_2exp (v, 1, exp_u - m, MPFR_RNDU);
+          mpfr_set_ui_2exp (v, 1, exp_u - m, GMP_RNDU);
         else
-          mpfr_set_ui (v, 0, MPFR_RNDN);
+          mpfr_set_ui (v, 0, GMP_RNDN);
         if (inex_v)
-          mpfr_set_ui_2exp (v, 1, exp_v - m, MPFR_RNDU);
+          mpfr_set_ui_2exp (v, 1, exp_v - m, GMP_RNDU);
         if (inex_w)
-          mpfr_set_ui_2exp (v, 1, exp_w - m, MPFR_RNDU);
+          mpfr_set_ui_2exp (v, 1, exp_w - m, GMP_RNDU);
 
-        mpfr_add (u, u, v, MPFR_RNDU);
+        mpfr_add (u, u, v, GMP_RNDU);
         if (mpfr_cmp (y, u) >= 0)
           {
             if (e != NULL)
-              *e = (mp_exp_t)mpfr_get_si (f, MPFR_RNDD) + 1;
+              *e = (mp_exp_t)mpfr_get_si (f, GMP_RNDD) + 1;
 
             roundup = +1;
             break;
@@ -1047,10 +1047,9 @@ regular_ab (struct number_parts *np, mpfr_srcptr p,
 
       /* pick up the 4 first bits */
       digit = msl >> (rnd_bit+1);
-      if (spec.rnd_mode == MPFR_RNDA
-          || (spec.rnd_mode == MPFR_RNDU && MPFR_IS_POS (p))
-          || (spec.rnd_mode == MPFR_RNDD && MPFR_IS_NEG (p))
-          || (spec.rnd_mode == MPFR_RNDN
+      if ((spec.rnd_mode == GMP_RNDU && MPFR_IS_POS (p))
+          || (spec.rnd_mode == GMP_RNDD && MPFR_IS_NEG (p))
+          || (spec.rnd_mode == GMP_RNDN
               && (msl & (MPFR_LIMB_ONE << rnd_bit))))
         digit++;
       MPFR_ASSERTD ((0 <= digit) && (digit <= 15));
@@ -1139,9 +1138,9 @@ regular_ab (struct number_parts *np, mpfr_srcptr p,
      We assume that |EXP| < 10^INT_MAX. */
   np->exp_size = 3;
   {
-    mpfr_uexp_t x;
+    mp_exp_unsigned_t x;
 
-    x = SAFE_ABS (mpfr_uexp_t, exp);
+    x = SAFE_ABS (mp_exp_unsigned_t, exp);
     while (x > 9)
       {
         np->exp_size++;
@@ -1256,9 +1255,9 @@ regular_eg (struct number_parts *np, mpfr_srcptr p,
      We assume that |EXP| < 10^INT_MAX. */
   np->exp_size = 3;
   {
-    mpfr_uexp_t x;
+    mp_exp_unsigned_t x;
 
-    x = SAFE_ABS (mpfr_uexp_t, exp);
+    x = SAFE_ABS (mp_exp_unsigned_t, exp);
     while (x > 9)
       {
         np->exp_size++;
@@ -1325,10 +1324,9 @@ regular_fg (struct number_parts *np, mpfr_srcptr p,
           /* y = abs(p) */
           MPFR_ALIAS (y, p, 1, MPFR_EXP (p));
 
-          if (spec.rnd_mode == MPFR_RNDA
-              || (spec.rnd_mode == MPFR_RNDD && MPFR_IS_NEG (p))
-              || (spec.rnd_mode == MPFR_RNDU && MPFR_IS_POS (p))
-              || (spec.rnd_mode == MPFR_RNDN && mpfr_cmp_d (y, 0.5) > 0))
+          if ((spec.rnd_mode == GMP_RNDD && MPFR_IS_NEG (p))
+              || (spec.rnd_mode == GMP_RNDU && MPFR_IS_POS (p))
+              || (spec.rnd_mode == GMP_RNDN && mpfr_cmp_d (y, 0.5) > 0))
             /* rounded up to 1: one digit '1' in integral part.
                note that 0.5 is rounded to 0 with RNDN (round ties to even) */
             np->ip_ptr[0] = '1';
@@ -1336,7 +1334,7 @@ regular_fg (struct number_parts *np, mpfr_srcptr p,
       else
         {
           /* exp =  position of the most significant decimal digit. */
-          round_to_10_power (&exp, p, 0, MPFR_RNDZ);
+          round_to_10_power (&exp, p, 0, GMP_RNDZ);
           MPFR_ASSERTD (exp < 0);
 
           if (exp < -spec.prec)
@@ -1345,16 +1343,13 @@ regular_fg (struct number_parts *np, mpfr_srcptr p,
               int round_away;
               switch (spec.rnd_mode)
                 {
-                case MPFR_RNDA:
-                  round_away = 1;
-                  break;
-                case MPFR_RNDD:
+                case GMP_RNDD:
                   round_away = MPFR_IS_NEG (p);
                   break;
-                case MPFR_RNDU:
+                case GMP_RNDU:
                   round_away = MPFR_IS_POS (p);
                   break;
-                case MPFR_RNDN:
+                case GMP_RNDN:
                   {
                     /* compare |p| to y = 0.5*10^(-spec.prec) */
                     mpfr_t y;
@@ -1366,9 +1361,9 @@ regular_fg (struct number_parts *np, mpfr_srcptr p,
                            0.5*10^(-spec.prec) different from |p| */
                         e += 8;
                         mpfr_set_prec (y, e);
-                        mpfr_set_si (y, -spec.prec, MPFR_RNDN);
-                        mpfr_exp10 (y, y, MPFR_RNDD);
-                        mpfr_div_2ui (y, y, 1, MPFR_RNDN);
+                        mpfr_set_si (y, -spec.prec, GMP_RNDN);
+                        mpfr_exp10 (y, y, GMP_RNDD);
+                        mpfr_div_2ui (y, y, 1, GMP_RNDN);
                       } while (mpfr_cmpabs (y, p) == 0);
 
                     round_away = mpfr_cmpabs (y, p) < 0;
@@ -1468,7 +1463,7 @@ regular_fg (struct number_parts *np, mpfr_srcptr p,
       size_t nsd;  /* Number of significant digits */
 
       /* Determine the position of the most significant decimal digit. */
-      round_to_10_power (&exp, p, 0, MPFR_RNDZ);
+      round_to_10_power (&exp, p, 0, GMP_RNDZ);
 
       MPFR_ASSERTD (exp >= 0);
       if (exp > INT_MAX)
@@ -1902,7 +1897,7 @@ mpfr_vasprintf (char **ptr, const char *fmt, va_list ap)
   MPFR_SAVE_EXPO_MARK (expo);
 
   nbchar = 0;
-  buffer_init (&buf, 4096);
+  buffer_init (&buf, 4096 * sizeof (char));
   xgmp_fmt_flag = 0;
   va_copy (ap2, ap);
   start = fmt;
@@ -1968,20 +1963,20 @@ mpfr_vasprintf (char **ptr, const char *fmt, va_list ap)
               break;
             case 'D':
               ++fmt;
-              spec.rnd_mode = MPFR_RNDD;
+              spec.rnd_mode = GMP_RNDD;
               break;
             case 'U':
               ++fmt;
-              spec.rnd_mode = MPFR_RNDU;
+              spec.rnd_mode = GMP_RNDU;
               break;
             case 'Z':
               ++fmt;
-              spec.rnd_mode = MPFR_RNDZ;
+              spec.rnd_mode = GMP_RNDZ;
               break;
             case 'N':
               ++fmt;
             default:
-              spec.rnd_mode = MPFR_RNDN;
+              spec.rnd_mode = GMP_RNDN;
             }
         }
 

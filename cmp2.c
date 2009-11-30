@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 
 #define MPFR_NEED_LONGLONG_H
@@ -38,7 +38,7 @@ mpfr_cmp2 (mpfr_srcptr b, mpfr_srcptr c, mp_prec_t *cancel)
 {
   mp_limb_t *bp, *cp, bb, cc = 0, lastc = 0, dif, high_dif = 0;
   mp_size_t bn, cn;
-  mpfr_uexp_t diff_exp;
+  mp_exp_unsigned_t diff_exp;
   mp_prec_t res = 0;
   int sign;
 
@@ -55,7 +55,7 @@ mpfr_cmp2 (mpfr_srcptr b, mpfr_srcptr c, mp_prec_t *cancel)
   if (MPFR_GET_EXP (b) >= MPFR_GET_EXP (c))
     {
       sign = 1;
-      diff_exp = (mpfr_uexp_t) MPFR_GET_EXP (b) - MPFR_GET_EXP (c);
+      diff_exp = (mp_exp_unsigned_t) MPFR_GET_EXP (b) - MPFR_GET_EXP (c);
 
       bp = MPFR_MANT(b);
       cp = MPFR_MANT(c);
@@ -119,7 +119,7 @@ mpfr_cmp2 (mpfr_srcptr b, mpfr_srcptr c, mp_prec_t *cancel)
   else /* MPFR_EXP(b) < MPFR_EXP(c) */
     {
       sign = -1;
-      diff_exp = (mpfr_uexp_t) MPFR_GET_EXP (c) - MPFR_GET_EXP (b);
+      diff_exp = (mp_exp_unsigned_t) MPFR_GET_EXP (c) - MPFR_GET_EXP (b);
 
       bp = MPFR_MANT(c);
       cp = MPFR_MANT(b);

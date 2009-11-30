@@ -1,7 +1,7 @@
 /* mpfr_urandomb (rop, state, nbits) -- Generate a uniform pseudorandom
    real number between 0 (inclusive) and 1 (exclusive) of size NBITS,
    using STATE as the random state previously initialized by a call to
-   gmp_randinit_lc_2exp_size().
+   gmp_randinit().
 
 Copyright 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
@@ -10,7 +10,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -19,24 +19,13 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
-
-void
-mpfr_rand_raw (mp_ptr mp, gmp_randstate_t rstate, unsigned long int nbits)
-{
-  mpz_t z;
-
-  /* To be sure to avoid the potential allocation of mpz_urandomb */
-  ALLOC(z) = SIZ(z) = (nbits / GMP_NUMB_BITS) + 1;
-  PTR(z)   = mp;
-  mpz_urandomb(z, rstate, nbits);
-}
 
 int
 mpfr_urandomb (mpfr_ptr rop, gmp_randstate_t rstate)
@@ -48,13 +37,15 @@ mpfr_urandomb (mpfr_ptr rop, gmp_randstate_t rstate)
   mp_exp_t exp;
   int cnt;
 
+  MPFR_CLEAR_FLAGS (rop);
+
   rp = MPFR_MANT (rop);
   nbits = MPFR_PREC (rop);
   nlimbs = MPFR_LIMB_SIZE (rop);
   MPFR_SET_POS (rop);
 
   /* Uniform non-normalized significand */
-  mpfr_rand_raw (rp, rstate, nlimbs * BITS_PER_MP_LIMB);
+  _gmp_rand (rp, rstate, nlimbs * BITS_PER_MP_LIMB);
 
   /* If nbits isn't a multiple of BITS_PER_MP_LIMB, mask the low bits */
   cnt = nlimbs * BITS_PER_MP_LIMB - nbits;

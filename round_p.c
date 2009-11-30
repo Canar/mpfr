@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include "mpfr-impl.h"
 
@@ -33,7 +33,7 @@ mpfr_round_p (mp_limb_t *bp, mp_size_t bn, mp_exp_t err0, mp_prec_t prec)
 
   i1 = mpfr_round_p_2 (bp, bn, err0, prec);
   i2 = mpfr_can_round_raw (bp, bn, MPFR_SIGN_POS, err0,
-                           MPFR_RNDN, MPFR_RNDZ, prec);
+                           GMP_RNDN, GMP_RNDZ, prec);
   if (i1 != i2)
     {
       fprintf (stderr, "mpfr_round_p(%d) != mpfr_can_round(%d)!\n"

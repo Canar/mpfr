@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
@@ -42,7 +42,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
  */
 
 int
-mpfr_cbrt (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
+mpfr_cbrt (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
 {
   mpz_t m;
   mp_exp_t e, r, sh;
@@ -87,7 +87,7 @@ mpfr_cbrt (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
   /* x = (m*2^r) * 2^(e-r) = (m*2^r) * 2^(3*q) */
 
   MPFR_MPZ_SIZEINBASE2 (size_m, m);
-  n = MPFR_PREC (y) + (rnd_mode == MPFR_RNDN);
+  n = MPFR_PREC (y) + (rnd_mode == GMP_RNDN);
 
   /* we want 3*n-2 <= size_m + 3*sh + r <= 3*n
      i.e. 3*sh + size_m + r <= 3*n */
@@ -115,7 +115,7 @@ mpfr_cbrt (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
   if (sh > 0) /* we have to flush to 0 the last sh bits from m */
     {
       inexact = inexact || ((mp_exp_t) mpz_scan1 (m, 0) < sh);
-      mpz_fdiv_q_2exp (m, m, sh);
+      mpz_div_2exp (m, m, sh);
       e += 3 * sh;
     }
 
@@ -123,8 +123,8 @@ mpfr_cbrt (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
     {
       if (negative)
         rnd_mode = MPFR_INVERT_RND (rnd_mode);
-      if (rnd_mode == MPFR_RNDU || rnd_mode == MPFR_RNDA
-          || (rnd_mode == MPFR_RNDN && mpz_tstbit (m, 0)))
+      if (rnd_mode == GMP_RNDU
+          || (rnd_mode == GMP_RNDN && mpz_tstbit (m, 0)))
         inexact = 1, mpz_add_ui (m, m, 1);
       else
         inexact = -1;
@@ -132,8 +132,8 @@ mpfr_cbrt (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
 
   /* either inexact is not zero, and the conversion is exact, i.e. inexact
      is not changed; or inexact=0, and inexact is set only when
-     rnd_mode=MPFR_RNDN and bit (n+1) from m is 1 */
-  inexact += mpfr_set_z (y, m, MPFR_RNDN);
+     rnd_mode=GMP_RNDN and bit (n+1) from m is 1 */
+  inexact += mpfr_set_z (y, m, GMP_RNDN);
   MPFR_SET_EXP (y, MPFR_GET_EXP (y) + e / 3);
 
   if (negative)

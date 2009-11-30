@@ -2,7 +2,7 @@
 @c %**start of header
 @setfilename mpfr.info
 @documentencoding ISO-8859-1
-@set VERSION 3.0.0-dev
+@set VERSION 2.4.2
 @set UPDATED-MONTH November 2009
 @settitle GNU MPFR @value{VERSION}
 @synindex tp fn
@@ -250,7 +250,7 @@ will not reflect on our reputation.@refill
 
 The precise conditions of the license for the GNU MPFR library are found in the
 Lesser General Public License that accompanies the source code.
-See the file COPYING.LESSER.@refill
+See the file COPYING.LIB.@refill
 
 @node Introduction to MPFR, Installing MPFR, Copying, Top
 @comment  node-name,  next,  previous,  up
@@ -270,7 +270,7 @@ does not depend (or should not) on the machine word size
 @item the precision in bits can be set exactly to any valid value
 for each variable (including very small precision);
 @item MPFR provides the four rounding modes from the IEEE 754-1985
-standard, plus round-to-away.
+standard.
 @end itemize
 
 In particular, with a precision of 53 bits, MPFR should be able to
@@ -282,7 +282,7 @@ operations and the square root, except the default exponent range is much
 wider and subnormal numbers are not implemented (but can be emulated).
 
 This version of MPFR is released under the GNU Lesser General Public
-License, version 3 or any later version.
+License, Version 2.1 or any later version.
 It is permitted to link MPFR to most non-free programs, as long as when
 distributing them the MPFR source code and a means to re-link with a
 modified MPFR library is provided.
@@ -414,7 +414,7 @@ specific to MPFR). Problems are also mentioned in the FAQ
 Please report problems to @samp{mpfr@@loria.fr}.
 @xref{Reporting Bugs}.
 Some bug fixes are available on the
-MPFR 3.0.0 web page @url{http://www.mpfr.org/mpfr-3.0.0/}.
+MPFR 2.4.2 web page @url{http://www.mpfr.org/mpfr-2.4.2/}.
 
 @section Getting the Latest Version of MPFR
 
@@ -429,7 +429,7 @@ The latest version of MPFR is available from
 @comment Warning! Do not split "MPFR ... @url{...}" across several lines
 @comment as this needs to be updated with update-version.
 If you think you have found a bug in the MPFR library, first have a look
-on the MPFR 3.0.0 web page @url{http://www.mpfr.org/mpfr-3.0.0/} and the
+on the MPFR 2.4.2 web page @url{http://www.mpfr.org/mpfr-2.4.2/} and the
 FAQ @url{http://www.mpfr.org/faq.html}:
 perhaps this bug is already known, in which case you may find there
 a workaround for it. Otherwise, please investigate and report it.
@@ -577,12 +577,12 @@ may abort, crash or have undefined behavior (depending on your C
 implementation).
 
 @cindex Rounding Modes
-@tindex @code{mpfr_rnd_t}
+@tindex @code{mp_rnd_t}
 @noindent
 The @dfn{rounding mode} specifies the way to round the result of a
 floating-point operation, in case the exact result can not be represented
 exactly in the destination significand;
-the corresponding C data type is @code{mpfr_rnd_t}.
+the corresponding C data type is @code{mp_rnd_t}.
 
 @cindex Limb
 @c @tindex @code{mp_limb_t}
@@ -636,14 +636,13 @@ life.
 
 @section Rounding Modes
 
-The following five rounding modes are supported:
+The following four rounding modes are supported:
 
 @itemize @bullet
-@item @code{MPFR_RNDN}: round to nearest (roundTiesToEven in IEEE 754-2008)
-@item @code{MPFR_RNDZ}: round toward zero (roundTowardZero in IEEE 754-2008)
-@item @code{MPFR_RNDU}: round toward plus infinity (roundTowardPositive in IEEE 754-2008)
-@item @code{MPFR_RNDD}: round toward minus infinity (roundTowardNegative in IEEE 754-2008)
-@item @code{MPFR_RNDA}: round away from zero (currently experimental)
+@item @code{GMP_RNDN}: round to nearest (roundTiesToEven in IEEE 754-2008)
+@item @code{GMP_RNDZ}: round toward zero (roundTowardZero in IEEE 754-2008)
+@item @code{GMP_RNDU}: round toward plus infinity (roundTowardPositive in IEEE 754-2008)
+@item @code{GMP_RNDD}: round toward minus infinity (roundTowardNegative in IEEE 754-2008)
 @end itemize
 
 The @samp{round to nearest} mode works as in the IEEE 754 standard: in
@@ -677,7 +676,7 @@ If the ternary value is zero, it means that the value stored in the
 destination variable is the exact result of the corresponding mathematical
 function. If the ternary value is positive (resp.@: negative), it means
 the value stored in the destination variable is greater (resp.@: lower)
-than the exact result. For example with the @code{MPFR_RNDU} rounding mode,
+than the exact result. For example with the @code{GMP_RNDU} rounding mode,
 the ternary value is usually positive, except when the result is exact, in
 which case it is zero. In the case of an infinite result, it is considered
 as inexact when it was obtained by overflow, and exact otherwise. A NaN
@@ -1062,26 +1061,25 @@ number of bits used to store its significand.
 These functions assign new values to already initialized floats
 (@pxref{Initialization Functions}).
 
-@deftypefun int mpfr_set (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_set_ui (mpfr_t @var{rop}, unsigned long int @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_set_si (mpfr_t @var{rop}, long int @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_set_uj (mpfr_t @var{rop}, uintmax_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_set_sj (mpfr_t @var{rop}, intmax_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_set_flt (mpfr_t @var{rop}, float @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_set_d (mpfr_t @var{rop}, double @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_set_ld (mpfr_t @var{rop}, long double @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_set_decimal64 (mpfr_t @var{rop}, _Decimal64 @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_set_z (mpfr_t @var{rop}, mpz_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_set_q (mpfr_t @var{rop}, mpq_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_set_f (mpfr_t @var{rop}, mpf_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_set (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_set_ui (mpfr_t @var{rop}, unsigned long int @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_set_si (mpfr_t @var{rop}, long int @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_set_uj (mpfr_t @var{rop}, uintmax_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_set_sj (mpfr_t @var{rop}, intmax_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_set_d (mpfr_t @var{rop}, double @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_set_ld (mpfr_t @var{rop}, long double @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_set_decimal64 (mpfr_t @var{rop}, _Decimal64 @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_set_z (mpfr_t @var{rop}, mpz_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_set_q (mpfr_t @var{rop}, mpq_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_set_f (mpfr_t @var{rop}, mpf_t @var{op}, mp_rnd_t @var{rnd})
 Set the value of @var{rop} from @var{op}, rounded
 toward the given direction @var{rnd}.
 Note that the input 0 is converted to +0 by @code{mpfr_set_ui},
 @code{mpfr_set_si}, @code{mpfr_set_sj}, @code{mpfr_set_uj},
 @code{mpfr_set_z}, @code{mpfr_set_q} and
 @code{mpfr_set_f}, regardless of the rounding mode.
-If the system does not support the IEEE 754 standard,
-@code{mpfr_set_flt}, @code{mpfr_set_d}, @code{mpfr_set_ld} and
+If the system does not support the IEEE 754 standard, @code{mpfr_set_d},
+@code{mpfr_set_ld} and
 @code{mpfr_set_decimal64} might not preserve the signed zeros.
 The @code{mpfr_set_decimal64} function is built only with the configure
 option @samp{--enable-decimal-float}, which also requires
@@ -1094,24 +1092,23 @@ denominator) can not be representable as a @code{mpfr_t}.
 
 Note: If you want to store a floating-point constant to a @code{mpfr_t},
 you should use @code{mpfr_set_str} (or one of the MPFR constant functions,
-such as @code{mpfr_const_pi} for @m{\pi,Pi}) instead of
-@code{mpfr_set_flt}, @code{mpfr_set_d},
+such as @code{mpfr_const_pi} for @m{\pi,Pi}) instead of @code{mpfr_set_d},
 @code{mpfr_set_ld} or @code{mpfr_set_decimal64}.
 Otherwise the floating-point constant will be first
 converted into a reduced-precision (e.g., 53-bit) binary number before
 MPFR can work with it.
 @end deftypefun
 
-@deftypefun int mpfr_set_ui_2exp (mpfr_t @var{rop}, unsigned long int @var{op}, mp_exp_t @var{e}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_set_si_2exp (mpfr_t @var{rop}, long int @var{op}, mp_exp_t @var{e}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_set_uj_2exp (mpfr_t @var{rop}, uintmax_t @var{op}, intmax_t @var{e}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_set_sj_2exp (mpfr_t @var{rop}, intmax_t @var{op}, intmax_t @var{e}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_set_ui_2exp (mpfr_t @var{rop}, unsigned long int @var{op}, mp_exp_t @var{e}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_set_si_2exp (mpfr_t @var{rop}, long int @var{op}, mp_exp_t @var{e}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_set_uj_2exp (mpfr_t @var{rop}, uintmax_t @var{op}, intmax_t @var{e}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_set_sj_2exp (mpfr_t @var{rop}, intmax_t @var{op}, intmax_t @var{e}, mp_rnd_t @var{rnd})
 Set the value of @var{rop} from @m{@var{op} \times 2^e, @var{op} multiplied by
 two to the power @var{e}}, rounded toward the given direction @var{rnd}.
 Note that the input 0 is converted to +0.
 @end deftypefun
 
-@deftypefun int mpfr_set_str (mpfr_t @var{rop}, const char *@var{s}, int @var{base}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_set_str (mpfr_t @var{rop}, const char *@var{s}, int @var{base}, mp_rnd_t @var{rnd})
 Set @var{rop} to the value of the string @var{s} in base @var{base},
 rounded in the direction @var{rnd}.
 See the documentation of @code{mpfr_strtofr} for a detailed description
@@ -1127,11 +1124,11 @@ is a valid number in base @var{base}; otherwise it returns @minus{}1, and
 @var{rop} may have changed.
 @end deftypefun
 
-@deftypefun int mpfr_strtofr (mpfr_t @var{rop}, const char *@var{nptr}, char **@var{endptr}, int @var{base}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_strtofr (mpfr_t @var{rop}, const char *@var{nptr}, char **@var{endptr}, int @var{base}, mp_rnd_t @var{rnd})
 
 Read a floating-point number from a string @var{nptr} in base @var{base},
 rounded in the direction @var{rnd}; @var{base} must be either 0 (to
-detect the base, as described below) or a number from 2 to 62 (otherwise
+detect the base, as described below) or a number from 2 to 36 (otherwise
 the behavior is undefined). If @var{nptr} starts with valid data, the
 result is stored in @var{rop} and @code{*@var{endptr}} points to the
 character just after the valid data (if @var{endptr} is not a null pointer);
@@ -1140,32 +1137,31 @@ in the location referenced by @var{endptr} (if @var{endptr} is not a null
 pointer). The usual ternary value is returned.
 
 Parsing follows the standard C @code{strtod} function with some extensions.
-After optional leading whitespace, one has a subject sequence consisting of an
-optional sign (@code{+} or @code{-}), and either numeric data or special
-data. The subject sequence is defined as the longest initial subsequence of
-the input string, starting with the first non-whitespace character, that is of
-the expected form.
+Case is ignored. After optional leading whitespace, one has a subject
+sequence consisting of an optional sign (@code{+} or @code{-}), and either
+numeric data or special data. The subject sequence is defined as the
+longest initial subsequence of the input string, starting with the first
+non-whitespace character, that is of the expected form.
 
-The form of numeric data is a non-empty sequence of significand digits with an
-optional decimal point, and an optional exponent consisting of an exponent
-prefix followed by an optional sign and a non-empty sequence of decimal
-digits. A significand digit is either a decimal digit or a Latin letter (62
-possible characters), with @code{A} = 10, @code{B} = 11, @dots{}, @code{Z} =
-35; case is ignored in bases less or equal to 36, in bases larger than 36,
-the letters in lower case represent values from 36 to 61. The value of a
-significand digit must be strictly less than the base.  The decimal point can
-be either the one defined by the current locale or the period (the first one
-is accepted for consistency with the C standard and the practice, the second
-one is accepted to allow the programmer to provide MPFR numbers from strings
-in a way that does not depend on the current locale).
+The form of numeric data is a non-empty sequence of significand digits
+with an optional decimal point, and an optional exponent consisting of
+an exponent prefix followed by an optional sign and a non-empty sequence
+of decimal digits. A significand digit is either a decimal digit or a
+Latin letter (62 possible characters), with @code{a} = 10, @code{b} = 11,
+@dots{}, @code{z} = 35; its value must be strictly less than the base.
+The decimal point can be either the one defined by the current locale or
+the period (the first one is accepted for consistency with the C standard
+and the practice, the second one is accepted to allow the programmer to
+provide MPFR numbers from strings in a way that does not depend on the
+current locale).
 The exponent prefix can be @code{e} or @code{E} for bases up to 10, or
 @code{@@} in any base; it indicates a multiplication by a power of the
-base. In bases 2 and 16, the exponent prefix can also be @code{p} or @code{P},
-in which case it introduces a binary exponent: it indicates a multiplication
-by a power of 2 (there is a difference only for base 16).
+base. In bases 2 and 16, the exponent prefix can also be @code{p} or
+@code{P}, in which case it introduces a binary exponent: it indicates a
+multiplication by a power of 2 (there is a difference only for base 16).
 The value of an exponent is always written in base 10.
-In base 2, the significand can start with @code{0b} or @code{0B}, and in base
-16, it can start with @code{0x} or @code{0X}.
+In base 2, the significand can start with @code{0b} or @code{0B}, and
+in base 16, it can start with @code{0x} or @code{0X}.
 
 If the argument @var{base} is 0, then the base is automatically detected
 as follows. If the significand starts with @code{0b} or @code{0B}, base 2
@@ -1189,13 +1185,11 @@ NaN.
 
 @end deftypefun
 
-@deftypefun void mpfr_set_nan (mpfr_t @var{x})
-@deftypefunx void mpfr_set_inf (mpfr_t @var{x}, int @var{sign})
-@deftypefunx void mpfr_set_zero (mpfr_t @var{x}, int @var{sign})
-Set the variable @var{x} to NaN (Not-a-Number), infinity or zero respectively.
-In @code{mpfr_set_inf} or @code{mpfr_set_zero}, @var{x} is set to plus
-infinity or plus zero iff @var{sign} is nonnegative;
-in @code{mpfr_set_nan}, the sign bit of the result is unspecified.
+@deftypefun void mpfr_set_inf (mpfr_t @var{x}, int @var{sign})
+@deftypefunx void mpfr_set_nan (mpfr_t @var{x})
+Set the variable @var{x} to infinity or NaN (Not-a-Number) respectively.
+In @code{mpfr_set_inf}, @var{x} is set to plus infinity iff @var{sign} is
+nonnegative.
 @end deftypefun
 
 @deftypefun void mpfr_swap (mpfr_t @var{x}, mpfr_t @var{y})
@@ -1210,21 +1204,21 @@ using a third auxiliary variable.
 @cindex Combined initialization and assignment functions
 @section Combined Initialization and Assignment Functions
 
-@deftypefn Macro int mpfr_init_set (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefnx Macro int mpfr_init_set_ui (mpfr_t @var{rop}, unsigned long int @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefnx Macro int mpfr_init_set_si (mpfr_t @var{rop}, signed long int @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefnx Macro int mpfr_init_set_d (mpfr_t @var{rop}, double @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefnx Macro int mpfr_init_set_ld (mpfr_t @var{rop}, long double @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefnx Macro int mpfr_init_set_z (mpfr_t @var{rop}, mpz_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefnx Macro int mpfr_init_set_q (mpfr_t @var{rop}, mpq_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefnx Macro int mpfr_init_set_f (mpfr_t @var{rop}, mpf_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefn Macro int mpfr_init_set (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefnx Macro int mpfr_init_set_ui (mpfr_t @var{rop}, unsigned long int @var{op}, mp_rnd_t @var{rnd})
+@deftypefnx Macro int mpfr_init_set_si (mpfr_t @var{rop}, signed long int @var{op}, mp_rnd_t @var{rnd})
+@deftypefnx Macro int mpfr_init_set_d (mpfr_t @var{rop}, double @var{op}, mp_rnd_t @var{rnd})
+@deftypefnx Macro int mpfr_init_set_ld (mpfr_t @var{rop}, long double @var{op}, mp_rnd_t @var{rnd})
+@deftypefnx Macro int mpfr_init_set_z (mpfr_t @var{rop}, mpz_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefnx Macro int mpfr_init_set_q (mpfr_t @var{rop}, mpq_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefnx Macro int mpfr_init_set_f (mpfr_t @var{rop}, mpf_t @var{op}, mp_rnd_t @var{rnd})
 Initialize @var{rop} and set its value from @var{op}, rounded in the direction
 @var{rnd}.
 The precision of @var{rop} will be taken from the active default precision,
 as set by @code{mpfr_set_default_prec}.
 @end deftypefn
 
-@deftypefun int mpfr_init_set_str (mpfr_t @var{x}, const char *@var{s}, int @var{base}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_init_set_str (mpfr_t @var{x}, const char *@var{s}, int @var{base}, mp_rnd_t @var{rnd})
 Initialize @var{x} and set its value from
 the string @var{s} in base @var{base},
 rounded in the direction @var{rnd}.
@@ -1236,12 +1230,11 @@ See @code{mpfr_set_str}.
 @cindex Conversion functions
 @section Conversion Functions
 
-@deftypefun float mpfr_get_flt (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx double mpfr_get_d (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx {long double} mpfr_get_ld (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx _Decimal64 mpfr_get_decimal64 (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-Convert @var{op} to a @code{float} (respectively @code{double},
-@code{long double} or @code{_Decimal64}), using the rounding mode @var{rnd}.
+@deftypefun double mpfr_get_d (mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx {long double} mpfr_get_ld (mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx _Decimal64 mpfr_get_decimal64 (mpfr_t @var{op}, mp_rnd_t @var{rnd})
+Convert @var{op} to a @code{double} (respectively @code{_Decimal64} or
+@code{long double}), using the rounding mode @var{rnd}.
 If @var{op} is NaN, some fixed NaN (either quiet or signaling) or the result
 of 0.0/0.0 is returned. If @var{op} is @pom{}Inf, an infinity of the same
 sign or the result of @pom{}1.0/0.0 is returned. If @var{op} is zero, these
@@ -1250,8 +1243,8 @@ The @code{mpfr_get_decimal64} function is built only under some conditions:
 see the documentation of @code{mpfr_set_decimal64}.
 @end deftypefun
 
-@deftypefun double mpfr_get_d_2exp (long *@var{exp}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx {long double} mpfr_get_ld_2exp (long *@var{exp}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun double mpfr_get_d_2exp (long *@var{exp}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx {long double} mpfr_get_ld_2exp (long *@var{exp}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Return @var{d} and set @var{exp} such that @math{0.5@le{}@GMPabs{@var{d}}<1}
 and @m{@var{d}\times 2^{exp}, @var{d} times 2 raised to @var{exp}} equals
 @var{op} rounded to double (resp.@: long double)
@@ -1265,10 +1258,10 @@ If @var{op} is NaN or an infinity, then the corresponding double precision
 value is returned, and @var{exp} is undefined.
 @end deftypefun
 
-@deftypefun long mpfr_get_si (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx {unsigned long} mpfr_get_ui (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx intmax_t mpfr_get_sj (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx uintmax_t mpfr_get_uj (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun long mpfr_get_si (mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx {unsigned long} mpfr_get_ui (mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx intmax_t mpfr_get_sj (mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx uintmax_t mpfr_get_uj (mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Convert @var{op} to a @code{long}, an @code{unsigned long},
 an @code{intmax_t} or an @code{uintmax_t} (respectively) after rounding
 it with respect to @var{rnd}.
@@ -1296,25 +1289,23 @@ If the exponent is not representable in the @code{mp_exp_t} type, the
 behavior is undefined.
 @end deftypefun
 
-@deftypefun int mpfr_get_z (mpz_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun void mpfr_get_z (mpz_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Convert @var{op} to a @code{mpz_t}, after rounding it with respect to
 @var{rnd}. If @var{op} is NaN or Inf, the result is undefined.
 @end deftypefun
 
-@deftypefun int mpfr_get_f (mpf_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_get_f (mpf_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Convert @var{op} to a @code{mpf_t}, after rounding it with respect to
-@var{rnd}.
-Return the usual ternary value. Notice that the meaning of the returned value
-has changed since version 3.0.
-The @emph{erange} flag is set if @var{op} is NaN or Inf, which do not exist in
-@code{mpf}.
+@var{rnd}. Return zero iff no error occurred,
+in particular a non-zero value is returned if
+@var{op} is NaN or Inf, which do not exist in @code{mpf}.
 @end deftypefun
 
-@deftypefun {char *} mpfr_get_str (char *@var{str}, mp_exp_t *@var{expptr}, int @var{b}, size_t @var{n}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun {char *} mpfr_get_str (char *@var{str}, mp_exp_t *@var{expptr}, int @var{b}, size_t @var{n}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Convert @var{op} to a string of digits in base @var{b}, with rounding in
 the direction @var{rnd}, where @var{n} is either zero (see below) or the
 number of significant digits; in the latter case, @var{n} must be greater
-or equal to 2. The base may vary from 2 to 62.
+or equal to 2. The base may vary from 2 to 36.
 
 The generated string is a fraction, with an implicit radix point immediately
 to the left of the first digit.  For example, the number @minus{}3.1416 would
@@ -1375,14 +1366,14 @@ see Section ``Custom Allocation'' in @cite{GNU MP}.
 @end ifnotinfo
 @end deftypefun
 
-@deftypefun int mpfr_fits_ulong_p (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_fits_slong_p (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_fits_uint_p (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_fits_sint_p (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_fits_ushort_p (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_fits_sshort_p (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_fits_intmax_p (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_fits_uintmax_p (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_fits_ulong_p (mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_fits_slong_p (mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_fits_uint_p (mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_fits_sint_p (mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_fits_ushort_p (mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_fits_sshort_p (mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_fits_intmax_p (mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_fits_uintmax_p (mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Return non-zero if @var{op} would fit in the respective C data type, when
 rounded to an integer in the direction @var{rnd}.
 @end deftypefun
@@ -1394,12 +1385,12 @@ rounded to an integer in the direction @var{rnd}.
 @cindex Arithmetic functions
 @section Basic Arithmetic Functions
 
-@deftypefun int mpfr_add (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_add_ui (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_add_si (mpfr_t @var{rop}, mpfr_t @var{op1}, long int @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_add_d (mpfr_t @var{rop}, mpfr_t @var{op1}, double @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_add_z (mpfr_t @var{rop}, mpfr_t @var{op1}, mpz_t @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_add_q (mpfr_t @var{rop}, mpfr_t @var{op1}, mpq_t @var{op2}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_add (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_add_ui (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_add_si (mpfr_t @var{rop}, mpfr_t @var{op1}, long int @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_add_d (mpfr_t @var{rop}, mpfr_t @var{op1}, double @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_add_z (mpfr_t @var{rop}, mpfr_t @var{op1}, mpz_t @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_add_q (mpfr_t @var{rop}, mpfr_t @var{op1}, mpq_t @var{op2}, mp_rnd_t @var{rnd})
 Set @var{rop} to @math{@var{op1} + @var{op2}} rounded in the direction
 @var{rnd}. For types having no signed zero, it is considered unsigned
 (i.e.@: (+0) + 0 = (+0) and (@minus{}0) + 0 = (@minus{}0)).
@@ -1408,15 +1399,15 @@ is a power of 2, with a precision at most that declared by the C implementation
 (macro @code{IEEE_DBL_MANT_DIG}, and if not defined 53 bits).
 @end deftypefun
 
-@deftypefun int mpfr_sub (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_ui_sub (mpfr_t @var{rop}, unsigned long int @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_sub_ui (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_si_sub (mpfr_t @var{rop}, long int @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_sub_si (mpfr_t @var{rop}, mpfr_t @var{op1}, long int @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_d_sub (mpfr_t @var{rop}, double @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_sub_d (mpfr_t @var{rop}, mpfr_t @var{op1}, double @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_sub_z (mpfr_t @var{rop}, mpfr_t @var{op1}, mpz_t @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_sub_q (mpfr_t @var{rop}, mpfr_t @var{op1}, mpq_t @var{op2}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_sub (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_ui_sub (mpfr_t @var{rop}, unsigned long int @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_sub_ui (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_si_sub (mpfr_t @var{rop}, long int @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_sub_si (mpfr_t @var{rop}, mpfr_t @var{op1}, long int @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_d_sub (mpfr_t @var{rop}, double @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_sub_d (mpfr_t @var{rop}, mpfr_t @var{op1}, double @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_sub_z (mpfr_t @var{rop}, mpfr_t @var{op1}, mpz_t @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_sub_q (mpfr_t @var{rop}, mpfr_t @var{op1}, mpq_t @var{op2}, mp_rnd_t @var{rnd})
 Set @var{rop} to @math{@var{op1} - @var{op2}} rounded in the direction
 @var{rnd}. For types having no signed zero, it is considered unsigned
 (i.e.@: (+0) @minus{} 0 = (+0), (@minus{}0) @minus{} 0 = (@minus{}0),
@@ -1425,12 +1416,12 @@ The same restrictions than for @code{mpfr_add_d} apply to @code{mpfr_d_sub}
 and @code{mpfr_sub_d}.
 @end deftypefun
 
-@deftypefun int mpfr_mul (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_mul_ui (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_mul_si (mpfr_t @var{rop}, mpfr_t @var{op1}, long int @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_mul_d (mpfr_t @var{rop}, mpfr_t @var{op1}, double @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_mul_z (mpfr_t @var{rop}, mpfr_t @var{op1}, mpz_t @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_mul_q (mpfr_t @var{rop}, mpfr_t @var{op1}, mpq_t @var{op2}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_mul (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_mul_ui (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_mul_si (mpfr_t @var{rop}, mpfr_t @var{op1}, long int @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_mul_d (mpfr_t @var{rop}, mpfr_t @var{op1}, double @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_mul_z (mpfr_t @var{rop}, mpfr_t @var{op1}, mpz_t @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_mul_q (mpfr_t @var{rop}, mpfr_t @var{op1}, mpq_t @var{op2}, mp_rnd_t @var{rnd})
 Set @var{rop} to @math{@var{op1} @GMPtimes{} @var{op2}} rounded in the
 direction @var{rnd}.
 When a result is zero, its sign is the product of the signs of the operands
@@ -1438,20 +1429,20 @@ When a result is zero, its sign is the product of the signs of the operands
 The same restrictions than for @code{mpfr_add_d} apply to @code{mpfr_mul_d}.
 @end deftypefun
 
-@deftypefun int mpfr_sqr (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_sqr (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to @m{@var{op}^{2}, the square of @var{op}}
 rounded in the direction @var{rnd}.
 @end deftypefun
 
-@deftypefun int mpfr_div (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_ui_div (mpfr_t @var{rop}, unsigned long int @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_div_ui (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_si_div (mpfr_t @var{rop}, long int @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_div_si (mpfr_t @var{rop}, mpfr_t @var{op1}, long int @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_d_div (mpfr_t @var{rop}, double @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_div_d (mpfr_t @var{rop}, mpfr_t @var{op1}, double @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_div_z (mpfr_t @var{rop}, mpfr_t @var{op1}, mpz_t @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_div_q (mpfr_t @var{rop}, mpfr_t @var{op1}, mpq_t @var{op2}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_div (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_ui_div (mpfr_t @var{rop}, unsigned long int @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_div_ui (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_si_div (mpfr_t @var{rop}, long int @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_div_si (mpfr_t @var{rop}, mpfr_t @var{op1}, long int @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_d_div (mpfr_t @var{rop}, double @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_div_d (mpfr_t @var{rop}, mpfr_t @var{op1}, double @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_div_z (mpfr_t @var{rop}, mpfr_t @var{op1}, mpz_t @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_div_q (mpfr_t @var{rop}, mpfr_t @var{op1}, mpq_t @var{op2}, mp_rnd_t @var{rnd})
 Set @var{rop} to @math{@var{op1}/@var{op2}} rounded in the direction @var{rnd}.
 When a result is zero, its sign is the product of the signs of the operands
 (for types having no signed zero, it is considered positive).
@@ -1459,23 +1450,23 @@ The same restrictions than for @code{mpfr_add_d} apply to @code{mpfr_d_div}
 and @code{mpfr_div_d}.
 @end deftypefun
 
-@deftypefun int mpfr_sqrt (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_sqrt_ui (mpfr_t @var{rop}, unsigned long int @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_sqrt (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_sqrt_ui (mpfr_t @var{rop}, unsigned long int @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to @m{\sqrt{@var{op}}, the square root of @var{op}}
 rounded in the direction @var{rnd}. Return @minus{}0 if @var{op} is
 @minus{}0 (to be consistent with the IEEE 754 standard).
 Set @var{rop} to NaN if @var{op} is negative.
 @end deftypefun
 
-@deftypefun int mpfr_rec_sqrt (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_rec_sqrt (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to @m{1/\sqrt{@var{op}}, the reciprocal square root of @var{op}}
 rounded in the direction @var{rnd}. Return +Inf if @var{op} is @pom{}0,
 and +0 if @var{op} is +Inf.
 Set @var{rop} to NaN if @var{op} is negative.
 @end deftypefun
 
-@deftypefun int mpfr_cbrt (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_root (mpfr_t @var{rop}, mpfr_t @var{op}, unsigned long int @var{k}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_cbrt (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_root (mpfr_t @var{rop}, mpfr_t @var{op}, unsigned long int @var{k}, mp_rnd_t @var{rnd})
 Set @var{rop} to the cubic root (resp.@: the @var{k}th root)
 of @var{op} rounded in the direction @var{rnd}.
 An odd (resp.@: even) root of a negative number (including @minus{}Inf)
@@ -1484,12 +1475,12 @@ The @var{k}th root of @minus{}0 is defined to be @minus{}0,
 whatever the parity of @var{k}.
 @end deftypefun
 
-@deftypefun int mpfr_pow (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_pow_ui (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_pow_si (mpfr_t @var{rop}, mpfr_t @var{op1}, long int @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_pow_z (mpfr_t @var{rop}, mpfr_t @var{op1}, mpz_t @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_ui_pow_ui (mpfr_t @var{rop}, unsigned long int @var{op1}, unsigned long int @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_ui_pow (mpfr_t @var{rop}, unsigned long int @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_pow (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_pow_ui (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_pow_si (mpfr_t @var{rop}, mpfr_t @var{op1}, long int @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_pow_z (mpfr_t @var{rop}, mpfr_t @var{op1}, mpz_t @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_ui_pow_ui (mpfr_t @var{rop}, unsigned long int @var{op1}, unsigned long int @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_ui_pow (mpfr_t @var{rop}, unsigned long int @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
 Set @var{rop} to @m{@var{op1}^{op2}, @var{op1} raised to @var{op2}},
 rounded in the direction @var{rnd}.
 Special values are currently handled as described in the ISO C99 standard
@@ -1513,34 +1504,34 @@ for the @code{pow} function (note this may change in future versions):
 @end itemize
 @end deftypefun
 
-@deftypefun int mpfr_neg (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_neg (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to @math{-@var{op}} rounded in the direction @var{rnd}.
 Just changes the sign if @var{rop} and @var{op} are the same variable.
 @end deftypefun
 
-@deftypefun int mpfr_abs (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_abs (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the absolute value of @var{op},
 rounded in the direction @var{rnd}.
 Just changes the sign if @var{rop} and @var{op} are the same variable.
 @end deftypefun
 
-@deftypefun int mpfr_dim (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_dim (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
 Set @var{rop} to the positive difference of @var{op1} and @var{op2}, i.e.,
 @math{@var{op1} - @var{op2}} rounded in the direction @var{rnd}
 if @math{@var{op1} > @var{op2}}, and +0 otherwise.
 Returns NaN when @var{op1} or @var{op2} is NaN.
 @end deftypefun
 
-@deftypefun int mpfr_mul_2ui (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_mul_2si (mpfr_t @var{rop}, mpfr_t @var{op1}, long int @var{op2}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_mul_2ui (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_mul_2si (mpfr_t @var{rop}, mpfr_t @var{op1}, long int @var{op2}, mp_rnd_t @var{rnd})
 Set @var{rop} to @m{@var{op1} \times 2^{op2}, @var{op1} times 2 raised
 to @var{op2}}
 rounded in the direction @var{rnd}. Just increases the exponent by @var{op2}
 when @var{rop} and @var{op1} are identical.
 @end deftypefun
 
-@deftypefun int mpfr_div_2ui (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_div_2si (mpfr_t @var{rop}, mpfr_t @var{op1}, long int @var{op2}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_div_2ui (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_div_2si (mpfr_t @var{rop}, mpfr_t @var{op1}, long int @var{op2}, mp_rnd_t @var{rnd})
 Set @var{rop} to @m{@var{op1}/2^{op2}, @var{op1} divided by 2 raised
 to @var{op2}}
 rounded in the direction @var{rnd}. Just decreases the exponent by @var{op2}
@@ -1593,10 +1584,8 @@ If one of the operands is NaN, set the @emph{erange} flag and return zero.
 @deftypefunx int mpfr_inf_p (mpfr_t @var{op})
 @deftypefunx int mpfr_number_p (mpfr_t @var{op})
 @deftypefunx int mpfr_zero_p (mpfr_t @var{op})
-@deftypefunx int mpfr_regular_p (mpfr_t @var{op})
 Return non-zero if @var{op} is respectively NaN, an infinity, an ordinary
-number (i.e.@: neither NaN nor an infinity), zero, or a regular number
-(i.e.@: neither NaN, nor an infinity nor zero). Return zero otherwise.
+number (i.e.@: neither NaN nor an infinity) or zero. Return zero otherwise.
 @end deftypefun
 
 @deftypefn Macro int mpfr_sgn (mpfr_t @var{op})
@@ -1651,9 +1640,9 @@ Important note: in some domains, computing special functions (either with
 correct or incorrect rounding) is expensive, even for small precision,
 for example the trigonometric and Bessel functions for large argument.
 
-@deftypefun int mpfr_log (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_log2 (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_log10 (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_log (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_log2 (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_log10 (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the natural logarithm of @var{op},
 @m{\log_2 @var{op}, log2(@var{op})} or
 @m{\log_{10} @var{op}, log10(@var{op})}, respectively,
@@ -1662,42 +1651,40 @@ Return @minus{}Inf if @var{op} is @minus{}0 (i.e.@: the sign of the zero
 has no influence on the result).
 @end deftypefun
 
-@deftypefun int mpfr_exp (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_exp2 (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_exp10 (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_exp (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_exp2 (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_exp10 (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the exponential of @var{op},
  to @m{2^{op}, 2 power of @var{op}}
 or to @m{10^{op}, 10 power of @var{op}}, respectively,
 rounded in the direction @var{rnd}.
 @end deftypefun
 
-@deftypefun int mpfr_cos (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_sin (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_tan (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_cos (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_sin (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_tan (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the cosine of @var{op}, sine of @var{op},
 tangent of @var{op}, rounded in the direction @var{rnd}.
 @end deftypefun
 
-@deftypefun int mpfr_sec (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_csc (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_cot (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_sec (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_csc (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_cot (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the secant of @var{op}, cosecant of @var{op},
 cotangent of @var{op}, rounded in the direction @var{rnd}.
 @end deftypefun
 
-@deftypefun int mpfr_sin_cos (mpfr_t @var{sop}, mpfr_t @var{cop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-Set simultaneously @var{sop} to the sine of @var{op} and @var{cop} to the
-cosine of @var{op}, rounded in the direction @var{rnd} with the corresponding
-precisions of @var{sop} and @var{cop}, which must be different variables.
-Return 0 iff both results are exact, more precisely it returns @math{s+4c}
-where @math{s=0} if @var{sop} is exact, @math{s=1} if @var{sop} is larger
-than the sine of @var{op}, @math{s=2} if @var{sop} is smaller than the sine
-of @var{op}, and similarly for @math{c}.
+@deftypefun int mpfr_sin_cos (mpfr_t @var{sop}, mpfr_t @var{cop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+Set simultaneously @var{sop} to the sine of @var{op} and
+                   @var{cop} to the cosine of @var{op},
+rounded in the direction @var{rnd} with the corresponding precisions of
+@var{sop} and @var{cop}, which must be different variables.
+Return 0 iff both results are exact.
 @end deftypefun
 
-@deftypefun int mpfr_acos (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_asin (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_atan (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_acos (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_asin (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_atan (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the arc-cosine, arc-sine or arc-tangent of @var{op},
 rounded in the direction @var{rnd}.
 Note that since @code{acos(-1)} returns the floating-point number closest to
@@ -1710,7 +1697,7 @@ The same holds for @code{asin(-1)}, @code{asin(1)}, @code{atan(-Inf)},
 @code{atan(+Inf)}.
 @end deftypefun
 
-@deftypefun int mpfr_atan2 (mpfr_t @var{rop}, mpfr_t @var{y}, mpfr_t @var{x}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_atan2 (mpfr_t @var{rop}, mpfr_t @var{y}, mpfr_t @var{x}, mp_rnd_t @var{rnd})
 Set @var{rop} to the arc-tangent2 of @var{y} and @var{x},
 rounded in the direction @var{rnd}:
 if @code{x > 0}, @code{atan2(y, x) = atan (y/x)};
@@ -1745,52 +1732,51 @@ for the @code{atan2} function (note this may change in future versions):
 @end itemize
 @end deftypefun
 
-@deftypefun int mpfr_cosh (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_sinh (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_tanh (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_cosh (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_sinh (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_tanh (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the hyperbolic cosine, sine or tangent of @var{op},
 rounded in the direction @var{rnd}.
 @end deftypefun
 
-@deftypefun int mpfr_sinh_cosh (mpfr_t @var{sop}, mpfr_t @var{cop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_sinh_cosh (mpfr_t @var{sop}, mpfr_t @var{cop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set simultaneously @var{sop} to the hyperbolic sine of @var{op} and
-@var{cop} to the hyperbolic cosine of @var{op},
+                   @var{cop} to the hyperbolic cosine of @var{op},
 rounded in the direction @var{rnd} with the corresponding precision of
 @var{sop} and @var{cop} which must be different variables.
-Return 0 iff both results are exact (see @code{mpfr_sin_cos} for a more
-detailed description of the return value).
+Return 0 iff both results are exact.
 @end deftypefun
 
-@deftypefun int mpfr_sech (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_csch (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_coth (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_sech (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_csch (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_coth (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the hyperbolic secant of @var{op}, cosecant of @var{op},
 cotangent of @var{op}, rounded in the direction @var{rnd}.
 @end deftypefun
 
-@deftypefun int mpfr_acosh (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_asinh (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_atanh (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_acosh (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_asinh (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_atanh (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the inverse hyperbolic cosine, sine or tangent of @var{op},
 rounded in the direction @var{rnd}.
 @end deftypefun
 
-@deftypefun int mpfr_fac_ui (mpfr_t @var{rop}, unsigned long int  @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_fac_ui (mpfr_t @var{rop}, unsigned long int  @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the factorial of the @code{unsigned long int} @var{op},
 rounded in the direction @var{rnd}.
 @end deftypefun
 
-@deftypefun int mpfr_log1p (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_log1p (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the logarithm of one plus @var{op},
 rounded in the direction @var{rnd}.
 @end deftypefun
 
-@deftypefun int mpfr_expm1 (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_expm1 (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the exponential of @var{op} minus one,
 rounded in the direction @var{rnd}.
 @end deftypefun
 
-@deftypefun int mpfr_eint (mpfr_t @var{y}, mpfr_t @var{x}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_eint (mpfr_t @var{y}, mpfr_t @var{x}, mp_rnd_t @var{rnd})
 Set @var{y} to the exponential integral of @var{x},
 rounded in the direction @var{rnd}.
 For positive @var{x},
@@ -1805,18 +1791,18 @@ $x^k/k/k!$.
 For negative @var{x}, the returned value is NaN.
 @end deftypefun
 
-@deftypefun int mpfr_li2 (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd_mode})
+@deftypefun int mpfr_li2 (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd_mode})
 Set @var{rop} to real part of the dilogarithm of @var{op}, rounded in the
 direction @var{rnd_mode}. The dilogarithm function is defined here as
 @m{-\int_{t=0}^x log(1-t)/t dt,the integral of -log(1-t)/t from 0 to x}.
 @end deftypefun
 
-@deftypefun int mpfr_gamma (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_gamma (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the value of the Gamma function on @var{op}, rounded in the
 direction @var{rnd}. When @var{op} is a negative integer, NaN is returned.
 @end deftypefun
 
-@deftypefun int mpfr_lngamma (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_lngamma (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the value of the logarithm of the Gamma function on @var{op},
 rounded in the direction @var{rnd}.
 When @math{@minus{}2@var{k}@minus{}1 @le{} @var{x} @le{} @minus{}2@var{k}},
@@ -1824,7 +1810,7 @@ When @math{@minus{}2@var{k}@minus{}1 @le{} @var{x} @le{} @minus{}2@var{k}},
 See also @code{mpfr_lgamma}.
 @end deftypefun
 
-@deftypefun int mpfr_lgamma (mpfr_t @var{rop}, int *@var{signp}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_lgamma (mpfr_t @var{rop}, int *@var{signp}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the value of the logarithm of the absolute value of the
 Gamma function on @var{op}, rounded in the direction @var{rnd}. The sign
 (1 or @minus{}1) of Gamma(@var{op}) is returned in the object pointed to
@@ -1834,31 +1820,25 @@ by @var{signp}. When @var{op} is an infinity or a non-positive integer,
 the sign of the zero.
 @end deftypefun
 
-@deftypefun int mpfr_digamma (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-Set @var{rop} to the value of the Digamma (sometimes also called Psi)
-function on @var{op}, rounded in the direction @var{rnd}.
-When @var{op} is a negative integer, NaN is returned.
-@end deftypefun
-
-@deftypefun int mpfr_zeta (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_zeta_ui (mpfr_t @var{rop}, unsigned long @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_zeta (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_zeta_ui (mpfr_t @var{rop}, unsigned long @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the value of the Riemann Zeta function on @var{op},
 rounded in the direction @var{rnd}.
 @end deftypefun
 
-@deftypefun int mpfr_erf (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_erf (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the value of the error function on @var{op},
 rounded in the direction @var{rnd}.
 @end deftypefun
 
-@deftypefun int mpfr_erfc (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_erfc (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the value of the complementary error function on @var{op},
 rounded in the direction @var{rnd}.
 @end deftypefun
 
-@deftypefun int mpfr_j0 (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_j1 (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_jn (mpfr_t @var{rop}, long @var{n}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_j0 (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_j1 (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_jn (mpfr_t @var{rop}, long @var{n}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the value of the first kind Bessel function of order 0, 1
 and @var{n} on @var{op}, rounded in the direction @var{rnd}. When @var{op} is
 NaN, @var{rop} is always set to NaN. When @var{op} is plus or minus Infinity,
@@ -1867,9 +1847,9 @@ NaN, @var{rop} is always set to NaN. When @var{op} is plus or minus Infinity,
 and the sign of @var{op}.
 @end deftypefun
 
-@deftypefun int mpfr_y0 (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_y1 (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_yn (mpfr_t @var{rop}, long @var{n}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_y0 (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_y1 (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_yn (mpfr_t @var{rop}, long @var{n}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the value of the second kind Bessel function of order 0, 1
 and @var{n} on @var{op}, rounded in the direction @var{rnd}. When @var{op} is
 NaN or negative,
@@ -1878,17 +1858,17 @@ NaN or negative,
 @var{rop} is +Inf or @minus{}Inf depending on the parity and sign of @var{n}.
 @end deftypefun
 
-@deftypefun int mpfr_fma (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_t @var{op3}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_fma (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_t @var{op3}, mp_rnd_t @var{rnd})
 Set @var{rop} to @math{(@var{op1} @GMPtimes{} @var{op2}) + @var{op3}},
 rounded in the direction @var{rnd}.
 @end deftypefun
 
-@deftypefun int mpfr_fms (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_t @var{op3}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_fms (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_t @var{op3}, mp_rnd_t @var{rnd})
 Set @var{rop} to @math{(@var{op1} @GMPtimes{} @var{op2}) - @var{op3}},
 rounded in the direction @var{rnd}.
 @end deftypefun
 
-@deftypefun int mpfr_agm (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_agm (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
 Set @var{rop} to the arithmetic-geometric mean of @var{op1} and @var{op2},
 rounded in the direction @var{rnd}.
 The arithmetic-geometric mean is the common limit of the sequences
@@ -1898,7 +1878,7 @@ u[n] and v[n].
 If any operand is negative, the return value is NaN.
 @end deftypefun
 
-@deftypefun int mpfr_hypot (mpfr_t @var{rop}, mpfr_t @var{x}, mpfr_t @var{y}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_hypot (mpfr_t @var{rop}, mpfr_t @var{x}, mpfr_t @var{y}, mp_rnd_t @var{rnd})
 Set @var{rop} to the Euclidean norm of @var{x} and @var{y},
 @ifnottex
 i.e.@: the square root of the sum of the squares of @var{x} and @var{y},
@@ -1913,10 +1893,10 @@ in future versions): If @var{x} or @var{y} is an infinity, then plus
 infinity is returned in @var{rop}, even if the other number is NaN.
 @end deftypefun
 
-@deftypefun int mpfr_const_log2 (mpfr_t @var{rop}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_const_pi (mpfr_t @var{rop}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_const_euler (mpfr_t @var{rop}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_const_catalan (mpfr_t @var{rop}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_const_log2 (mpfr_t @var{rop}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_const_pi (mpfr_t @var{rop}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_const_euler (mpfr_t @var{rop}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_const_catalan (mpfr_t @var{rop}, mp_rnd_t @var{rnd})
 Set @var{rop} to the logarithm of 2, the value of @m{\pi,Pi},
 of Euler's constant 0.577@dots{}, of Catalan's constant 0.915@dots{},
 respectively, rounded in the direction
@@ -1934,7 +1914,7 @@ You should call this function before terminating a thread, even if you did
 not call these functions directly (they could have been called internally).
 @end deftypefun
 
-@deftypefun int mpfr_sum (mpfr_t @var{rop}, mpfr_ptr const @var{tab}[], unsigned long @var{n}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_sum (mpfr_t @var{rop}, mpfr_ptr const @var{tab}[], unsigned long @var{n}, mp_rnd_t @var{rnd})
 Set @var{rop} to the sum of all elements of @var{tab}, whose size is @var{n},
 rounded in the direction @var{rnd}. Warning, @var{tab} is a table of pointers
 to mpfr_t, not a table of mpfr_t (preliminary interface). If the returned
@@ -1961,10 +1941,10 @@ When using any of these functions, you must include the @code{<stdio.h>}
 standard header before @file{mpfr.h}, to allow @file{mpfr.h} to define
 prototypes for these functions.
 
-@deftypefun size_t mpfr_out_str (FILE *@var{stream}, int @var{base}, size_t @var{n}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun size_t mpfr_out_str (FILE *@var{stream}, int @var{base}, size_t @var{n}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Output @var{op} on stream @var{stream}, as a string of digits in
 base @var{base}, rounded in the direction @var{rnd}.
-The base may vary from 2 to 62.  Print @var{n} significant digits exactly,
+The base may vary from 2 to 36.  Print @var{n} significant digits exactly,
 or if @var{n} is 0, enough digits so that @var{op} can be read back
 exactly (see @code{mpfr_get_str}).
 
@@ -1977,11 +1957,11 @@ instead of @samp{e} as exponent delimiter.
 Return the number of bytes written, or if an error occurred, return 0.
 @end deftypefun
 
-@deftypefun size_t mpfr_inp_str (mpfr_t @var{rop}, FILE *@var{stream}, int @var{base}, mpfr_rnd_t @var{rnd})
+@deftypefun size_t mpfr_inp_str (mpfr_t @var{rop}, FILE *@var{stream}, int @var{base}, mp_rnd_t @var{rnd})
 Input a string in base @var{base} from stream @var{stream},
 rounded in the direction @var{rnd}, and put the
 read float in @var{rop}.
-@c The argument @var{base} must be in the range 2 to 62.
+@c The argument @var{base} must be in the range 2 to 36.
 
 @c The string is of the form @samp{M@@N} or, if the
 @c base is 10 or less, alternatively @samp{MeN} or @samp{MEN}, or, if the base
@@ -2109,7 +2089,7 @@ one of the following characters:
 @item @samp{D}  @tab round toward minus infinity
 @item @samp{Z}  @tab round toward zero
 @item @samp{N}  @tab round to nearest
-@item @samp{*}  @tab rounding mode indicated by the @code{mpfr_rnd_t} argument
+@item @samp{*}  @tab rounding mode indicated by the @code{mp_rnd_t} argument
 just before the corresponding @code{mpfr_t} variable.
 @end multitable
 @end quotation
@@ -2122,16 +2102,8 @@ mpfr_init (x);
 @dots{}
 mpfr_printf ("%.128Rf", x);
 mpfr_printf ("%.128RNf", x);
-mpfr_printf ("%.128R*f", MPFR_RNDN, x);
+mpfr_printf ("%.128R*f", GMP_RNDN, x);
 @end example
-
-Note that the rounding away from zero mode is only available through @samp{*},
-as in
-@example
-mpfr_printf ("%.128R*f", MPFR_RNDA, x);
-@end example
-because ISO C reserves the @samp{A} specifier for hexadecimal output (see
-below).
 
 The output @samp{conv} specifiers allowed with @code{mpfr_t} parameter are:
 
@@ -2172,7 +2144,7 @@ the @samp{e} (resp. @samp{E}) style.
 If the precision is set to a value greater than the maximum value for an
 @code{int}, it will be silently reduced down to @code{INT_MAX}.
 
-If the @samp{precision} field is empty (as in @code{%Re} or @code{%.RE}) with
+If the @samp{precision} field is empty (as in @code{%Re} or @code{%.Re}) with
 @samp{conv} specifier @samp{e} and @samp{E}, the number is displayed with
 enough digits so that it can be read back exactly, assuming that the input and
 output variables have the same precision and that the input and output
@@ -2254,7 +2226,7 @@ the @emph{erange} flag, and (in POSIX system only) @code{errno} is set to
 @cindex Integer related functions
 @section Integer and Remainder Related Functions
 
-@deftypefun int mpfr_rint (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_rint (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 @deftypefunx int mpfr_ceil (mpfr_t @var{rop}, mpfr_t @var{op})
 @deftypefunx int mpfr_floor (mpfr_t @var{rop}, mpfr_t @var{op})
 @deftypefunx int mpfr_round (mpfr_t @var{rop}, mpfr_t @var{op})
@@ -2283,10 +2255,10 @@ in binary) in 2-bit precision, though @code{round(4.5)} is equal to 5 and
 5 (101 in binary) is rounded to 6 (110 in binary) in 2-bit precision.
 @end deftypefun
 
-@deftypefun int mpfr_rint_ceil (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_rint_floor (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_rint_round (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_rint_trunc (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_rint_ceil (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_rint_floor (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_rint_round (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_rint_trunc (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to @var{op} rounded to an integer.
 @code{mpfr_rint_ceil} rounds to the next higher or equal integer,
 @code{mpfr_rint_floor} to the next lower or equal integer,
@@ -2298,26 +2270,25 @@ round-to-integer function (regarded in the same way as any other
 mathematical function).
 @end deftypefun
 
-@deftypefun int mpfr_frac (mpfr_t @var{rop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_frac (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the fractional part of @var{op}, having the same sign as
 @var{op}, rounded in the direction @var{rnd} (unlike in @code{mpfr_rint},
 @var{rnd} affects only how the exact fractional part is rounded, not how
 the fractional part is generated).
 @end deftypefun
 
-@deftypefun int mpfr_modf (mpfr_t @var{iop}, mpfr_t @var{fop}, mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_modf (mpfr_t @var{iop}, mpfr_t @var{fop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set simultaneously @var{iop} to the integral part of @var{op} and @var{fop} to
 the fractional part of @var{op}, rounded in the direction @var{rnd} with the
 corresponding precision of @var{iop} and @var{fop} (equivalent to
 @code{mpfr_trunc(@var{iop}, @var{op}, @var{rnd})} and
 @code{mpfr_frac(@var{fop}, @var{op}, @var{rnd})}). The variables @var{iop} and
-@var{fop} must be different. Return 0 iff both results are exact (see
-@code{mpfr_sin_cos} for a more detailed description of the return value).
+@var{fop} must be different. Return 0 iff both results are exact.
 @end deftypefun
 
-@deftypefun int mpfr_fmod (mpfr_t @var{r}, mpfr_t @var{x}, mpfr_t @var{y}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_remainder (mpfr_t @var{r}, mpfr_t @var{x}, mpfr_t @var{y}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_remquo (mpfr_t @var{r}, long* @var{q}, mpfr_t @var{x}, mpfr_t @var{y}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_fmod (mpfr_t @var{r}, mpfr_t @var{x}, mpfr_t @var{y}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_remainder (mpfr_t @var{r}, mpfr_t @var{x}, mpfr_t @var{y}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_remquo (mpfr_t @var{r}, long* @var{q}, mpfr_t @var{x}, mpfr_t @var{y}, mp_rnd_t @var{rnd})
 Set @var{r} to the value of @math{x - n y}, rounded according to the direction
 @var{rnd}, where @math{n} is the integer quotient of @var{x} divided
 by @var{y}, defined as follows: @math{n} is rounded toward zero for
@@ -2351,16 +2322,16 @@ Return non-zero iff @var{op} is an integer.
 @cindex Rounding mode related functions
 @section Rounding Related Functions
 
-@deftypefun void mpfr_set_default_rounding_mode (mpfr_rnd_t @var{rnd})
+@deftypefun void mpfr_set_default_rounding_mode (mp_rnd_t @var{rnd})
 Set the default rounding mode to @var{rnd}.
 The default rounding mode is to nearest initially.
 @end deftypefun
 
-@deftypefun mpfr_rnd_t mpfr_get_default_rounding_mode (void)
+@deftypefun mp_rnd_t mpfr_get_default_rounding_mode (void)
 Get the default rounding mode.
 @end deftypefun
 
-@deftypefun int mpfr_prec_round (mpfr_t @var{x}, mp_prec_t @var{prec}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_prec_round (mpfr_t @var{x}, mp_prec_t @var{prec}, mp_rnd_t @var{rnd})
 Round @var{x} according to @var{rnd} with precision @var{prec}, which
 must be an integer between @code{MPFR_PREC_MIN} and @code{MPFR_PREC_MAX}
 (otherwise the behavior is undefined).
@@ -2368,27 +2339,13 @@ If @var{prec} is greater or equal to the precision of @var{x}, then new
 space is allocated for the significand, and it is filled with zeros.
 Otherwise, the significand is rounded to precision @var{prec} with the given
 direction. In both cases, the precision of @var{x} is changed to @var{prec}.
-
-Here is an example of how to use @code{mpfr_prec_round} to implement
-Newton's algorithm to compute the inverse of @var{a}, assuming @var{x} is
-already an approximation to @var{n} bits:
-@example
-  mpfr_set_prec (t, 2 * n);
-  mpfr_set (t, a, MPFR_RNDN);            /* round a to 2n bits */
-  mpfr_mul (t, t, x, MPFR_RNDN);         /* t is correct to 2n bits */
-  mpfr_ui_sub (t, 1, t, MPFR_RNDN);      /* high n bits cancel with 1 */
-  mpfr_prec_round (t, n, MPFR_RNDN);     /* t is correct to n bits */
-  mpfr_mul (t, t, x, MPFR_RNDN);         /* t is correct to n bits */
-  mpfr_prec_round (x, 2 * n, MPFR_RNDN); /* exact */
-  mpfr_add (x, x, t, MPFR_RNDN);         /* x is correct to 2n bits */
-@end example
 @end deftypefun
 
-@deftypefun int mpfr_round_prec (mpfr_t @var{x}, mpfr_rnd_t @var{rnd}, mp_prec_t @var{prec})
+@deftypefun int mpfr_round_prec (mpfr_t @var{x}, mp_rnd_t @var{rnd}, mp_prec_t @var{prec})
 [This function is obsolete. Please use @code{mpfr_prec_round} instead.]
 @end deftypefun
 
-@deftypefun int mpfr_can_round (mpfr_t @var{b}, mp_exp_t @var{err}, mpfr_rnd_t @var{rnd1}, mpfr_rnd_t @var{rnd2}, mp_prec_t @var{prec})
+@deftypefun int mpfr_can_round (mpfr_t @var{b}, mp_exp_t @var{err}, mp_rnd_t @var{rnd1}, mp_rnd_t @var{rnd2}, mp_prec_t @var{prec})
 Assuming @var{b} is an approximation of an unknown number
 @var{x} in the direction @var{rnd1} with error at most two to the power
 E(b)-@var{err} where E(b) is the exponent of @var{b}, return a non-zero
@@ -2397,18 +2354,13 @@ value if one is able to round correctly @var{x} to precision
 and 0 otherwise (including for NaN and Inf).
 This function @strong{does not modify} its arguments.
 
-If @var{rnd1} is @code{MPFR_RNDN}, then the sign of the error is
-unknown, but its absolute value is the same, so that the possible range
-is twice as large as with a directed rounding for @var{rnd1}.
-
 Note: if one wants to also determine the correct ternary value when rounding
-@var{b} to precision @var{prec} with rounding mode @var{rnd},
-a useful trick is the following:
+@var{b} to precision @var{prec}, a useful trick is the following:
 @verbatim
-   if (mpfr_can_round (b, err, MPFR_RNDN, MPFR_RNDZ, prec + (rnd == MPFR_RNDN)))
+   if (mpfr_can_round (b, err, rnd1, GMP_RNDZ, prec + (rnd2 == GMP_RNDN)))
       ...
 @end verbatim
-Indeed, if @var{rnd} is @code{MPFR_RNDN}, this will check if one can
+Indeed, if @var{rnd2} is @code{GMP_RNDN}, this will check if one can
 round to @var{prec}+1 bits with a directed rounding:
 if so, one can surely round to nearest to @var{prec} bits,
 and in addition one can determine the correct ternary value, which would not
@@ -2416,16 +2368,8 @@ be the case when @var{b} is near from a value exactly representable on
 @var{prec} bits.
 @end deftypefun
 
-@deftypefun mpfr_prec_t mpfr_min_prec (mpfr_t @var{x})
-Returns the minimal number of bits required to store the significand of
-@var{x}, and 0 for special values, including 0. (Warning: the returned
-value can be less than @code{MPFR_PREC_MIN}.)
-
-The function name is subject to change.
-@end deftypefun
-
-@deftypefun {const char *} mpfr_print_rnd_mode (mpfr_rnd_t @var{rnd})
-Return the input string (MPFR_RNDD, MPFR_RNDU, MPFR_RNDN, MPFR_RNDZ)
+@deftypefun {const char *} mpfr_print_rnd_mode (mp_rnd_t @var{rnd})
+Return the input string (GMP_RNDD, GMP_RNDU, GMP_RNDN, GMP_RNDZ)
 corresponding to the rounding mode @var{rnd} or a null pointer if
 @var{rnd} is an invalid rounding mode.
 @end deftypefun
@@ -2453,7 +2397,7 @@ Equivalent to @code{mpfr_nexttoward} where @var{y} is plus infinity.
 Equivalent to @code{mpfr_nexttoward} where @var{y} is minus infinity.
 @end deftypefun
 
-@deftypefun int mpfr_min (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_min (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
 Set @var{rop} to the minimum of @var{op1} and @var{op2}. If @var{op1}
 and @var{op2} are both NaN, then @var{rop} is set to NaN. If @var{op1}
 or @var{op2} is NaN, then @var{rop} is set to the numeric value. If
@@ -2461,7 +2405,7 @@ or @var{op2} is NaN, then @var{rop} is set to the numeric value. If
 is set to @minus{}0.
 @end deftypefun
 
-@deftypefun int mpfr_max (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_max (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
 Set @var{rop} to the maximum of @var{op1} and @var{op2}. If @var{op1}
 and @var{op2} are both NaN, then @var{rop} is set to NaN. If @var{op1}
 or @var{op2} is NaN, then @var{rop} is set to the numeric value. If
@@ -2482,6 +2426,29 @@ second argument is a @code{gmp_randstate_t} structure which should be
 created using the GMP @code{gmp_randinit} function, see the GMP manual.
 @end deftypefun
 
+@deftypefun void mpfr_random (mpfr_t @var{rop})
+Generate a uniformly distributed random float in the interval
+@math{0 @le{} @var{rop} < 1}.
+
+This function is deprecated and will be suppressed in the next release;
+@code{mpfr_urandomb} should be used instead.
+@end deftypefun
+
+@deftypefun void mpfr_random2 (mpfr_t @var{rop}, mp_size_t @var{size}, mp_exp_t @var{exp})
+Generate a random float of at most @var{size} limbs, with long strings of
+zeros and ones in the binary representation. The exponent of the number is in
+the interval @minus{}@var{exp} to @var{exp}.
+This function is useful for
+testing functions and algorithms, since this kind of random numbers have
+proven to be more likely to trigger corner-case bugs.
+Negative random numbers are generated when @var{size} is negative.
+Put +0 in @var{rop} when size if zero. The internal state of the default
+pseudorandom number generator is modified by a call to this function (the
+same one as GMP if MPFR was built using @samp{--with-gmp-build}).
+
+This function is deprecated and will be suppressed in the next release.
+@end deftypefun
+
 @deftypefun mp_exp_t mpfr_get_exp (mpfr_t @var{x})
 Get the exponent of @var{x}, assuming that @var{x} is a non-zero ordinary
 number and the significand is chosen in [1/2,1). The behavior for NaN,
@@ -2500,13 +2467,13 @@ Return a non-zero value iff @var{op} has its sign bit set (i.e.@: if it is
 negative, @minus{}0, or a NaN whose representation has its sign bit set).
 @end deftypefun
 
-@deftypefun int mpfr_setsign (mpfr_t @var{rop}, mpfr_t @var{op}, int @var{s}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_setsign (mpfr_t @var{rop}, mpfr_t @var{op}, int @var{s}, mp_rnd_t @var{rnd})
 Set the value of @var{rop} from @var{op}, rounded toward the given
 direction @var{rnd}, then set (resp.@: clear) its sign bit if @var{s}
 is non-zero (resp.@: zero), even when @var{op} is a NaN.
 @end deftypefun
 
-@deftypefun int mpfr_copysign (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_copysign (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
 Set the value of @var{rop} from @var{op1}, rounded toward the given
 direction @var{rnd}, then set its sign bit to that of @var{op2} (even
 when @var{op1} or @var{op2} is a NaN). This function is equivalent to
@@ -2564,19 +2531,6 @@ applied to the old (compile-time) MPFR version are not available (however
 this information should not have much interest in general).
 @end deftypefun
 
-@deftypefun int mpfr_buildopt_tls_p (void)
-Return a non-zero value if MPFR was compiled as thread safe using
-compiler-level Thread Local Storage (that is MPFR was built with the
-@code{--enable-thread-safe} configure option, see @code{INSTALL} file), return
-zero otherwise.
-@end deftypefun
-
-@deftypefun int mpfr_buildopt_decimal_p (void)
-Return a non-zero value if MPFR was compiled with decimal float support (that
-is MPFR was built with the @code{--enable-decimal-float} configure option),
-return zero otherwise.
-@end deftypefun
-
 @node Exception Related Functions, Compatibility with MPF, Miscellaneous Functions, MPFR Interface
 @comment  node-name,  next,  previous,  up
 @cindex Exception related functions
@@ -2616,7 +2570,7 @@ and @code{mpfr_set_emin(mpfr_get_emin_min())} since the values
 of the smallest and largest exponents become implementation dependent.
 @end deftypefun
 
-@deftypefun int mpfr_check_range (mpfr_t @var{x}, int @var{t}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_check_range (mpfr_t @var{x}, int @var{t}, mp_rnd_t @var{rnd})
 This function forces @var{x} to be in the current range of acceptable
 values, @var{t} being the current ternary value: negative if @var{x}
 is smaller than the exact value, positive if @var{x} is larger than
@@ -2637,7 +2591,7 @@ set. This is useful because @code{mpfr_check_range} is typically called
 been set due to internal computations.
 @end deftypefun
 
-@deftypefun int mpfr_subnormalize (mpfr_t @var{x}, int @var{t}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_subnormalize (mpfr_t @var{x}, int @var{t}, mp_rnd_t @var{rnd})
 This function rounds @var{x} emulating subnormal number arithmetic:
 if @var{x} is outside the subnormal exponent range, it just propagates the
 ternary value @var{t}; otherwise, it rounds @var{x} to precision
@@ -2676,12 +2630,12 @@ This is an example of how to emulate binary double IEEE 754 arithmetic
 
   mpfr_init (xa); mpfr_init (xb);
 
-  b = 34.3; mpfr_set_d (xb, b, MPFR_RNDN);
-  a = 0x1.1235P-1021; mpfr_set_d (xa, a, MPFR_RNDN);
+  b = 34.3; mpfr_set_d (xb, b, GMP_RNDN);
+  a = 0x1.1235P-1021; mpfr_set_d (xa, a, GMP_RNDN);
 
   a /= b;
-  i = mpfr_div (xa, xa, xb, MPFR_RNDN);
-  i = mpfr_subnormalize (xa, i, MPFR_RNDN);
+  i = mpfr_div (xa, xa, xb, GMP_RNDN);
+  i = mpfr_subnormalize (xa, i, GMP_RNDN);
 
   mpfr_clear (xa); mpfr_clear (xb);
 @}
@@ -2759,7 +2713,7 @@ you want to know whether two numbers are close to each other; for instance,
 @var{op3} larger than 1 (but this may change in the next release).
 @end deftypefun
 
-@deftypefun void mpfr_reldiff (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_rnd_t @var{rnd})
+@deftypefun void mpfr_reldiff (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
 Compute the relative difference between @var{op1} and @var{op2}
 and store the result in @var{rop}.
 This function does not guarantee the correct rounding on the relative
@@ -2767,8 +2721,8 @@ difference; it just computes @math{|@var{op1}-@var{op2}|/@var{op1}}, using the
 rounding mode @var{rnd} for all operations and the precision of @var{rop}.
 @end deftypefun
 
-@deftypefun int mpfr_mul_2exp (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_div_2exp (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mpfr_rnd_t @var{rnd})
+@deftypefun int mpfr_mul_2exp (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mp_rnd_t @var{rnd})
+@deftypefunx int mpfr_div_2exp (mpfr_t @var{rop}, mpfr_t @var{op1}, unsigned long int @var{op2}, mp_rnd_t @var{rnd})
 See @code{mpfr_mul_2ui} and @code{mpfr_div_2ui}. These functions are only kept
 for compatibility with MPF.
 @end deftypefun

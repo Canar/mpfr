@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
@@ -129,7 +129,7 @@ mpfr_mpn_sub_aux (mp_ptr ap, mp_ptr bp, mp_size_t n, mp_limb_t cy, int extra)
 }
 
 int
-mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mpfr_rnd_t rnd_mode)
+mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mp_rnd_t rnd_mode)
 {
   mp_size_t q0size = MPFR_LIMB_SIZE(q); /* number of limbs of destination */
   mp_size_t usize = MPFR_LIMB_SIZE(u);
@@ -213,6 +213,7 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mpfr_rnd_t rnd_mode)
           MPFR_RET (0);
         }
     }
+  MPFR_CLEAR_FLAGS (q);
 
   /**************************************************************************
    *                                                                        *
@@ -258,7 +259,7 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mpfr_rnd_t rnd_mode)
 
   MPFR_UNSIGNED_MINUS_MODULO(sh, MPFR_PREC(q));
 
-  if (MPFR_UNLIKELY(rnd_mode == MPFR_RNDN && sh == 0))
+  if (MPFR_UNLIKELY(rnd_mode == GMP_RNDN && sh == 0))
     { /* we compute the quotient with one more limb, in order to get
          the round bit in the quotient, and the remainder only contains
          sticky bits */
@@ -342,7 +343,7 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mpfr_rnd_t rnd_mode)
       sticky3 = qp[0] & MPFR_LIMB_MASK(sh); /* does nothing when sh=0 */
       sh2 = sh;
     }
-  else /* qsize = q0size + 1: only happens when rnd_mode=MPFR_RNDN and sh=0 */
+  else /* qsize = q0size + 1: only happens when rnd_mode=GMP_RNDN and sh=0 */
     {
       MPN_COPY (q0p, qp + 1, q0size);
       sticky3 = qp[0];
@@ -358,8 +359,8 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mpfr_rnd_t rnd_mode)
           (unsigned long) sticky, (unsigned long) sticky3, inex);
 #endif
 
-  like_rndz = rnd_mode == MPFR_RNDZ ||
-    rnd_mode == (sign_quotient < 0 ? MPFR_RNDU : MPFR_RNDD);
+  like_rndz = rnd_mode == GMP_RNDZ ||
+    rnd_mode == (sign_quotient < 0 ? GMP_RNDU : GMP_RNDD);
 
   /* to round, we distinguish two cases:
      (a) vsize <= qsize: we used the full divisor
@@ -372,7 +373,7 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mpfr_rnd_t rnd_mode)
 #endif
   if (MPFR_LIKELY(vsize <= qsize)) /* use the full divisor */
     {
-      if (MPFR_LIKELY(rnd_mode == MPFR_RNDN))
+      if (MPFR_LIKELY(rnd_mode == GMP_RNDN))
         {
           round_bit = sticky3 & (MPFR_LIMB_ONE << (sh2 - 1));
           sticky = (sticky3 ^ round_bit) | sticky_u;
@@ -398,7 +399,7 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mpfr_rnd_t rnd_mode)
              inexact flag for 000...000 or 000...001.)
           */
           mp_limb_t sticky3orig = sticky3;
-          if (rnd_mode == MPFR_RNDN)
+          if (rnd_mode == GMP_RNDN)
             {
               round_bit = sticky3 & (MPFR_LIMB_ONE << (sh2 - 1));
               sticky3   = sticky3 ^ round_bit;
@@ -519,7 +520,7 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mpfr_rnd_t rnd_mode)
                         { /* round_bit=0, sticky3=0: q1-1 is exact only
                              when sh=0 */
                           inex = (cmp_s_r || sh) ? -1 : 0;
-                          if (rnd_mode == MPFR_RNDN ||
+                          if (rnd_mode == GMP_RNDN ||
                               (! like_rndz && inex != 0))
                             {
                               inex = 1;
@@ -536,10 +537,10 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mpfr_rnd_t rnd_mode)
                     }
                   else /* q1-2 < u/v < q1-1 */
                     {
-                      /* if rnd=MPFR_RNDN, the result is q1 when
+                      /* if rnd=GMP_RNDN, the result is q1 when
                          q1-2 >= q1-2^(sh-1), i.e. sh >= 2,
                          otherwise (sh=1) it is q1-2 */
-                      if (rnd_mode == MPFR_RNDN) /* sh > 0 */
+                      if (rnd_mode == GMP_RNDN) /* sh > 0 */
                         {
                           /* Case sh=1: sb=0 always, and q1-rb is exactly
                              representable, like q1-rb-2.
@@ -607,7 +608,7 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mpfr_rnd_t rnd_mode)
       inex = round_bit == MPFR_LIMB_ZERO && sticky == MPFR_LIMB_ZERO ? 0 : -1;
       goto truncate;
     }
-  else if (rnd_mode == MPFR_RNDN) /* sticky <> 0 or round <> 0 */
+  else if (rnd_mode == GMP_RNDN) /* sticky <> 0 or round <> 0 */
     {
       if (round_bit == MPFR_LIMB_ZERO) /* necessarily sticky <> 0 */
         {
@@ -664,9 +665,9 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mpfr_rnd_t rnd_mode)
     return mpfr_overflow (q, rnd_mode, sign_quotient);
   else if (MPFR_UNLIKELY(qexp < __gmpfr_emin))
     {
-      if (rnd_mode == MPFR_RNDN && ((qexp < __gmpfr_emin - 1) ||
+      if (rnd_mode == GMP_RNDN && ((qexp < __gmpfr_emin - 1) ||
                                    (inex >= 0 && mpfr_powerof2_raw (q))))
-        rnd_mode = MPFR_RNDZ;
+        rnd_mode = GMP_RNDZ;
       return mpfr_underflow (q, rnd_mode, sign_quotient);
     }
   MPFR_SET_EXP(q, qexp);

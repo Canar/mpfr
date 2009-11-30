@@ -1,5 +1,6 @@
 /* mpfr_random2 -- Generate a positive random mpfr_t of specified size, with
    long runs of consecutive ones and zeros in the binary representation.
+   Intended for testing.
 
 Copyright 1999, 2001, 2002, 2003, 2004, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
@@ -8,7 +9,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -17,11 +18,12 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
-#include "mpfr-test.h"
+#define MPFR_NEED_LONGLONG_H
+#include "mpfr-impl.h"
 
 #define LOGBITS_PER_BLOCK 4
 #if GMP_NUMB_BITS < 32
@@ -30,15 +32,17 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #define BITS_PER_RANDCALL 32
 #endif
 
-void
-mpfr_random2 (mpfr_ptr x, mp_size_t size, mp_exp_t exp,
-              gmp_randstate_t rstate)
+static void
+mpfr_random2_raw (mpfr_ptr x, mp_size_t size, mp_exp_t exp,
+                  gmp_randstate_t rstate)
 {
   mp_size_t xn, k, ri;
   unsigned long sh;
   mp_ptr xp;
   mp_limb_t elimb, ran, acc;
   int ran_nbits, bit_pos, nb;
+
+  MPFR_CLEAR_FLAGS (x);
 
   if (MPFR_UNLIKELY(size == 0))
     {
@@ -65,7 +69,7 @@ mpfr_random2 (mpfr_ptr x, mp_size_t size, mp_exp_t exp,
   /* Code extracted from GMP, function mpn_random2, to avoid the use
      of GMP's internal random state in MPFR */
 
-  mpfr_rand_raw (&elimb, rstate, BITS_PER_RANDCALL);
+  _gmp_rand (&elimb, rstate, BITS_PER_RANDCALL);
   ran = elimb;
 
   /* Start off at a random bit position in the most significant limb.  */
@@ -83,7 +87,7 @@ mpfr_random2 (mpfr_ptr x, mp_size_t size, mp_exp_t exp,
     {
       if (ran_nbits < LOGBITS_PER_BLOCK + 1)
         {
-          mpfr_rand_raw (&elimb, rstate, BITS_PER_RANDCALL);
+          _gmp_rand (&elimb, rstate, BITS_PER_RANDCALL);
           ran = elimb;
           ran_nbits = BITS_PER_RANDCALL;
         }
@@ -136,9 +140,15 @@ mpfr_random2 (mpfr_ptr x, mp_size_t size, mp_exp_t exp,
     }
 
   /* Generate random exponent.  */
-  mpfr_rand_raw (&elimb, RANDS, BITS_PER_MP_LIMB);
+  _gmp_rand (&elimb, RANDS, BITS_PER_MP_LIMB);
   exp = ABS (exp);
   MPFR_SET_EXP (x, elimb % (2 * exp + 1) - exp);
 
   return ;
+}
+
+void
+mpfr_random2 (mpfr_ptr x, mp_size_t size, mp_exp_t exp)
+{
+  mpfr_random2_raw (x, size, exp, RANDS);
 }

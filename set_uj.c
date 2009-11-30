@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #ifdef HAVE_CONFIG_H
 # include "config.h"       /* for a build within gmp */
@@ -45,13 +45,13 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #ifdef _MPFR_H_HAVE_INTMAX_T
 
 int
-mpfr_set_uj (mpfr_t x, uintmax_t j, mpfr_rnd_t rnd)
+mpfr_set_uj (mpfr_t x, uintmax_t j, mp_rnd_t rnd)
 {
   return mpfr_set_uj_2exp (x, j, 0, rnd);
 }
 
 int
-mpfr_set_uj_2exp (mpfr_t x, uintmax_t j, intmax_t e, mpfr_rnd_t rnd)
+mpfr_set_uj_2exp (mpfr_t x, uintmax_t j, intmax_t e, mp_rnd_t rnd)
 {
   unsigned int cnt, i;
   mp_size_t k, len;
@@ -122,8 +122,8 @@ mpfr_set_uj_2exp (mpfr_t x, uintmax_t j, intmax_t e, mpfr_rnd_t rnd)
        *   _ |x| < 2^(emin-2), or
        *   _ |x| = 2^(emin-2) and the absolute value of the exact
        *     result is <= 2^(emin-2). */
-      if (rnd == MPFR_RNDN && (e+1 < __gmpfr_emin || mpfr_powerof2_raw(y)))
-        rnd = MPFR_RNDZ;
+      if (rnd == GMP_RNDN && (e+1 < __gmpfr_emin || mpfr_powerof2_raw(y)))
+        rnd = GMP_RNDZ;
       return mpfr_underflow (x, rnd, MPFR_SIGN_POS);
     }
   if (MPFR_UNLIKELY(e > __gmpfr_emax))

@@ -8,7 +8,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -17,9 +17,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include <float.h>
 
@@ -28,7 +28,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #ifndef HAVE_LDOUBLE_IEEE_EXT_LITTLE
 
 long double
-mpfr_get_ld (mpfr_srcptr x, mpfr_rnd_t rnd_mode)
+mpfr_get_ld (mpfr_srcptr x, mp_rnd_t rnd_mode)
 {
 
   if (MPFR_UNLIKELY (MPFR_IS_SINGULAR (x)))
@@ -56,10 +56,10 @@ mpfr_get_ld (mpfr_srcptr x, mpfr_rnd_t rnd_mode)
 
       r = 0.0;
       do {
-        s = mpfr_get_d (y, MPFR_RNDN); /* high part of y */
+        s = mpfr_get_d (y, GMP_RNDN); /* high part of y */
         r += (long double) s;
-        mpfr_set_d (z, s, MPFR_RNDN);  /* exact */
-        mpfr_sub (y, y, z, MPFR_RNDN); /* exact */
+        mpfr_set_d (z, s, GMP_RNDN);  /* exact */
+        mpfr_sub (y, y, z, GMP_RNDN); /* exact */
       } while (!MPFR_IS_ZERO (y));
 
       mpfr_clear (z);
@@ -103,7 +103,7 @@ mpfr_get_ld (mpfr_srcptr x, mpfr_rnd_t rnd_mode)
 #else
 
 long double
-mpfr_get_ld (mpfr_srcptr x, mpfr_rnd_t rnd_mode)
+mpfr_get_ld (mpfr_srcptr x, mp_rnd_t rnd_mode)
 {
   mpfr_long_double_t ld;
   mpfr_t tmp;
@@ -118,7 +118,7 @@ mpfr_get_ld (mpfr_srcptr x, mpfr_rnd_t rnd_mode)
   mpfr_set_emin (-16382-63);
   mpfr_set_emax (16384);
   mpfr_subnormalize (tmp, mpfr_check_range (tmp, inex, rnd_mode), rnd_mode);
-  mpfr_prec_round (tmp, 64, MPFR_RNDZ); /* exact */
+  mpfr_prec_round (tmp, 64, GMP_RNDZ); /* exact */
   if (MPFR_UNLIKELY (MPFR_IS_SINGULAR (tmp)))
     ld.ld = (long double) mpfr_get_d (tmp, rnd_mode);
   else
@@ -174,7 +174,7 @@ mpfr_get_ld (mpfr_srcptr x, mpfr_rnd_t rnd_mode)
 
 /* contributed by Damien Stehle */
 long double
-mpfr_get_ld_2exp (long *expptr, mpfr_srcptr src, mpfr_rnd_t rnd_mode)
+mpfr_get_ld_2exp (long *expptr, mpfr_srcptr src, mp_rnd_t rnd_mode)
 {
   long double ret;
   mp_exp_t exp;

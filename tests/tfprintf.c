@@ -5,7 +5,7 @@ Contributed by the Arenaire and Cacao projects, INRIA.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -14,9 +14,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #ifdef HAVE_STDARG
 #include <stdarg.h>
@@ -160,7 +160,7 @@ check_mixed (FILE *fout)
   mpz_t mpz;
   mpq_t mpq;
   mpf_t mpf;
-  mpfr_rnd_t rnd = MPFR_RNDN;
+  mp_rnd_t rnd = GMP_RNDN;
 
   mp_size_t limb_size = 3;
   mp_limb_t limb[3];
@@ -176,7 +176,7 @@ check_mixed (FILE *fout)
   mpf_set_q (mpf, mpq);
 
   mpfr_init2 (mpfr, prec);
-  mpfr_set_f (mpfr, mpf, MPFR_RNDN);
+  mpfr_set_f (mpfr, mpf, GMP_RNDN);
 
   limb[0] = limb[1] = limb[2] = ~ (mp_limb_t) 0;
 
@@ -273,7 +273,7 @@ check_random (FILE *fout, int nb_tests)
 {
   int i;
   mpfr_t x;
-  mpfr_rnd_t rnd;
+  mp_rnd_t rnd;
   char flag[] =
     {
       '-',
@@ -369,7 +369,7 @@ bug_20090316 (FILE *fout)
   mpfr_init2 (x, 53);
 
   /* bug 20090316: fixed in r6112 */
-  mpfr_set_ui_2exp (x, 0x60fa2916, -30, MPFR_RNDN);
+  mpfr_set_ui_2exp (x, 0x60fa2916, -30, GMP_RNDN);
   check (fout, "%-#.4095RDg\n", x);
 
   mpfr_clear (x);

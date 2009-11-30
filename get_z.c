@@ -8,7 +8,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -17,16 +17,15 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include "mpfr-impl.h"
 
-int
-mpfr_get_z (mpz_ptr z, mpfr_srcptr f, mpfr_rnd_t rnd)
+void
+mpfr_get_z (mpz_ptr z, mpfr_srcptr f, mp_rnd_t rnd)
 {
-  int inex;
   mpfr_t r;
   mp_exp_t exp = MPFR_EXP (f);
 
@@ -34,16 +33,12 @@ mpfr_get_z (mpz_ptr z, mpfr_srcptr f, mpfr_rnd_t rnd)
   MPFR_ASSERTN (exp < 0 || exp <= MPFR_PREC_MAX);
   mpfr_init2 (r, (exp < (mp_exp_t) MPFR_PREC_MIN ?
                   MPFR_PREC_MIN : (mpfr_prec_t) exp));
-  inex = mpfr_rint (r, f, rnd);
-  MPFR_ASSERTN (inex != 1 && inex != -1); /* integral part of f is
-                                             representable in r */
+  mpfr_rint (r, f, rnd);
   MPFR_ASSERTN (MPFR_IS_FP (r) );
   exp = mpfr_get_z_exp (z, r);
   if (exp >= 0)
     mpz_mul_2exp (z, z, exp);
   else
-    mpz_fdiv_q_2exp (z, z, -exp);
+    mpz_div_2exp (z, z, -exp);
   mpfr_clear (r);
-
-  return inex;
 }

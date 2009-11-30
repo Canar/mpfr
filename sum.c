@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,13 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
-
-/* Reference: James Demmel and Yozo Hida, Fast and accurate floating-point
-   summation with application to computational geometry, Numerical Algorithms,
-   volume 37, number 1-4, pages 101--112, 2004. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
@@ -225,22 +221,23 @@ sum_once (mpfr_ptr ret, mpfr_srcptr *const tab, unsigned long n, mp_prec_t F)
   MPFR_ASSERTD (n >= 2);
 
   mpfr_init2 (sum, F);
-  error_trap = mpfr_set (sum, tab[0], MPFR_RNDN);
+  error_trap = mpfr_set (sum, tab[0], GMP_RNDN);
   for (i = 1; i < n - 1; i++)
     {
       MPFR_ASSERTD (!MPFR_IS_NAN (sum) && !MPFR_IS_INF (sum));
-      error_trap |= mpfr_add (sum, sum, tab[i], MPFR_RNDN);
+      error_trap |= mpfr_add (sum, sum, tab[i], GMP_RNDN);
     }
-  error_trap |= mpfr_add (ret, sum, tab[n - 1], MPFR_RNDN);
+  error_trap |= mpfr_add (ret, sum, tab[n - 1], GMP_RNDN);
   mpfr_clear (sum);
   return error_trap;
 }
 
 /* Sum a list of floating-point numbers.
+ * FIXME : add reference to Demmel-Hida's paper.
  */
 
 int
-mpfr_sum (mpfr_ptr ret, mpfr_ptr *const tab_p, unsigned long n, mpfr_rnd_t rnd)
+mpfr_sum (mpfr_ptr ret, mpfr_ptr *const tab_p, unsigned long n, mp_rnd_t rnd)
 {
   mpfr_t cur_sum;
   mp_prec_t prec;
@@ -296,7 +293,7 @@ mpfr_sum (mpfr_ptr ret, mpfr_ptr *const tab_p, unsigned long n, mpfr_rnd_t rnd)
                        (!MPFR_IS_ZERO (cur_sum) &&
                         mpfr_can_round (cur_sum,
                                         MPFR_GET_EXP (cur_sum) - prec + 2,
-                                        MPFR_RNDN, rnd, MPFR_PREC (ret)))))
+                                        GMP_RNDN, rnd, MPFR_PREC (ret)))))
         break;
       MPFR_ZIV_NEXT (loop, prec);
       mpfr_set_prec (cur_sum, prec);

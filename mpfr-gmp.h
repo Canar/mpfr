@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #ifndef __GMPFR_GMP_H__
 #define __GMPFR_GMP_H__
@@ -252,6 +252,11 @@ __MPFR_DECLSPEC extern gmp_randstate_t  mpfr_rands;
   } while (0)
 
 typedef __gmp_randstate_struct *gmp_randstate_ptr;
+
+#undef _gmp_rand
+#define _gmp_rand mpfr_rand_raw
+__MPFR_DECLSPEC void mpfr_rand_raw _MPFR_PROTO((mp_ptr, gmp_randstate_t,
+                                                unsigned long));
 
 /* Allocate func are defined in gmp-impl.h */
 

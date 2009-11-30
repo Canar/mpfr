@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,23 +16,22 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include "mpfr-impl.h"
 
-/* compute sign(b) * (|b| + |c|), assuming b and c have same sign,
-   and are not NaN, Inf, nor zero. */
+/* compute sign(b) * (|b| + |c|) */
 int
-mpfr_add1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
+mpfr_add1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode)
 {
   mp_limb_t *ap, *bp, *cp;
   mp_prec_t aq, bq, cq, aq2;
   mp_size_t an, bn, cn;
   mp_exp_t difw, exp;
   int sh, rb, fb, inex;
-  mpfr_uexp_t diff_exp;
+  mp_exp_unsigned_t diff_exp;
   MPFR_TMP_DECL(marker);
 
   MPFR_ASSERTD(MPFR_IS_PURE_FP(b) && MPFR_IS_PURE_FP(c));
@@ -69,9 +68,7 @@ mpfr_add1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
 
   exp = MPFR_GET_EXP (b);
   MPFR_SET_SAME_SIGN(a, b);
-  MPFR_UPDATE2_RND_MODE(rnd_mode, MPFR_SIGN(b));
-  /* now rnd_mode is either MPFR_RNDN, MPFR_RNDZ or MPFR_RNDA */
-  diff_exp = (mpfr_uexp_t) exp - MPFR_GET_EXP(c);
+  diff_exp = (mp_exp_unsigned_t) exp - MPFR_GET_EXP(c);
 
   /*
    * 1. Compute the significant part A', the non-significant bits of A
@@ -158,7 +155,7 @@ mpfr_add1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
         {
           if (MPFR_UNLIKELY(exp == __gmpfr_emax))
             {
-              inex = mpfr_overflow (a, rnd_mode, MPFR_SIGN(a));
+              inex = mpfr_overflow(a, rnd_mode, MPFR_SIGN(a));
               goto end_of_add;
             }
           exp++;
@@ -299,7 +296,7 @@ mpfr_add1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
                 {
                   if (exp == __gmpfr_emax)
                     {
-                      inex = mpfr_overflow (a, rnd_mode, MPFR_SIGN(a));
+                      inex = mpfr_overflow(a, rnd_mode, MPFR_SIGN(a));
                       goto end_of_add;
                     }
                   exp++;
@@ -352,7 +349,7 @@ mpfr_add1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
                     {
                       if (MPFR_UNLIKELY(exp == __gmpfr_emax))
                         {
-                          inex = mpfr_overflow (a, rnd_mode, MPFR_SIGN(a));
+                          inex = mpfr_overflow(a, rnd_mode, MPFR_SIGN(a));
                           goto end_of_add;
                         }
                       exp++;
@@ -470,9 +467,9 @@ mpfr_add1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
     } /* fb != 1 */
 
  rounding:
-  /* rnd_mode should be one of MPFR_RNDN, MPFR_RNDZ or MPFR_RNDA */
-  if (MPFR_LIKELY(rnd_mode == MPFR_RNDN))
+  switch (rnd_mode)
     {
+    case GMP_RNDN:
       if (fb == 0)
         {
           if (rb == 0)
@@ -498,28 +495,37 @@ mpfr_add1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
           inex = MPFR_IS_POS(a) ? 1 : -1;
           goto add_one_ulp;
         }
-    }
-  else if (rnd_mode == MPFR_RNDZ)
-    {
+
+    case GMP_RNDZ:
       inex = rb || fb ? (MPFR_IS_NEG(a) ? 1 : -1) : 0;
       goto set_exponent;
-    }
-  else
-    {
-      MPFR_ASSERTN (rnd_mode == MPFR_RNDA);
-      inex = rb || fb ? (MPFR_IS_POS(a) ? 1 : -1) : 0;
-      if (inex)
+
+    case GMP_RNDU:
+      inex = rb || fb;
+      if (inex && MPFR_IS_POS(a))
         goto add_one_ulp;
       else
         goto set_exponent;
+
+    case GMP_RNDD:
+      inex = - (rb || fb);
+      if (inex && MPFR_IS_NEG(a))
+        goto add_one_ulp;
+      else
+        goto set_exponent;
+
+    default:
+      MPFR_ASSERTN(0);
+      inex = 0;
+      goto set_exponent;
     }
 
  add_one_ulp: /* add one unit in last place to a */
-  if (MPFR_UNLIKELY(mpn_add_1 (ap, ap, an, MPFR_LIMB_ONE << sh)))
+  if (MPFR_UNLIKELY(mpn_add_1(ap, ap, an, MPFR_LIMB_ONE << sh)))
     {
       if (MPFR_UNLIKELY(exp == __gmpfr_emax))
         {
-          inex = mpfr_overflow (a, rnd_mode, MPFR_SIGN(a));
+          inex = mpfr_overflow(a, rnd_mode, MPFR_SIGN(a));
           goto end_of_add;
         }
       exp++;

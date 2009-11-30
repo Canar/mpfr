@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 
 #define MPFR_NEED_LONGLONG_H
@@ -28,7 +28,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
    as some cases will take longer (the number may be parsed twice). */
 
 int
-mpfr_frac (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
+mpfr_frac (mpfr_ptr r, mpfr_srcptr u, mp_rnd_t rnd_mode)
 {
   mp_exp_t re, ue;
   mp_prec_t uq;
@@ -48,6 +48,7 @@ mpfr_frac (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
     }
   else if (MPFR_UNLIKELY(MPFR_IS_INF(u) || mpfr_integer_p (u)))
     {
+      MPFR_CLEAR_FLAGS(r);
       MPFR_SET_SAME_SIGN(r, u);
       MPFR_SET_ZERO(r);
       MPFR_RET(0);  /* zero is exact */
@@ -100,6 +101,7 @@ mpfr_frac (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
   /* t has enough precision to contain the fractional part of u */
   /* If we use a temporary variable, we take the non-significant bits
      of u into account, because of the mpn_lshift below. */
+  MPFR_CLEAR_FLAGS(t);
   MPFR_SET_SAME_SIGN(t, u);
 
   /* Put the fractional part of u into t */

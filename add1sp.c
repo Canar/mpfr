@@ -8,7 +8,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -17,9 +17,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
@@ -28,8 +28,8 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #ifdef WANT_ASSERT
 # if WANT_ASSERT >= 2
 
-int mpfr_add1sp2 (mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_rnd_t);
-int mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
+int mpfr_add1sp2 (mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t);
+int mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode)
 {
   mpfr_t tmpa, tmpb, tmpc;
   int inexb, inexc, inexact, inexact2;
@@ -38,10 +38,10 @@ int mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   mpfr_init2 (tmpb, MPFR_PREC (b));
   mpfr_init2 (tmpc, MPFR_PREC (c));
 
-  inexb = mpfr_set (tmpb, b, MPFR_RNDN);
+  inexb = mpfr_set (tmpb, b, GMP_RNDN);
   MPFR_ASSERTN (inexb == 0);
 
-  inexc = mpfr_set (tmpc, c, MPFR_RNDN);
+  inexc = mpfr_set (tmpc, c, GMP_RNDN);
   MPFR_ASSERTN (inexc == 0);
 
   inexact2 = mpfr_add1 (tmpa, tmpb, tmpc, rnd_mode);
@@ -84,9 +84,9 @@ int mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
    a negative value when the result is less than the exact value,
    a positive value otherwise. */
 int
-mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
+mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode)
 {
-  mpfr_uexp_t d;
+  mp_exp_unsigned_t d;
   mp_prec_t p;
   unsigned int sh;
   mp_size_t n;
@@ -130,7 +130,7 @@ mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
       /* Zero: Truncate
          Nearest: Even Rule => truncate or add 1
          Away: Add 1 */
-      if (MPFR_LIKELY(rnd_mode==MPFR_RNDN))
+      if (MPFR_LIKELY(rnd_mode==GMP_RNDN))
         {
           if (MPFR_LIKELY((ap[0]&(MPFR_LIMB_ONE<<sh))==0))
             { inexact = -1; goto set_exponent; }
@@ -138,7 +138,7 @@ mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
             goto add_one_ulp;
         }
       MPFR_UPDATE_RND_MODE(rnd_mode, MPFR_IS_NEG(b));
-      if (rnd_mode==MPFR_RNDZ)
+      if (rnd_mode==GMP_RNDZ)
         { inexact = -1; goto set_exponent; }
       else
         goto add_one_ulp;
@@ -151,7 +151,7 @@ mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
           /* Away:    Add 1
              Nearest: Trunc
              Zero:    Trunc */
-          if (MPFR_LIKELY (rnd_mode==MPFR_RNDN
+          if (MPFR_LIKELY (rnd_mode==GMP_RNDN
                            || MPFR_IS_LIKE_RNDZ (rnd_mode, MPFR_IS_NEG (b))))
             {
             copy_set_exponent:
@@ -174,7 +174,7 @@ mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
           /* Away:    Add 1
              Nearest: Even Rule if C is a power of 2, else Add 1
              Zero:    Trunc */
-          if (MPFR_LIKELY(rnd_mode==MPFR_RNDN))
+          if (MPFR_LIKELY(rnd_mode==GMP_RNDN))
             {
               /* Check if C was a power of 2 */
               cp = MPFR_MANT(c);
@@ -208,7 +208,7 @@ mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
 
       /* Shift c in temporary allocated place */
       {
-        mpfr_uexp_t dm;
+        mp_exp_unsigned_t dm;
         mp_size_t m;
 
         dm = d % BITS_PER_MP_LIMB;
@@ -331,7 +331,7 @@ mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
           Nearest: Truncate but could be exact if Cp==0
                    Add 1 if C'p+1 !=0,
                    Even rule else */
-      if (MPFR_LIKELY(rnd_mode == MPFR_RNDN))
+      if (MPFR_LIKELY(rnd_mode == GMP_RNDN))
         {
           if (MPFR_LIKELY(bcp == 0))
             { inexact = MPFR_LIKELY(bcp1) ? -1 : 0; goto set_exponent; }
@@ -341,7 +341,7 @@ mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
             goto add_one_ulp;
         }
       MPFR_UPDATE_RND_MODE(rnd_mode, MPFR_IS_NEG(b));
-      if (rnd_mode == MPFR_RNDZ)
+      if (rnd_mode == GMP_RNDZ)
         {
           inexact = MPFR_LIKELY(bcp || bcp1) ? -1 : 0;
           goto set_exponent;

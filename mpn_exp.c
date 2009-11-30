@@ -8,7 +8,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -17,9 +17,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 
 #define MPFR_NEED_LONGLONG_H
@@ -53,7 +53,7 @@ mpfr_mpn_exp (mp_limb_t *a, mp_exp_t *exp_r, int b, mp_exp_t e, size_t n)
   MPFR_TMP_DECL(marker);
 
   MPFR_ASSERTN(e > 0);
-  MPFR_ASSERTN((2 <= b) && (b <= 62));
+  MPFR_ASSERTN((2 <= b) && (b <= 36));
 
   MPFR_TMP_MARK(marker);
 
@@ -106,7 +106,7 @@ mpfr_mpn_exp (mp_limb_t *a, mp_exp_t *exp_r, int b, mp_exp_t e, size_t n)
       /* FIXME: Could f = 2*f + n * BITS_PER_MP_LIMB be used? */
       f = 2*f;
       MPFR_SADD_OVERFLOW (f, f, n * BITS_PER_MP_LIMB,
-                          mp_exp_t, mpfr_uexp_t,
+                          mp_exp_t, mp_exp_unsigned_t,
                           MPFR_EXP_MIN, MPFR_EXP_MAX,
                           goto overflow, goto overflow);
       if ((c[2*n - 1] & MPFR_LIMB_HIGHBIT) == 0)

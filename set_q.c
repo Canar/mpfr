@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
@@ -62,7 +62,7 @@ set_z (mpfr_ptr f, mpz_srcptr z, mp_size_t *zs)
 
 /* set f to the rational q */
 int
-mpfr_set_q (mpfr_ptr f, mpq_srcptr q, mpfr_rnd_t rnd)
+mpfr_set_q (mpfr_ptr f, mpq_srcptr q, mp_rnd_t rnd)
 {
   mpz_srcptr num, den;
   mpfr_t n, d;
@@ -109,8 +109,8 @@ mpfr_set_q (mpfr_ptr f, mpq_srcptr q, mpfr_rnd_t rnd)
     }
   if (MPFR_UNLIKELY (sn < MPFR_EMIN_MIN / BITS_PER_MP_LIMB -1))
     {
-      if (rnd == MPFR_RNDN)
-        rnd = MPFR_RNDZ;
+      if (rnd == GMP_RNDN)
+        rnd = GMP_RNDZ;
       inexact = mpfr_underflow (f, rnd, MPFR_SIGN (f));
       goto end;
     }

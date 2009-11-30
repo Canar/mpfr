@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include <stdlib.h>
 #include <time.h>
@@ -62,44 +62,7 @@ int verbose;
   speed_starttime ();                                \
   i = s->reps;                                       \
   do                                                 \
-    mean_fun (w, x, MPFR_RNDN);                      \
-  while (--i != 0);                                  \
-  t = speed_endtime ();                              \
-                                                     \
-  MPFR_TMP_FREE (marker);                            \
-  return t;                                          \
-} while (0)
-
-/* same as SPEED_MPFR_FUNC, but for say mpfr_sin_cos (y, z, x, r) */
-#define SPEED_MPFR_FUNC2(mean_fun) do {              \
-  unsigned  i;                                       \
-  mp_ptr    vp, wp;                                  \
-  double    t;                                       \
-  mpfr_t    v, w, x;                                 \
-  mp_size_t size;                                    \
-  MPFR_TMP_DECL (marker);                            \
-                                                     \
-  SPEED_RESTRICT_COND (s->size >= MPFR_PREC_MIN);    \
-  SPEED_RESTRICT_COND (s->size <= MPFR_PREC_MAX);    \
-  MPFR_TMP_MARK (marker);                            \
-                                                     \
-  size = (s->size-1)/BITS_PER_MP_LIMB+1;             \
-  s->xp[size-1] |= MPFR_LIMB_HIGHBIT;                \
-  MPFR_TMP_INIT1 (s->xp, x, s->size);                \
-  MPFR_SET_EXP (x, 0);                               \
-                                                     \
-  MPFR_TMP_INIT (vp, v, s->size, size);              \
-  MPFR_TMP_INIT (wp, w, s->size, size);              \
-                                                     \
-  speed_operand_src (s, s->xp, size);                \
-  speed_operand_dst (s, vp, size);                   \
-  speed_operand_dst (s, wp, size);                   \
-  speed_cache_fill (s);                              \
-                                                     \
-  speed_starttime ();                                \
-  i = s->reps;                                       \
-  do                                                 \
-    mean_fun (v, w, x, MPFR_RNDN);                   \
+    mean_fun (w, x, GMP_RNDN);                       \
   while (--i != 0);                                  \
   t = speed_endtime ();                              \
                                                      \
@@ -137,7 +100,7 @@ int verbose;
   speed_starttime ();                                \
   i = s->reps;                                       \
   do                                                 \
-    mean_fun (w, x, y, MPFR_RNDN);                    \
+    mean_fun (w, x, y, GMP_RNDN);                    \
   while (--i != 0);                                  \
   t = speed_endtime ();                              \
                                                      \
@@ -147,7 +110,7 @@ int verbose;
 
 
 /* First we include all the functions we want to tune inside this program.
-   We can't use the GNU MPFR library since the thresholds are fixed macros. */
+   We can't use GNU MPFR library since the THRESHOLD can't vary */
 
 /* Setup mpfr_exp_2 */
 mp_prec_t mpfr_exp_2_threshold;
@@ -165,15 +128,6 @@ mp_prec_t mpfr_exp_threshold;
 #include "exp.c"
 static double speed_mpfr_exp (struct speed_params *s) {
   SPEED_MPFR_FUNC (mpfr_exp);
-}
-
-/* Setup mpfr_sin_cos */
-mp_prec_t mpfr_sincos_threshold;
-#undef MPFR_SINCOS_THRESHOLD
-#define MPFR_SINCOS_THRESHOLD mpfr_sincos_threshold
-#include "sin_cos.c"
-static double speed_mpfr_sincos (struct speed_params *s) {
-  SPEED_MPFR_FUNC2 (mpfr_sin_cos);
 }
 
 /* Setup mpfr_mul */
@@ -355,6 +309,8 @@ tune_simple_func (mp_prec_t *threshold,
     printf ("%lu\n", *threshold);
   return;
 }
+
+
 
 /************************************
  * Tune Mulders' mulhigh function   *
@@ -606,14 +562,6 @@ all (const char *filename)
                     MPFR_PREC_MIN+3*BITS_PER_MP_LIMB);
   fprintf (f, "#define MPFR_EXP_THRESHOLD %lu /* bits */\n",
            (unsigned long) mpfr_exp_threshold);
-
-  /* Tune mpfr_sin_cos */
-  if (verbose)
-    printf ("Tuning mpfr_sin_cos...\n");
-  tune_simple_func (&mpfr_sincos_threshold, speed_mpfr_sincos,
-                    MPFR_PREC_MIN+3*BITS_PER_MP_LIMB);
-  fprintf (f, "#define MPFR_SINCOS_THRESHOLD %lu /* bits */\n",
-           (unsigned long) mpfr_sincos_threshold);
 
   /* End of tuning */
   time (&end_time);

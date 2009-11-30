@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -36,7 +36,7 @@ check_is_sorted (unsigned long n, mpfr_srcptr *perm)
 }
 
 static int
-sum_tab (mpfr_ptr ret, mpfr_t *tab, unsigned long n, mpfr_rnd_t rnd)
+sum_tab (mpfr_ptr ret, mpfr_t *tab, unsigned long n, mp_rnd_t rnd)
 {
   mpfr_ptr *tabtmp;
   unsigned long i;
@@ -88,10 +88,10 @@ algo_exact (mpfr_t somme, mpfr_t *tab, unsigned long n, mp_prec_t f)
 
   prec_max = get_prec_max(tab, n, f);
   mpfr_set_prec (somme, prec_max);
-  mpfr_set_ui (somme, 0, MPFR_RNDN);
+  mpfr_set_ui (somme, 0, GMP_RNDN);
   for (i = 0; i < n; i++)
     {
-      if (mpfr_add(somme, somme, tab[i], MPFR_RNDN))
+      if (mpfr_add(somme, somme, tab[i], GMP_RNDN))
         {
           printf ("FIXME: algo_exact is buggy.\n");
           exit (1);
@@ -157,10 +157,10 @@ test_sum (mp_prec_t f, unsigned long n)
   for (i = 0; i < n; i++)
     mpfr_urandomb (tab[i], RANDS);
   algo_exact (real_non_rounded, tab, n, f);
-  for (rnd_mode = 0; rnd_mode < MPFR_RND_MAX; rnd_mode++)
+  for (rnd_mode = 0; rnd_mode < GMP_RND_MAX; rnd_mode++)
     {
-      sum_tab (sum, tab, n, (mpfr_rnd_t) rnd_mode);
-      mpfr_set (real_sum, real_non_rounded, (mpfr_rnd_t) rnd_mode);
+      sum_tab (sum, tab, n, (mp_rnd_t) rnd_mode);
+      mpfr_set (real_sum, real_non_rounded, (mp_rnd_t) rnd_mode);
       if (mpfr_cmp (real_sum, sum) != 0)
         {
           printf ("mpfr_sum incorrect.\n");
@@ -177,10 +177,10 @@ test_sum (mp_prec_t f, unsigned long n)
       mpfr_set_exp (tab[i], randlimb () %1000);
     }
   algo_exact (real_non_rounded, tab, n, f);
-  for (rnd_mode = 0; rnd_mode < MPFR_RND_MAX; rnd_mode++)
+  for (rnd_mode = 0; rnd_mode < GMP_RND_MAX; rnd_mode++)
     {
-      sum_tab (sum, tab, n, (mpfr_rnd_t) rnd_mode);
-      mpfr_set (real_sum, real_non_rounded, (mpfr_rnd_t) rnd_mode);
+      sum_tab (sum, tab, n, (mp_rnd_t) rnd_mode);
+      mpfr_set (real_sum, real_non_rounded, (mp_rnd_t) rnd_mode);
       if (mpfr_cmp (real_sum, sum) != 0)
         {
           printf ("mpfr_sum incorrect.\n");
@@ -209,24 +209,24 @@ void check_special (void)
   tabp[1] = tab[1];
   tabp[2] = tab[2];
 
-  i = mpfr_sum (r, tabp, 0, MPFR_RNDN);
+  i = mpfr_sum (r, tabp, 0, GMP_RNDN);
   if (!MPFR_IS_ZERO (r) || !MPFR_IS_POS (r) || i != 0)
     {
       printf ("Special case n==0 failed!\n");
       exit (1);
     }
 
-  mpfr_set_ui (tab[0], 42, MPFR_RNDN);
-  i = mpfr_sum (r, tabp, 1, MPFR_RNDN);
+  mpfr_set_ui (tab[0], 42, GMP_RNDN);
+  i = mpfr_sum (r, tabp, 1, GMP_RNDN);
   if (mpfr_cmp_ui (r, 42) || i != 0)
     {
       printf ("Special case n==1 failed!\n");
       exit (1);
     }
 
-  mpfr_set_ui (tab[1], 17, MPFR_RNDN);
+  mpfr_set_ui (tab[1], 17, GMP_RNDN);
   MPFR_SET_NAN (tab[2]);
-  i = mpfr_sum (r, tabp, 3, MPFR_RNDN);
+  i = mpfr_sum (r, tabp, 3, GMP_RNDN);
   if (!MPFR_IS_NAN (r) || i != 0)
     {
       printf ("Special case NAN failed!\n");
@@ -235,7 +235,7 @@ void check_special (void)
 
   MPFR_SET_INF (tab[2]);
   MPFR_SET_POS (tab[2]);
-  i = mpfr_sum (r, tabp, 3, MPFR_RNDN);
+  i = mpfr_sum (r, tabp, 3, GMP_RNDN);
   if (!MPFR_IS_INF (r) || !MPFR_IS_POS (r) || i != 0)
     {
       printf ("Special case +INF failed!\n");
@@ -244,7 +244,7 @@ void check_special (void)
 
   MPFR_SET_INF (tab[2]);
   MPFR_SET_NEG (tab[2]);
-  i = mpfr_sum (r, tabp, 3, MPFR_RNDN);
+  i = mpfr_sum (r, tabp, 3, GMP_RNDN);
   if (!MPFR_IS_INF (r) || !MPFR_IS_NEG (r) || i != 0)
     {
       printf ("Special case -INF failed!\n");
@@ -252,7 +252,7 @@ void check_special (void)
     }
 
   MPFR_SET_ZERO (tab[1]);
-  i = mpfr_sum (r, tabp, 2, MPFR_RNDN);
+  i = mpfr_sum (r, tabp, 2, GMP_RNDN);
   if (mpfr_cmp_ui (r, 42) || i != 0)
     {
       printf ("Special case 42+0 failed!\n");
@@ -260,7 +260,7 @@ void check_special (void)
     }
 
   MPFR_SET_NAN (tab[0]);
-  i = mpfr_sum (r, tabp, 3, MPFR_RNDN);
+  i = mpfr_sum (r, tabp, 3, GMP_RNDN);
   if (!MPFR_IS_NAN (r) || i != 0)
     {
       printf ("Special case NAN+0+-INF failed!\n");
@@ -268,9 +268,9 @@ void check_special (void)
     }
 
   mpfr_set_inf (tab[0], 1);
-  mpfr_set_ui  (tab[1], 59, MPFR_RNDN);
+  mpfr_set_ui  (tab[1], 59, GMP_RNDN);
   mpfr_set_inf (tab[2], -1);
-  i = mpfr_sum (r, tabp, 3, MPFR_RNDN);
+  i = mpfr_sum (r, tabp, 3, GMP_RNDN);
   if (!MPFR_IS_NAN (r) || i != 0)
     {
       printf ("Special case +INF + 59 +-INF failed!\n");

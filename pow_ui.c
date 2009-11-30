@@ -8,7 +8,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -17,22 +17,22 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
 
 /* sets y to x^n, and return 0 if exact, non-zero otherwise */
 int
-mpfr_pow_ui (mpfr_ptr y, mpfr_srcptr x, unsigned long int n, mpfr_rnd_t rnd)
+mpfr_pow_ui (mpfr_ptr y, mpfr_srcptr x, unsigned long int n, mp_rnd_t rnd)
 {
   unsigned long m;
   mpfr_t res;
   mp_prec_t prec, err;
   int inexact;
-  mpfr_rnd_t rnd1;
+  mp_rnd_t rnd1;
   MPFR_SAVE_EXPO_DECL (expo);
   MPFR_ZIV_DECL (loop);
   MPFR_BLOCK_DECL (flags);
@@ -91,7 +91,7 @@ mpfr_pow_ui (mpfr_ptr y, mpfr_srcptr x, unsigned long int n, mpfr_rnd_t rnd)
     + MPFR_INT_CEIL_LOG2 (MPFR_PREC (y));
   mpfr_init2 (res, prec);
 
-  rnd1 = MPFR_IS_POS (x) ? MPFR_RNDU : MPFR_RNDD; /* away */
+  rnd1 = MPFR_IS_POS (x) ? GMP_RNDU : GMP_RNDD; /* away */
 
   MPFR_ZIV_INIT (loop, prec);
   for (;;)
@@ -105,13 +105,13 @@ mpfr_pow_ui (mpfr_ptr y, mpfr_srcptr x, unsigned long int n, mpfr_rnd_t rnd)
       err = prec - 1 - (mpfr_prec_t) i;
       /* First step: compute square from x */
       MPFR_BLOCK (flags,
-                  inexact = mpfr_mul (res, x, x, MPFR_RNDU);
+                  inexact = mpfr_mul (res, x, x, GMP_RNDU);
                   MPFR_ASSERTD (i >= 2);
                   if (n & (1UL << (i-2)))
                     inexact |= mpfr_mul (res, res, x, rnd1);
                   for (i -= 3; i >= 0 && !MPFR_BLOCK_EXCEP; i--)
                     {
-                      inexact |= mpfr_mul (res, res, res, MPFR_RNDU);
+                      inexact |= mpfr_mul (res, res, res, GMP_RNDU);
                       if (n & (1UL << i))
                         inexact |= mpfr_mul (res, res, x, rnd1);
                     });

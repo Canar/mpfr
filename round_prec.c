@@ -8,7 +8,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -17,9 +17,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include "mpfr-impl.h"
 
@@ -46,7 +46,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #include "round_raw_generic.c"
 
 int
-mpfr_prec_round (mpfr_ptr x, mp_prec_t prec, mpfr_rnd_t rnd_mode)
+mpfr_prec_round (mpfr_ptr x, mp_prec_t prec, mp_rnd_t rnd_mode)
 {
   mp_limb_t *tmp, *xp;
   int carry, inexact;
@@ -118,19 +118,19 @@ mpfr_prec_round (mpfr_ptr x, mp_prec_t prec, mpfr_rnd_t rnd_mode)
 */
 
 int
-mpfr_can_round (mpfr_srcptr b, mp_exp_t err, mpfr_rnd_t rnd1,
-                mpfr_rnd_t rnd2, mp_prec_t prec)
+mpfr_can_round (mpfr_srcptr b, mp_exp_t err, mp_rnd_t rnd1,
+                mp_rnd_t rnd2, mp_prec_t prec)
 {
   if (MPFR_UNLIKELY(MPFR_IS_SINGULAR(b)))
     return 0; /* We cannot round if Zero, Nan or Inf */
   else
-    return mpfr_can_round_raw (MPFR_MANT(b), MPFR_LIMB_SIZE(b),
-                               MPFR_SIGN(b), err, rnd1, rnd2, prec);
+    return mpfr_can_round_raw(MPFR_MANT(b), MPFR_LIMB_SIZE(b),
+                              MPFR_SIGN(b), err, rnd1, rnd2, prec);
 }
 
 int
 mpfr_can_round_raw (const mp_limb_t *bp, mp_size_t bn, int neg, mp_exp_t err0,
-                    mpfr_rnd_t rnd1, mpfr_rnd_t rnd2, mp_prec_t prec)
+                    mp_rnd_t rnd1, mp_rnd_t rnd2, mp_prec_t prec)
 {
   mp_prec_t err;
   mp_size_t k, k1, tn;
@@ -139,11 +139,11 @@ mpfr_can_round_raw (const mp_limb_t *bp, mp_size_t bn, int neg, mp_exp_t err0,
   mp_limb_t *tmp;
   MPFR_TMP_DECL(marker);
 
-  if (MPFR_UNLIKELY(err0 < 0 || (mpfr_uexp_t) err0 <= prec))
+  if (MPFR_UNLIKELY(err0 < 0 || (mp_exp_unsigned_t) err0 <= prec))
     return 0;  /* can't round */
   else if (MPFR_UNLIKELY (prec > (mp_prec_t) bn * BITS_PER_MP_LIMB))
     { /* then ulp(b) < precision < error */
-      return rnd2 == MPFR_RNDN && (mpfr_uexp_t) err0 - 2 >= prec;
+      return rnd2 == GMP_RNDN && (mp_exp_unsigned_t) err0 - 2 >= prec;
       /* can round only in rounding to the nearest and err0 >= prec + 2 */
     }
 
@@ -152,26 +152,27 @@ mpfr_can_round_raw (const mp_limb_t *bp, mp_size_t bn, int neg, mp_exp_t err0,
 
   /* if the error is smaller than ulp(b), then anyway it will propagate
      up to ulp(b) */
-  err = ((mpfr_uexp_t) err0 > (mp_prec_t) bn * BITS_PER_MP_LIMB) ?
+  err = ((mp_exp_unsigned_t) err0 > (mp_prec_t) bn * BITS_PER_MP_LIMB) ?
     (mp_prec_t) bn * BITS_PER_MP_LIMB : (mp_prec_t) err0;
 
   /* warning: if k = m*BITS_PER_MP_LIMB, consider limb m-1 and not m */
   k = (err - 1) / BITS_PER_MP_LIMB;
   MPFR_UNSIGNED_MINUS_MODULO(s, err);
+
   /* the error corresponds to bit s in limb k, the most significant limb
      being limb 0 */
-
   k1 = (prec - 1) / BITS_PER_MP_LIMB;
   MPFR_UNSIGNED_MINUS_MODULO(s1, prec);
+
   /* the last significant bit is bit s1 in limb k1 */
 
   /* don't need to consider the k1 most significant limbs */
   k -= k1;
   bn -= k1;
   prec -= (mp_prec_t) k1 * BITS_PER_MP_LIMB;
-
   /* if when adding or subtracting (1 << s) in bp[bn-1-k], it does not
      change bp[bn-1] >> s1, then we can round */
+
   MPFR_TMP_MARK(marker);
   tn = bn;
   k++; /* since we work with k+1 everywhere */
@@ -184,21 +185,18 @@ mpfr_can_round_raw (const mp_limb_t *bp, mp_size_t bn, int neg, mp_exp_t err0,
   /* Transform RNDD and RNDU to Zero / Away */
   MPFR_ASSERTD((neg == 0) || (neg ==1));
   if (MPFR_IS_RNDUTEST_OR_RNDDNOTTEST(rnd1, neg))
-    rnd1 = MPFR_RNDZ;
+    rnd1 = GMP_RNDZ;
 
   switch (rnd1)
     {
-    case MPFR_RNDZ:
+    case GMP_RNDZ:
       /* Round to Zero */
       cc = (bp[bn - 1] >> s1) & 1;
-      /* mpfr_round_raw2 returns 1 if one should add 1 at ulp(b,prec),
-         and 0 otherwise */
-      cc ^= mpfr_round_raw2 (bp, bn, neg, rnd2, prec);
-      /* cc is the new value of bit s1 in bp[bn-1] */
-      /* now round b + 2^(MPFR_EXP(b)-err) */
+      cc ^= mpfr_round_raw2(bp, bn, neg, rnd2, prec);
+      /* now round b +/- 2^(MPFR_EXP(b)-err) */
       cc2 = mpn_add_1 (tmp + bn - k, bp + bn - k, k, MPFR_LIMB_ONE << s);
       break;
-    case MPFR_RNDN:
+    case GMP_RNDN:
       /* Round to nearest */
        /* first round b+2^(MPFR_EXP(b)-err) */
       cc = mpn_add_1 (tmp + bn - k, bp + bn - k, k, MPFR_LIMB_ONE << s);
@@ -210,13 +208,12 @@ mpfr_can_round_raw (const mp_limb_t *bp, mp_size_t bn, int neg, mp_exp_t err0,
     default:
       /* Round away */
       cc = (bp[bn - 1] >> s1) & 1;
-      cc ^= mpfr_round_raw2 (bp, bn, neg, rnd2, prec);
+      cc ^= mpfr_round_raw2(bp, bn, neg, rnd2, prec);
       /* now round b +/- 2^(MPFR_EXP(b)-err) */
       cc2 = mpn_sub_1 (tmp + bn - k, bp + bn - k, k, MPFR_LIMB_ONE << s);
       break;
     }
 
-  /* if cc2 is 1, then a carry or borrow propagates to the next limb */
   if (cc2 && cc)
     {
       MPFR_TMP_FREE(marker);

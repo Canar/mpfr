@@ -5,7 +5,7 @@
 # 
 # The MPFR Library is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or (at your
+# the Free Software Foundation; either version 2.1 of the License, or (at your
 # option) any later version.
 # 
 # The MPFR Library is distributed in the hope that it will be useful, but
@@ -14,7 +14,7 @@
 # License for more details.
 # 
 # You should have received a copy of the GNU Lesser General Public License
-# along with the MPFR Library; see the file COPYING.LESSER.  If not, write to
+# along with the MPFR Library; see the file COPYING.LIB.  If not, write to
 # the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
 # MA 02110-1301, USA.
  
@@ -47,10 +47,8 @@ NAME=mbench
 #########################################################
 .SUFFIXES: .c .o
 
-# add -I$(MPFR) and -I$(GMP) if GMP/MPFR build directories are given
-INCLUDES=-I. -I$(MPFR_INCLUDE) -I$(MPFR) -I$(GMP)/include/ -I$(GMP)
-# search first for real install, then for build directory
-LIBS=`(test -f $(MPFR_LIB)/libmpfr.a && echo $(MPFR_LIB)/libmpfr.a)` $(MPFR)/.libs/libmpfr.a `(test -f $(GMP)/lib/libgmp.a && echo $(GMP)/lib/libgmp.a)` $(GMP)/.libs/libgmp.a
+INCLUDES=-I. -I$(MPFR_INCLUDE) -I$(GMP)/include/
+LIBS=`(test -f $(MPFR_LIB)/libmpfr.a && echo $(MPFR_LIB)/libmpfr.a) || echo -lmpfr` `(test -f $(GMP)/lib/libgmp.a && echo $(GMP)/lib/libgmp.a) || echo -lgmp`
 
 XLIBS=`test -f $(PARI)/lib/libpari.a && echo $(PARI)/lib/libpari.a` \
       `test -f $(NTL)/lib/libntl.a && echo $(NTL)/lib/libntl.a`     \

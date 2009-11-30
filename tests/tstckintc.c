@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include <stdlib.h>
 
@@ -82,9 +82,9 @@ test1 (void)
   org = stack;
   x = new_mpfr (p);
   y = new_mpfr (p);
-  mpfr_set_ui (x, 42, MPFR_RNDN);
-  mpfr_set_ui (y, 17, MPFR_RNDN);
-  mpfr_add (y, x, y, MPFR_RNDN);
+  mpfr_set_ui (x, 42, GMP_RNDN);
+  mpfr_set_ui (y, 17, GMP_RNDN);
+  mpfr_add (y, x, y, GMP_RNDN);
   y = return_mpfr (y, org);
   if (y != x || mpfr_cmp_ui (y, 59) != 0)
     {
@@ -116,7 +116,7 @@ dummy_set_si (long si)
   mpfr_t x;
   long * r = dummy_new ();
   (mpfr_custom_init_set) (x, 0, 0, p, &r[2]);
-  mpfr_set_si (x, si, MPFR_RNDN);
+  mpfr_set_si (x, si, GMP_RNDN);
   r[0] = mpfr_custom_get_kind (x);
   r[1] = mpfr_custom_get_exp (x);
   return r;
@@ -130,7 +130,7 @@ dummy_add (long *a, long *b)
   mpfr_custom_init_set (x, 0, 0, p, &r[2]);
   (mpfr_custom_init_set) (y, a[0], a[1], p, &a[2]);
   mpfr_custom_init_set (z, b[0], b[1], p, &b[2]);
-  mpfr_add (x, y, z, MPFR_RNDN);
+  mpfr_add (x, y, z, GMP_RNDN);
   r[0] = (mpfr_custom_get_kind) (x);
   r[1] = (mpfr_custom_get_exp) (x);
   return r;

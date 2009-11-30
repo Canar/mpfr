@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
@@ -39,7 +39,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 */
 
 int
-mpfr_log (mpfr_ptr r, mpfr_srcptr a, mpfr_rnd_t rnd_mode)
+mpfr_log (mpfr_ptr r, mpfr_srcptr a, mp_rnd_t rnd_mode)
 {
   int inexact;
   mp_prec_t p, q;
@@ -126,15 +126,15 @@ mpfr_log (mpfr_ptr r, mpfr_srcptr a, mpfr_rnd_t rnd_mode)
       MPFR_TMP_INIT (tmp1p, tmp1, p, size);
       MPFR_TMP_INIT (tmp2p, tmp2, p, size);
 
-      mpfr_mul_2si (tmp2, a, m, MPFR_RNDN);    /* s=a*2^m,        err<=1 ulp  */
-      mpfr_div (tmp1, __gmpfr_four, tmp2, MPFR_RNDN);/* 4/s,      err<=2 ulps */
-      mpfr_agm (tmp2, __gmpfr_one, tmp1, MPFR_RNDN); /* AG(1,4/s),err<=3 ulps */
-      mpfr_mul_2ui (tmp2, tmp2, 1, MPFR_RNDN); /* 2*AG(1,4/s),    err<=3 ulps */
-      mpfr_const_pi (tmp1, MPFR_RNDN);         /* compute pi,     err<=1ulp   */
-      mpfr_div (tmp2, tmp1, tmp2, MPFR_RNDN);  /* pi/2*AG(1,4/s), err<=5ulps  */
-      mpfr_const_log2 (tmp1, MPFR_RNDN);      /* compute log(2),  err<=1ulp   */
-      mpfr_mul_si (tmp1, tmp1, m, MPFR_RNDN); /* compute m*log(2),err<=2ulps  */
-      mpfr_sub (tmp1, tmp2, tmp1, MPFR_RNDN); /* log(a),    err<=7ulps+cancel */
+      mpfr_mul_2si (tmp2, a, m, GMP_RNDN);    /* s=a*2^m,        err<=1 ulp  */
+      mpfr_div (tmp1, __gmpfr_four, tmp2, GMP_RNDN);/* 4/s,      err<=2 ulps */
+      mpfr_agm (tmp2, __gmpfr_one, tmp1, GMP_RNDN); /* AG(1,4/s),err<=3 ulps */
+      mpfr_mul_2ui (tmp2, tmp2, 1, GMP_RNDN); /* 2*AG(1,4/s),    err<=3 ulps */
+      mpfr_const_pi (tmp1, GMP_RNDN);         /* compute pi,     err<=1ulp   */
+      mpfr_div (tmp2, tmp1, tmp2, GMP_RNDN);  /* pi/2*AG(1,4/s), err<=5ulps  */
+      mpfr_const_log2 (tmp1, GMP_RNDN);      /* compute log(2),  err<=1ulp   */
+      mpfr_mul_si (tmp1, tmp1, m, GMP_RNDN); /* compute m*log(2),err<=2ulps  */
+      mpfr_sub (tmp1, tmp2, tmp1, GMP_RNDN); /* log(a),    err<=7ulps+cancel */
 
       if (MPFR_LIKELY (MPFR_IS_PURE_FP (tmp1) && MPFR_IS_PURE_FP (tmp2)))
         {

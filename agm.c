@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,16 +16,16 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
 
 /* agm(x,y) is between x and y, so we don't need to save exponent range */
 int
-mpfr_agm (mpfr_ptr r, mpfr_srcptr op2, mpfr_srcptr op1, mpfr_rnd_t rnd_mode)
+mpfr_agm (mpfr_ptr r, mpfr_srcptr op2, mpfr_srcptr op1, mp_rnd_t rnd_mode)
 {
   int compare, inexact;
   mp_size_t s;
@@ -74,6 +74,7 @@ mpfr_agm (mpfr_ptr r, mpfr_srcptr op2, mpfr_srcptr op1, mpfr_rnd_t rnd_mode)
           MPFR_RET (0); /* exact */
         }
     }
+  MPFR_CLEAR_FLAGS (r);
 
   /* If a or b is negative (excluding -Infinity), the result is NaN */
   if (MPFR_UNLIKELY(MPFR_IS_NEG(op1) || MPFR_IS_NEG(op2)))
@@ -117,32 +118,32 @@ mpfr_agm (mpfr_ptr r, mpfr_srcptr op2, mpfr_srcptr op1, mpfr_rnd_t rnd_mode)
       MPFR_TMP_INIT (tmpp, tmp, p, s);
 
       /* Calculus of un and vn */
-      mpfr_mul (u, op1, op2, MPFR_RNDN); /* Faster since PREC(op) < PREC(u) */
-      mpfr_sqrt (u, u, MPFR_RNDN);
-      mpfr_add (v, op1, op2, MPFR_RNDN); /* add with !=prec is still good*/
-      mpfr_div_2ui (v, v, 1, MPFR_RNDN);
+      mpfr_mul (u, op1, op2, GMP_RNDN); /* Faster since PREC(op) < PREC(u) */
+      mpfr_sqrt (u, u, GMP_RNDN);
+      mpfr_add (v, op1, op2, GMP_RNDN); /* add with !=prec is still good*/
+      mpfr_div_2ui (v, v, 1, GMP_RNDN);
       n = 1;
       while (mpfr_cmp2 (u, v, &eq) != 0 && eq <= p - 2)
         {
-          mpfr_add (tmp, u, v, MPFR_RNDN);
-          mpfr_div_2ui (tmp, tmp, 1, MPFR_RNDN);
+          mpfr_add (tmp, u, v, GMP_RNDN);
+          mpfr_div_2ui (tmp, tmp, 1, GMP_RNDN);
           /* See proof in algorithms.tex */
           if (4*eq > p)
             {
               mpfr_t w;
               /* tmp = U(k) */
               mpfr_init2 (w, (p + 1) / 2);
-              mpfr_sub (w, v, u, MPFR_RNDN);         /* e = V(k-1)-U(k-1) */
-              mpfr_sqr (w, w, MPFR_RNDN);            /* e = e^2 */
-              mpfr_div_2ui (w, w, 4, MPFR_RNDN);     /* e*= (1/2)^2*1/4  */
-              mpfr_div (w, w, tmp, MPFR_RNDN);       /* 1/4*e^2/U(k) */
-              mpfr_sub (v, tmp, w, MPFR_RNDN);
+              mpfr_sub (w, v, u, GMP_RNDN);         /* e = V(k-1)-U(k-1) */
+              mpfr_sqr (w, w, GMP_RNDN);            /* e = e^2 */
+              mpfr_div_2ui (w, w, 4, GMP_RNDN);     /* e*= (1/2)^2*1/4  */
+              mpfr_div (w, w, tmp, GMP_RNDN);       /* 1/4*e^2/U(k) */
+              mpfr_sub (v, tmp, w, GMP_RNDN);
               err = MPFR_GET_EXP (tmp) - MPFR_GET_EXP (v); /* 0 or 1 */
               mpfr_clear (w);
               break;
             }
-          mpfr_mul (u, u, v, MPFR_RNDN);
-          mpfr_sqrt (u, u, MPFR_RNDN);
+          mpfr_mul (u, u, v, GMP_RNDN);
+          mpfr_sqrt (u, u, GMP_RNDN);
           mpfr_swap (v, tmp);
           n ++;
         }

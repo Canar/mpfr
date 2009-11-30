@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
@@ -31,9 +31,9 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #ifdef WANT_ASSERT
 # if WANT_ASSERT >= 3
 
-int mpfr_mul2 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode);
+int mpfr_mul2 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode);
 static int
-mpfr_mul3 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
+mpfr_mul3 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode)
 {
   /* Old implementation */
   int sign_product, cc, inexact;
@@ -89,6 +89,7 @@ mpfr_mul3 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
           MPFR_RET(0); /* 0 * 0 is exact */
         }
     }
+  MPFR_CLEAR_FLAGS(a);
   sign_product = MPFR_MULT_SIGN( MPFR_SIGN(b) , MPFR_SIGN(c) );
 
   ax = MPFR_GET_EXP (b) + MPFR_GET_EXP (c);
@@ -145,10 +146,10 @@ mpfr_mul3 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
            result (i.e. before rounding, i.e. without taking cc into account)
            is < __gmpfr_emin - 1 or the exact result is a power of 2 (i.e. if
            both arguments are powers of 2), then round to zero. */
-        if (rnd_mode == MPFR_RNDN &&
+        if (rnd_mode == GMP_RNDN &&
             (ax + (mp_exp_t) b1 < __gmpfr_emin ||
              (mpfr_powerof2_raw (b) && mpfr_powerof2_raw (c))))
-          rnd_mode = MPFR_RNDZ;
+          rnd_mode = GMP_RNDZ;
         return mpfr_underflow (a, rnd_mode, sign_product);
       }
     MPFR_SET_EXP (a, ax2);
@@ -158,7 +159,7 @@ mpfr_mul3 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
 }
 
 int
-mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
+mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode)
 {
   mpfr_t ta, tb, tc;
   int inexact1, inexact2;
@@ -166,8 +167,8 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   mpfr_init2 (ta, MPFR_PREC (a));
   mpfr_init2 (tb, MPFR_PREC (b));
   mpfr_init2 (tc, MPFR_PREC (c));
-  MPFR_ASSERTN (mpfr_set (tb, b, MPFR_RNDN) == 0);
-  MPFR_ASSERTN (mpfr_set (tc, c, MPFR_RNDN) == 0);
+  MPFR_ASSERTN (mpfr_set (tb, b, GMP_RNDN) == 0);
+  MPFR_ASSERTN (mpfr_set (tc, c, GMP_RNDN) == 0);
 
   inexact2 = mpfr_mul3 (ta, tb, tc, rnd_mode);
   inexact1  = mpfr_mul2 (a, b, c, rnd_mode);
@@ -178,13 +179,13 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
                "Prec_a = %lu, Prec_b = %lu, Prec_c = %lu\nB = ",
                mpfr_print_rnd_mode (rnd_mode),
                MPFR_PREC (a), MPFR_PREC (b), MPFR_PREC (c));
-      mpfr_out_str (stderr, 16, 0, tb, MPFR_RNDN);
+      mpfr_out_str (stderr, 16, 0, tb, GMP_RNDN);
       fprintf (stderr, "\nC = ");
-      mpfr_out_str (stderr, 16, 0, tc, MPFR_RNDN);
+      mpfr_out_str (stderr, 16, 0, tc, GMP_RNDN);
       fprintf (stderr, "\nOldMul: ");
-      mpfr_out_str (stderr, 16, 0, ta, MPFR_RNDN);
+      mpfr_out_str (stderr, 16, 0, ta, GMP_RNDN);
       fprintf (stderr, "\nNewMul: ");
-      mpfr_out_str (stderr, 16, 0, a, MPFR_RNDN);
+      mpfr_out_str (stderr, 16, 0, a, GMP_RNDN);
       fprintf (stderr, "\nNewInexact = %d | OldInexact = %d\n",
                inexact1, inexact2);
       MPFR_ASSERTN(0);
@@ -203,7 +204,7 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
 /* Multiply 2 mpfr_t */
 
 int
-mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
+mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode)
 {
   int sign, inexact;
   mp_exp_t  ax, ax2;
@@ -261,6 +262,7 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
           MPFR_RET (0);
         }
     }
+  MPFR_CLEAR_FLAGS (a);
   sign = MPFR_MULT_SIGN (MPFR_SIGN (b), MPFR_SIGN (c));
 
   ax = MPFR_GET_EXP (b) + MPFR_GET_EXP (c);
@@ -274,7 +276,7 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   if (MPFR_UNLIKELY (ax > __gmpfr_emax + 1))
     return mpfr_overflow (a, rnd_mode, sign);
   if (MPFR_UNLIKELY (ax < __gmpfr_emin - 2))
-    return mpfr_underflow (a, rnd_mode == MPFR_RNDN ? MPFR_RNDZ : rnd_mode,
+    return mpfr_underflow (a, rnd_mode == GMP_RNDN ? GMP_RNDZ : rnd_mode,
                            sign);
 #endif
 
@@ -464,7 +466,7 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
         MPFR_ASSERTD (MPFR_LIMB_MSB (tmp[tn-1]) != 0);
 
         if (MPFR_UNLIKELY (!mpfr_round_p (tmp, tn, p+b1-1, MPFR_PREC(a)
-                                          + (rnd_mode == MPFR_RNDN))))
+                                          + (rnd_mode == GMP_RNDN))))
           {
             tmp -= k - tn; /* tmp may have changed, FIX IT!!!!! */
             goto full_multiply;
@@ -501,10 +503,10 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
          result (i.e. before rounding, i.e. without taking cc into account)
          is < __gmpfr_emin - 1 or the exact result is a power of 2 (i.e. if
          both arguments are powers of 2), then round to zero. */
-      if (rnd_mode == MPFR_RNDN
+      if (rnd_mode == GMP_RNDN
           && (ax + (mp_exp_t) b1 < __gmpfr_emin
               || (mpfr_powerof2_raw (b) && mpfr_powerof2_raw (c))))
-        rnd_mode = MPFR_RNDZ;
+        rnd_mode = GMP_RNDZ;
       return mpfr_underflow (a, rnd_mode, sign);
     }
   MPFR_RET (inexact);

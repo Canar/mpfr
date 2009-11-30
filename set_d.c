@@ -8,7 +8,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -17,9 +17,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include <float.h>  /* For DOUBLE_ISINF and DOUBLE_ISNAN */
 
@@ -140,7 +140,7 @@ __gmpfr_extract_double (mp_ptr rp, double d)
 /* End of part included from gmp-2.0.2 */
 
 int
-mpfr_set_d (mpfr_ptr r, double d, mpfr_rnd_t rnd_mode)
+mpfr_set_d (mpfr_ptr r, double d, mp_rnd_t rnd_mode)
 {
   int signd, inexact;
   unsigned int cnt;
@@ -148,6 +148,8 @@ mpfr_set_d (mpfr_ptr r, double d, mpfr_rnd_t rnd_mode)
   mpfr_t tmp;
   mp_limb_t tmpmant[MPFR_LIMBS_PER_DOUBLE];
   MPFR_SAVE_EXPO_DECL (expo);
+
+  MPFR_CLEAR_FLAGS(r);
 
   if (MPFR_UNLIKELY(DOUBLE_ISNAN(d)))
     {

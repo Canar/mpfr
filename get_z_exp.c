@@ -8,7 +8,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -17,9 +17,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include "mpfr-impl.h"
 
@@ -66,8 +66,8 @@ mpfr_get_z_exp (mpz_ptr z, mpfr_srcptr f)
   /* Test if the result is representable. Later, we could choose
      to return MPFR_EXP_MIN if it isn't, or perhaps MPFR_EXP_MAX
      to signal an error. The significand would still be meaningful. */
-  MPFR_ASSERTD ((mpfr_uexp_t) MPFR_GET_EXP (f) - MPFR_EXP_MIN
-                >= (mpfr_uexp_t) MPFR_PREC(f));
+  MPFR_ASSERTD ((mp_exp_unsigned_t) MPFR_GET_EXP (f) - MPFR_EXP_MIN
+                >= (mp_exp_unsigned_t) MPFR_PREC(f));
 
   return MPFR_GET_EXP (f) - MPFR_PREC (f);
 }

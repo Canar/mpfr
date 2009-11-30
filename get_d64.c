@@ -12,7 +12,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -21,9 +21,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include <stdlib.h> /* for strtol */
 #include "mpfr-impl.h"
@@ -294,7 +294,7 @@ string_to_Decimal64 (char *s)
 }
 
 _Decimal64
-mpfr_get_decimal64 (mpfr_srcptr src, mpfr_rnd_t rnd_mode)
+mpfr_get_decimal64 (mpfr_srcptr src, mp_rnd_t rnd_mode)
 {
   int negative;
   mp_exp_t e;
@@ -317,16 +317,13 @@ mpfr_get_decimal64 (mpfr_srcptr src, mpfr_rnd_t rnd_mode)
   e = MPFR_GET_EXP (src);
   negative = MPFR_IS_NEG (src);
 
-  if (MPFR_UNLIKELY(rnd_mode == MPFR_RNDA))
-    rnd_mode = negative ? MPFR_RNDD : MPFR_RNDU;
-
   /* the smallest decimal64 number is 10^(-398),
      with 2^(-1323) < 10^(-398) < 2^(-1322) */
   if (MPFR_UNLIKELY (e < -1323)) /* src <= 2^(-1324) < 1/2*10^(-398) */
     {
-      if (rnd_mode == MPFR_RNDZ || rnd_mode == MPFR_RNDN
-          || (rnd_mode == MPFR_RNDD && negative == 0)
-          || (rnd_mode == MPFR_RNDU && negative != 0))
+      if (rnd_mode == GMP_RNDZ || rnd_mode == GMP_RNDN
+          || (rnd_mode == GMP_RNDD && negative == 0)
+          || (rnd_mode == GMP_RNDU && negative != 0))
         return get_decimal64_zero (negative);
       else /* return the smallest non-zero number */
         return get_decimal64_min (negative);
@@ -334,8 +331,8 @@ mpfr_get_decimal64 (mpfr_srcptr src, mpfr_rnd_t rnd_mode)
   /* the largest decimal64 number is just below 10^(385) < 2^1279 */
   else if (MPFR_UNLIKELY (e > 1279)) /* then src >= 2^1279 */
     {
-      if (MPFR_RNDZ || (rnd_mode == MPFR_RNDU && negative != 0)
-          || (rnd_mode == MPFR_RNDD && negative == 0))
+      if (GMP_RNDZ || (rnd_mode == GMP_RNDU && negative != 0)
+          || (rnd_mode == GMP_RNDD && negative == 0))
         return get_decimal64_max (negative);
       else
         return get_decimal64_inf (negative);
@@ -354,9 +351,9 @@ mpfr_get_decimal64 (mpfr_srcptr src, mpfr_rnd_t rnd_mode)
              which corresponds to s=[0.]1000...000 and e=-397 */
           if (e < -397)
             {
-              if (rnd_mode == MPFR_RNDZ || rnd_mode == MPFR_RNDN
-                  || (rnd_mode == MPFR_RNDD && negative == 0)
-                  || (rnd_mode == MPFR_RNDU && negative != 0))
+              if (rnd_mode == GMP_RNDZ || rnd_mode == GMP_RNDN
+                  || (rnd_mode == GMP_RNDD && negative == 0)
+                  || (rnd_mode == GMP_RNDU && negative != 0))
                 return get_decimal64_zero (negative);
               else /* return the smallest non-zero number */
                 return get_decimal64_min (negative);
@@ -379,8 +376,8 @@ mpfr_get_decimal64 (mpfr_srcptr src, mpfr_rnd_t rnd_mode)
          which corresponds to s=[0.]9999...999 and e=385 */
       else if (e > 385)
         {
-          if (MPFR_RNDZ || (rnd_mode == MPFR_RNDU && negative != 0)
-              || (rnd_mode == MPFR_RNDD && negative == 0))
+          if (GMP_RNDZ || (rnd_mode == GMP_RNDU && negative != 0)
+              || (rnd_mode == GMP_RNDD && negative == 0))
             return get_decimal64_max (negative);
           else
             return get_decimal64_inf (negative);

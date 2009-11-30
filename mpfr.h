@@ -7,7 +7,7 @@ This file is part of the GNU MPFR Library.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,18 +16,18 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #ifndef __MPFR_H
 #define __MPFR_H
 
 /* Define MPFR version number */
-#define MPFR_VERSION_MAJOR 3
-#define MPFR_VERSION_MINOR 0
-#define MPFR_VERSION_PATCHLEVEL 0
-#define MPFR_VERSION_STRING "3.0.0-dev"
+#define MPFR_VERSION_MAJOR 2
+#define MPFR_VERSION_MINOR 4
+#define MPFR_VERSION_PATCHLEVEL 2
+#define MPFR_VERSION_STRING "2.4.2"
 
 /* Macros dealing with MPFR VERSION */
 #define MPFR_VERSION_NUM(a,b,c) (((a) << 16L) | ((b) << 8) | (c))
@@ -64,34 +64,20 @@ MPFR_VERSION_NUM(MPFR_VERSION_MAJOR,MPFR_VERSION_MINOR,MPFR_VERSION_PATCHLEVEL)
 # define _MPFR_H_HAVE_INTMAX_T 1
 #endif
 
-/* Definition of rounding modes (DON'T USE MPFR_RNDNA!).
+/* Definition of rounding modes (DON'T USE GMP_RNDNA!).
    Warning! Changing the contents of this enum should be seen as an
    interface change since the old and the new types are not compatible
    (the integer type compatible with the enumerated type can even change,
-   see ISO C99, 6.7.2.2#4), and in Makefile.am, AGE should be set to 0.
-
-   MPFR_RNDU must appear just before MPFR_RNDD (see
-   MPFR_IS_RNDUTEST_OR_RNDDNOTTEST in mpfr-impl.h).
-
-   If you change the order of the rounding modes, please update the routines
-   in texceptions.c which assume 0=RNDN, 1=RNDZ, 2=RNDU, 3=RNDD, 4=RNDA.
-*/
+   see ISO C99, 6.7.2.2#4), and in Makefile.am, AGE should be set to 0. */
 typedef enum {
-  MPFR_RNDN=0,  /* round to nearest, with ties to even */
-  MPFR_RNDZ,    /* round toward zero */
-  MPFR_RNDU,    /* round toward +Inf */
-  MPFR_RNDD,    /* round toward -Inf */
-  MPFR_RNDA,    /* round away from zero */
-  MPFR_RND_MAX, /* gives number of supported rounding modes, those after are
+  GMP_RNDN=0,  /* round to nearest, with ties to even */
+  GMP_RNDZ,    /* round toward zero */
+  GMP_RNDU,    /* round toward +Inf */
+  GMP_RNDD,    /* round toward -Inf */
+  GMP_RND_MAX, /* gives number of supported rounding modes, those after are
                   only supported by some functions */
-  MPFR_RNDNA=-1 /* round to nearest, with ties away from zero (mpfr_round) */
+  GMP_RNDNA=-1 /* round to nearest, with ties away from zero (mpfr_round) */
 } mpfr_rnd_t;
-
-/* kept for compatibility with MPFR 2.4.x and before */
-#define GMP_RNDN MPFR_RNDN
-#define GMP_RNDZ MPFR_RNDZ
-#define GMP_RNDU MPFR_RNDU
-#define GMP_RNDD MPFR_RNDD
 
 /* Define precision : 1 (short), 2 (int) or 3 (long) (DON'T USE IT!)*/
 #ifndef _MPFR_PREC_FORMAT
@@ -217,8 +203,6 @@ extern "C" {
 
 __MPFR_DECLSPEC __gmp_const char * mpfr_get_version _MPFR_PROTO ((void));
 __MPFR_DECLSPEC __gmp_const char * mpfr_get_patches _MPFR_PROTO ((void));
-__MPFR_DECLSPEC int mpfr_buildopt_tls_p     _MPFR_PROTO ((void));
-__MPFR_DECLSPEC int mpfr_buildopt_decimal_p _MPFR_PROTO ((void));
 
 __MPFR_DECLSPEC mp_exp_t mpfr_get_emin     _MPFR_PROTO ((void));
 __MPFR_DECLSPEC int      mpfr_set_emin     _MPFR_PROTO ((mp_exp_t));
@@ -230,7 +214,7 @@ __MPFR_DECLSPEC mp_exp_t mpfr_get_emax_min _MPFR_PROTO ((void));
 __MPFR_DECLSPEC mp_exp_t mpfr_get_emax_max _MPFR_PROTO ((void));
 
 __MPFR_DECLSPEC void mpfr_set_default_rounding_mode _MPFR_PROTO((mpfr_rnd_t));
-__MPFR_DECLSPEC mpfr_rnd_t mpfr_get_default_rounding_mode _MPFR_PROTO((void));
+__MPFR_DECLSPEC mp_rnd_t mpfr_get_default_rounding_mode _MPFR_PROTO((void));
 __MPFR_DECLSPEC __gmp_const char *
    mpfr_print_rnd_mode _MPFR_PROTO((mpfr_rnd_t));
 
@@ -272,7 +256,6 @@ __MPFR_DECLSPEC int
 __MPFR_DECLSPEC int
   mpfr_can_round _MPFR_PROTO ((mpfr_srcptr, mp_exp_t, mpfr_rnd_t, mpfr_rnd_t,
                                mpfr_prec_t));
-__MPFR_DECLSPEC mpfr_prec_t mpfr_min_prec _MPFR_PROTO ((mpfr_srcptr));
 
 __MPFR_DECLSPEC mp_exp_t mpfr_get_exp _MPFR_PROTO ((mpfr_srcptr));
 __MPFR_DECLSPEC int mpfr_set_exp _MPFR_PROTO ((mpfr_ptr, mp_exp_t));
@@ -283,10 +266,9 @@ __MPFR_DECLSPEC void mpfr_set_default_prec _MPFR_PROTO((mpfr_prec_t));
 __MPFR_DECLSPEC mp_prec_t mpfr_get_default_prec _MPFR_PROTO((void));
 
 __MPFR_DECLSPEC int mpfr_set_d _MPFR_PROTO ((mpfr_ptr, double, mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_set_flt _MPFR_PROTO ((mpfr_ptr, float, mpfr_rnd_t));
 #ifdef MPFR_WANT_DECIMAL_FLOATS
 __MPFR_DECLSPEC int mpfr_set_decimal64 _MPFR_PROTO ((mpfr_ptr, _Decimal64,
-                                                     mpfr_rnd_t));
+                                                     mp_rnd_t));
 #endif
 __MPFR_DECLSPEC int
   mpfr_set_ld _MPFR_PROTO ((mpfr_ptr, long double, mpfr_rnd_t));
@@ -294,7 +276,6 @@ __MPFR_DECLSPEC int
   mpfr_set_z _MPFR_PROTO ((mpfr_ptr, mpz_srcptr, mpfr_rnd_t));
 __MPFR_DECLSPEC void mpfr_set_nan _MPFR_PROTO ((mpfr_ptr));
 __MPFR_DECLSPEC void mpfr_set_inf _MPFR_PROTO ((mpfr_ptr, int));
-__MPFR_DECLSPEC void mpfr_set_zero _MPFR_PROTO ((mpfr_ptr, int));
 __MPFR_DECLSPEC int
   mpfr_set_f _MPFR_PROTO ((mpfr_ptr, mpf_srcptr, mpfr_rnd_t));
 __MPFR_DECLSPEC int
@@ -344,11 +325,10 @@ __MPFR_DECLSPEC uintmax_t mpfr_get_uj _MPFR_PROTO ((mpfr_srcptr, mpfr_rnd_t));
 #endif
 
 __MPFR_DECLSPEC mp_exp_t mpfr_get_z_exp _MPFR_PROTO ((mpz_ptr, mpfr_srcptr));
-__MPFR_DECLSPEC float mpfr_get_flt _MPFR_PROTO ((mpfr_srcptr, mpfr_rnd_t));
 __MPFR_DECLSPEC double mpfr_get_d _MPFR_PROTO ((mpfr_srcptr, mpfr_rnd_t));
 #ifdef MPFR_WANT_DECIMAL_FLOATS
 __MPFR_DECLSPEC _Decimal64 mpfr_get_decimal64 _MPFR_PROTO ((mpfr_srcptr,
-                                                           mpfr_rnd_t));
+                                                           mp_rnd_t));
 #endif
 __MPFR_DECLSPEC long double mpfr_get_ld _MPFR_PROTO ((mpfr_srcptr,
                                                       mpfr_rnd_t));
@@ -362,11 +342,14 @@ __MPFR_DECLSPEC unsigned long mpfr_get_ui _MPFR_PROTO ((mpfr_srcptr,
                                                         mpfr_rnd_t));
 __MPFR_DECLSPEC char*mpfr_get_str _MPFR_PROTO ((char*, mp_exp_t*, int, size_t,
                                                 mpfr_srcptr, mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_get_z _MPFR_PROTO ((mpz_ptr z, mpfr_srcptr f,
-                                             mpfr_rnd_t));
+__MPFR_DECLSPEC void mpfr_get_z _MPFR_PROTO ((mpz_ptr z, mpfr_srcptr f,
+                                              mpfr_rnd_t));
 
 __MPFR_DECLSPEC void mpfr_free_str _MPFR_PROTO ((char *));
 
+
+__MPFR_DECLSPEC void mpfr_random _MPFR_PROTO ((mpfr_ptr));
+__MPFR_DECLSPEC void mpfr_random2 _MPFR_PROTO ((mpfr_ptr,mp_size_t,mp_exp_t));
 __MPFR_DECLSPEC int mpfr_urandomb _MPFR_PROTO ((mpfr_ptr, gmp_randstate_t));
 
 __MPFR_DECLSPEC void mpfr_nextabove _MPFR_PROTO ((mpfr_ptr));
@@ -552,11 +535,11 @@ __MPFR_DECLSPEC int mpfr_frac _MPFR_PROTO ((mpfr_ptr,mpfr_srcptr,mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_modf _MPFR_PROTO ((mpfr_ptr, mpfr_ptr, mpfr_srcptr,
                                                   mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_remquo _MPFR_PROTO ((mpfr_ptr, long*, mpfr_srcptr,
-                                              mpfr_srcptr, mpfr_rnd_t));
+                                              mpfr_srcptr, mp_rnd_t));
 __MPFR_DECLSPEC int mpfr_remainder _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
-                                                 mpfr_srcptr, mpfr_rnd_t));
+                                                 mpfr_srcptr, mp_rnd_t));
 __MPFR_DECLSPEC int mpfr_fmod _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
-                                                 mpfr_srcptr, mpfr_rnd_t));
+                                                 mpfr_srcptr, mp_rnd_t));
 
 __MPFR_DECLSPEC int mpfr_fits_ulong_p _MPFR_PROTO((mpfr_srcptr, mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_fits_slong_p _MPFR_PROTO((mpfr_srcptr, mpfr_rnd_t));
@@ -577,7 +560,6 @@ __MPFR_DECLSPEC int mpfr_inf_p _MPFR_PROTO((mpfr_srcptr));
 __MPFR_DECLSPEC int mpfr_number_p _MPFR_PROTO((mpfr_srcptr));
 __MPFR_DECLSPEC int mpfr_integer_p _MPFR_PROTO ((mpfr_srcptr));
 __MPFR_DECLSPEC int mpfr_zero_p _MPFR_PROTO ((mpfr_srcptr));
-__MPFR_DECLSPEC int mpfr_regular_p _MPFR_PROTO ((mpfr_srcptr));
 
 __MPFR_DECLSPEC int mpfr_greater_p _MPFR_PROTO ((mpfr_srcptr, mpfr_srcptr));
 __MPFR_DECLSPEC int mpfr_greaterequal_p _MPFR_PROTO ((mpfr_srcptr,
@@ -624,7 +606,6 @@ __MPFR_DECLSPEC int mpfr_root _MPFR_PROTO ((mpfr_ptr,mpfr_srcptr,unsigned long,m
 __MPFR_DECLSPEC int mpfr_gamma _MPFR_PROTO((mpfr_ptr,mpfr_srcptr,mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_lngamma _MPFR_PROTO((mpfr_ptr,mpfr_srcptr,mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_lgamma _MPFR_PROTO((mpfr_ptr,int*,mpfr_srcptr,mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_digamma _MPFR_PROTO((mpfr_ptr,mpfr_srcptr,mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_zeta _MPFR_PROTO ((mpfr_ptr,mpfr_srcptr,mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_zeta_ui _MPFR_PROTO ((mpfr_ptr,unsigned long,mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_fac_ui _MPFR_PROTO ((mpfr_ptr, unsigned long int,
@@ -677,7 +658,7 @@ __MPFR_DECLSPEC int mpfr_sum _MPFR_PROTO ((mpfr_ptr, mpfr_ptr *__gmp_const,
 __MPFR_DECLSPEC void mpfr_free_cache _MPFR_PROTO ((void));
 
 __MPFR_DECLSPEC int  mpfr_subnormalize _MPFR_PROTO ((mpfr_ptr, int,
-                                                     mpfr_rnd_t));
+                                                     mp_rnd_t));
 
 __MPFR_DECLSPEC int  mpfr_strtofr _MPFR_PROTO ((mpfr_ptr, __gmp_const char *,
                                                 char **, int, mpfr_rnd_t));
@@ -717,9 +698,8 @@ __MPFR_DECLSPEC int    mpfr_custom_get_kind   _MPFR_PROTO ((mpfr_srcptr));
 # endif
 #endif
 
-/* Warning! This macro doesn't work with K&R C (e.g., compare the "gcc -E"
-   output with and without -traditional) and shouldn't be used internally.
-   For public use only, but see the MPFR manual. */
+/* Warning! This macro doesn't work with K&R C and shouldn't be used
+   internally. For public use only, but see the MPFR manual. */
 #define MPFR_DECL_INIT(_x, _p)                                        \
   MPFR_EXTENSION mp_limb_t __gmpfr_local_tab_##_x[((_p)-1)/GMP_NUMB_BITS+1]; \
   MPFR_EXTENSION mpfr_t _x = {{(_p),1,__MPFR_EXP_NAN,__gmpfr_local_tab_##_x}}
@@ -730,26 +710,22 @@ __MPFR_DECLSPEC int    mpfr_custom_get_kind   _MPFR_PROTO ((mpfr_srcptr));
 #ifndef MPFR_USE_NO_MACRO
 
 /* Inlining theses functions is both faster and smaller */
-#define mpfr_nan_p(_x)      ((_x)->_mpfr_exp == __MPFR_EXP_NAN)
-#define mpfr_inf_p(_x)      ((_x)->_mpfr_exp == __MPFR_EXP_INF)
-#define mpfr_zero_p(_x)     ((_x)->_mpfr_exp == __MPFR_EXP_ZERO)
-#define mpfr_regular_p(_x)  ((_x)->_mpfr_exp >  __MPFR_EXP_INF)
+#define mpfr_nan_p(_x)    ((_x)->_mpfr_exp == __MPFR_EXP_NAN)
+#define mpfr_inf_p(_x)    ((_x)->_mpfr_exp == __MPFR_EXP_INF)
+#define mpfr_zero_p(_x)   ((_x)->_mpfr_exp == __MPFR_EXP_ZERO)
 #define mpfr_sgn(_x)                                          \
   ((_x)->_mpfr_exp < __MPFR_EXP_INF ?                         \
    (mpfr_nan_p (_x) ? mpfr_set_erangeflag () : (void) 0), 0 : \
    MPFR_SIGN (_x))
 
 /* Prevent them from using as lvalues */
-#define MPFR_VALUE_OF(x)  (0 ? (x) : (x))
-#define mpfr_get_prec(_x) MPFR_VALUE_OF((_x)->_mpfr_prec)
-#define mpfr_get_exp(_x)  MPFR_VALUE_OF((_x)->_mpfr_exp)
-/* Note: if need be, the MPFR_VALUE_OF can be used for other expressions
-   (of any type). Thanks to Wojtek Lerch and Tim Rentsch for the idea. */
+#define mpfr_get_prec(_x) ((_x)->_mpfr_prec + 0)
+#define mpfr_get_exp(_x)  ((_x)->_mpfr_exp + 0)
 
-#define mpfr_round(a,b) mpfr_rint((a), (b), MPFR_RNDNA)
-#define mpfr_trunc(a,b) mpfr_rint((a), (b), MPFR_RNDZ)
-#define mpfr_ceil(a,b)  mpfr_rint((a), (b), MPFR_RNDU)
-#define mpfr_floor(a,b) mpfr_rint((a), (b), MPFR_RNDD)
+#define mpfr_round(a,b) mpfr_rint((a), (b), GMP_RNDNA)
+#define mpfr_trunc(a,b) mpfr_rint((a), (b), GMP_RNDZ)
+#define mpfr_ceil(a,b)  mpfr_rint((a), (b), GMP_RNDU)
+#define mpfr_floor(a,b) mpfr_rint((a), (b), GMP_RNDD)
 
 #define mpfr_cmp_ui(b,i) mpfr_cmp_ui_2exp((b),(i),0)
 #define mpfr_cmp_si(b,i) mpfr_cmp_si_2exp((b),(i),0)

@@ -7,7 +7,7 @@ dnl  This file is part of the GNU MPFR Library.
 dnl
 dnl  The GNU MPFR Library is free software; you can redistribute it and/or modify
 dnl  it under the terms of the GNU Lesser General Public License as published
-dnl  by the Free Software Foundation; either version 3 of the License, or (at
+dnl  by the Free Software Foundation; either version 2.1 of the License, or (at
 dnl  your option) any later version.
 dnl
 dnl  The GNU MPFR Library is distributed in the hope that it will be useful, but
@@ -16,9 +16,9 @@ dnl  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 dnl  License for more details.
 dnl
 dnl  You should have received a copy of the GNU Lesser General Public License
-dnl  along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
-dnl  http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-dnl  51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+dnl  along with the GNU MPFR Library; see the file COPYING.LIB.  If not, write to
+dnl  the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+dnl  MA 02110-1301, USA.
 
 dnl  autoconf 2.60 is necessary because of the use of AC_PROG_SED.
 dnl  The following line allows the autoconf wrapper (when installed)
@@ -104,6 +104,14 @@ alpha*-*-*)
   else
     CFLAGS="$saved_CFLAGS $mpfr_cv_ieee_switches"
   fi
+esac
+
+dnl Check for Core2 processor
+case $host in
+x86_64-*linux*)
+  case `sed -n '/^vendor_id/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo` in
+    *Intel*) AC_DEFINE(HAVE_HOST_CORE2,1,[Define if processor is Core 2]) ;;
+  esac
 esac
 
 dnl check for long long

@@ -1,12 +1,12 @@
 /*
 Copyright 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
-Contributed by Patrick Pelissier and Paul Zimmermann, INRIA.
+Contributed by Patrick Pelissier, INRIA.
 
 This file is part of the MPFR Library.
 
 The MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation; either version 3 of the License, or (at your
+the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
 The MPFR Library is distributed in the hope that it will be useful, but
@@ -15,9 +15,9 @@ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the MPFR Library; see the file COPYING.LESSER.  If not, see
-http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+along with the MPFR Library; see the file COPYING.LIB.  If not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA 02110-1301, USA. */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -85,7 +85,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 /*
  * List of all the tests to do.
- * Macro "BENCH" is defined below.
+ * Macro "Bench" is defined futhermore
  */
 #define TEST_LIST \
   BENCH("MPFR::::::::::", ; ); \
@@ -113,16 +113,15 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
   BENCH("mpf_swap", mpf_swap(y,z)); \
   EXTRA_TEST_LIST
 
-#define USAGE                                                           \
-  "Get the graph of the low-level functions of Mpfr (gnuplot).\n"       \
-          __FILE__" " __DATE__" " __TIME__" GCC "__VERSION__ "\n"       \
-  "Usage: mpfr-gfx [-bPREC_BEGIN] [-ePREC_END] [-sPREC_STEP] [-rPREC_RATIO]\n" \
-  "       [-mSTAT_SIZE] [-oFILENAME] [-xFUNCTION_NUM] [-yFUNCTION_NUM] [-c]\n" \
-  "       [-fSMOOTH] [-p]\n"
+#define USAGE                                                                \
+ "Get the graph of the low-level functions of Mpfr (gnuplot).\n"             \
+  __FILE__" " __DATE__" " __TIME__" GCC "__VERSION__ "\n"                    \
+ "Usage: mpfr-gfx [-bPREC_BEGIN] [-ePREC_END] [-sPREC_STEP] [-mSTAT_SIZE] \n"\
+ "       [-oFILENAME] [-xFUNCTION_NUM] [-yFUNCTION_NUM] [-c] [-fSMOOTH]\n"
 
 unsigned long num;
 mpf_t *xt, *yt, *zt;
-int smooth = 3; /* (default) minimal number of routine calls for each number */
+int smooth = 3;
 
 void lets_start(unsigned long n, mp_prec_t p)
 {
@@ -189,10 +188,8 @@ double get_speed(mp_prec_t p, int select)
 
   TIMP_OVERHEAD ();
 
-  /* we perform at least smooth loops */
   for(j = 0, cont = smooth ; cont ; j++, cont--)
     {
-      /* we loop over each of the num random numbers */
       for(i = 0 ; i < num ; i++)
 	{
 	  /* Set var for tests */
@@ -201,9 +198,6 @@ double get_speed(mp_prec_t p, int select)
 	  mpfr_set_f(b, yt[i], GMP_RNDN);
 	  mpfr_set_f(c, zt[i], GMP_RNDN);
 	  SCS(( scs_set_mpfr(sc2, b), scs_set_mpfr(sc3, c) ));
-	  /* if the measured time m is smaller than the smallest one
-	     observed so far mc[i] for the i-th random number, we start
-	     again the smooth loops */
 #undef BENCH
 #define BENCH(TEST_STR, TEST)                           \
 	  if (op++ == select) {                         \
@@ -232,89 +226,38 @@ double get_speed(mp_prec_t p, int select)
   return (double) (moy) / (double) num;
 }
 
-/* compares two functions given by indices select1 and select2
-   (by default select1 refers to mpfr and select2 to mpf).
-   
-   If postscript=0, output is plain gnuplot;
-   If postscript=1, output is postscript.
-*/
-int
-write_data (const char *filename, 
-	    unsigned long num,
-	    mp_prec_t p1, mp_prec_t p2, mp_prec_t ps, float pr,
-	    int select1, int select2, int postscript)
+int write_data(const char *filename, 
+	       unsigned long num,
+	       mp_prec_t p1, mp_prec_t p2, mp_prec_t ps,
+	       int select1, int select2)
 {
-  char strf[256], strg[256];
-  FILE *f, *g;
-  mp_prec_t p, step;
-  int op = 0;
+  FILE *f;
+  mp_prec_t p;
 
   lets_start (num, p2);
-  strcpy (strf, filename);
-  strcat (strf, ".data");
-  f = fopen (strf, "w");
-  if (f == NULL)
+  f = fopen(filename, "w");
+  if (f==NULL)
     {
-      fprintf (stderr, "Can't open %s!\n", strf);
+      fprintf(stderr, "Can't open %s!\n", filename);
       lets_end ();
-      abort ();
+      abort();
     }
-  strcpy (strg, filename);
-  strcat (strg, ".gnuplot");
-  g = fopen (strg, "w");
-  if (g == NULL)
-    {
-      fprintf (stderr, "Can't open %s!\n", strg);
-      lets_end ();
-      abort ();
-    }
-  fprintf (g, "set data style lines\n");
-  if (postscript)
-    fprintf (g, "set terminal postscript\n");
-#undef BENCH
-#define BENCH(TEST_STR, TEST)						\
-  if (++op == select1)							\
-    fprintf (g, "plot  \"%s\" using 1:2 title \"%s\", \\\n", strf,	\
-	     TEST_STR);							\
-  else if (op == select2)						\
-    fprintf (g, "      \"%s\" using 1:3 title \"%s\"\n", strf, TEST_STR);
-  op = -1;
-  TEST_LIST;
-
-  step = ps;
-  for (p = p1 ; p < p2 ; p+=step)
-    {
-      fprintf(f, "%lu\t%1.20e\t%1.20e\n", p, 
-              get_speed(p, select1),
-              get_speed(p, select2));
-      if (pr != 0.0)
-        {
-          step = (mp_prec_t) (p * pr - p);
-          if (step < 1)
-            step = 1;
-        }
-    }
-
-  fclose (f);
-  fclose (g);
+  for (p = p1 ; p < p2 ; p+=ps)
+    fprintf(f, "%lu\t%1.20e\t%1.20e\n", p, 
+	    get_speed(p, select1),
+	    get_speed(p, select2));
+  fclose(f);
   lets_end ();
-  if (postscript == 0)
-    fprintf (stderr, "Now type: gnuplot -persist %s.gnuplot\n", filename);
-  else
-    fprintf (stderr, "Now type: gnuplot %s.gnuplot > %s.ps\n", filename,
-	     filename);
   return 0;
 }
 
-/* this function considers all functions from s_begin to s_end */
-int
-write_data2 (const char *filename, 
-	     unsigned long num,
-	     mp_prec_t p_begin, mp_prec_t p_end, mp_prec_t p_step, float p_r,
-	     int s_begin, int s_end)
+int write_data2(const char *filename, 
+		unsigned long num,
+		mp_prec_t p_begin, mp_prec_t p_end, mp_prec_t p_step,
+		int s_begin, int s_end)
 {
   FILE *f;
-  mp_prec_t p, step;
+  mp_prec_t p;
   int s;
 
   lets_start (num, p_end);
@@ -325,20 +268,12 @@ write_data2 (const char *filename,
       lets_end ();
       exit (1);
     }
-
-  step = p_step;
-  for (p = p_begin ; p < p_end ; p += step)
+  for (p = p_begin ; p < p_end ; p += p_step)
     {
       fprintf (f, "%lu", p);
       for (s = s_begin ; s <= s_end ; s++)
 	fprintf (f, "\t%1.20e", get_speed (p, s));
       fprintf (f, "\n");
-      if (p_r != 0.0)
-        {
-          step = (mp_prec_t) (p * p_r - p);
-          if (step < 1)
-            step = 1;
-        }
     }
   fclose (f);
   lets_end ();
@@ -358,19 +293,17 @@ int op_num (void)
 int main(int argc, const char *argv[])
 {
   mp_prec_t p1, p2, ps;
-  float pr;
   int i;
   unsigned long stat;
-  const char *filename = "plot";
+  const char *filename = "plot.data";
   int select1, select2, max_op, conti;
-  int postscript = 0;
 
   printf (USAGE);
 
   max_op = op_num ();
   select1 = 1; select2 = 13;
-  p1 = 2; p2 = 500; ps = 4; pr = 0.0;
-  stat = 500; /* number of different random numbers */
+  p1 = 2; p2 = 500; ps = 4;
+  stat = 500;
   conti = 0;
 
   for(i = 1 ; i < argc ; i++)
@@ -388,14 +321,6 @@ int main(int argc, const char *argv[])
             case 's':
               ps = atol(argv[i]+2);
               break;
-            case 'r':
-              pr = atof (argv[i]+2);
-              if (pr <= 1.0)
-                {
-                  fprintf (stderr, "-rPREC_RATIO must be > 1.0\n");
-                  exit (1);
-                }
-              break;
  	    case 'm':
 	      stat = atol(argv[i]+2);
 	      break;
@@ -412,9 +337,6 @@ int main(int argc, const char *argv[])
 	    case 'c':
 	      conti = 1;
 	      break;
-	    case 'p':
-	      postscript = 1;
-	      break;
 	    case 'f':
 	      smooth = atoi  (argv[i]+2);
 	      break;
@@ -426,22 +348,17 @@ int main(int argc, const char *argv[])
     }
   /* Set low priority */
   setpriority(PRIO_PROCESS,0,14);
-  if (pr == 0.0)
-    printf("GMP:%s MPFR:%s From p=%lu to %lu by %lu Output: %s N=%ld\n",
-           gmp_version, mpfr_get_version(), p1,p2,ps, filename, stat);
-  else
-    printf("GMP:%s MPFR:%s From p=%lu to %lu by %f Output: %s N=%ld\n",
-           gmp_version, mpfr_get_version(), p1, p2, pr, filename, stat);
-
+  printf("GMP:%s MPFR:%s From p=%lu to %lu by %lu Output: %s N=%ld\n",
+	 gmp_version, mpfr_get_version(), p1,p2,ps, filename,stat);
   if (select2 >= max_op)
     select2 = max_op-1;
   if (select1 >= max_op)
     select1 = max_op-1;
 
   if (conti == 0)
-    write_data (filename, stat, p1, p2, ps, pr, select1, select2, postscript);
+    write_data (filename, stat, p1, p2, ps, select1, select2);
   else
-    write_data2 (filename, stat, p1, p2, ps, pr, select1, select2);
+    write_data2 (filename, stat, p1, p2, ps, select1, select2);
 
   return 0;
 }

@@ -11,10 +11,6 @@ grep -E 'mpfr_(underflow|overflow|nanflag|inexflag|erangeflag)_p' *.{c,h} | \
 grep -E 'if +(test|\[).* == ' acinclude.m4 configure.in
 grep -E '="`' acinclude.m4 configure.in
 
-grep GMP_RND {,tests/}*.{c,h} | grep -v '#define GMP_RND'
-
-grep mp_rnd_t {,tests/}*.{c,h} | grep -v '# *\(define\|ifndef\) *mp_rnd_t'
-
 for file in {,tests/}*.{c,h} {,tests/}Makefile.am acinclude.m4 configure.in
 do
   # Note: this is one less that the POSIX minimum limit in case
@@ -33,11 +29,10 @@ GFDL versions differ:
 EOF
 
 # Note: if paragraphs are reformatted, this may need to be updated.
-lgpl="`sed -n '/version [0-9.]\+ or any later version/ \
-  {s/.*version //; s/ or.*//; p; q}' mpfr.texi`"
+lgpl="`sed -n '/Version [0-9.]\+ or any later version/ \
+  {s/.*Version //; s/ or.*//; p; q}' mpfr.texi`"
 for file in {,tests/}*.{c,h}
 do
-  [ "$file" = "get_patches.c" ] && file="get_patches.sh"
   if grep -q "GNU MPFR Library" "$file"; then
     grep -q "either version $lgpl of the License" "$file" || \
       echo "Possibly missing or incorrect copyright notice in $file"

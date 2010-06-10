@@ -27,7 +27,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #define MPFR_VERSION_MAJOR 3
 #define MPFR_VERSION_MINOR 0
 #define MPFR_VERSION_PATCHLEVEL 0
-#define MPFR_VERSION_STRING "3.0.0-dev"
+#define MPFR_VERSION_STRING "3.0.0"
 
 /* Macros dealing with MPFR VERSION */
 #define MPFR_VERSION_NUM(a,b,c) (((a) << 16L) | ((b) << 8) | (c))
@@ -58,14 +58,12 @@ MPFR_VERSION_NUM(MPFR_VERSION_MAJOR,MPFR_VERSION_MINOR,MPFR_VERSION_PATCHLEVEL)
        We do not check INTMAX_MAX and UINTMAX_MAX because under Solaris,
        these macros are always defined by <limits.h> (i.e. even when
        <stdint.h> and <inttypes.h> are not included).
-     - _STDINT_H (defined by the glibc), _STDINT_H_ (defined under
-       Mac OS X) and _STDINT (defined under MS Visual Studio), but
-       this test may not work with all implementations.
+     - _STDINT_H (defined by the glibc) and _STDINT_H_ (defined under
+       Mac OS X), but this test may not work with all implementations.
        Portable software should not rely on these tests.
 */
 #if (defined (INTMAX_C) && defined (UINTMAX_C) && !defined(__cplusplus)) || \
-  defined (MPFR_USE_INTMAX_T) || \
-  defined (_STDINT_H) || defined (_STDINT_H_) || defined (_STDINT)
+  defined (MPFR_USE_INTMAX_T) || defined (_STDINT_H) || defined (_STDINT_H_)
 # define _MPFR_H_HAVE_INTMAX_T 1
 #endif
 
@@ -661,7 +659,6 @@ __MPFR_DECLSPEC int mpfr_yn _MPFR_PROTO ((mpfr_ptr, long, mpfr_srcptr,
                                           mpfr_rnd_t));
 
 __MPFR_DECLSPEC int mpfr_ai _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr, mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_ai2 _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr, mpfr_rnd_t));
 
 __MPFR_DECLSPEC int mpfr_min _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr, mpfr_srcptr,
                                            mpfr_rnd_t));

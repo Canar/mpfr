@@ -1,4 +1,426 @@
 ------------------------------------------------------------------------
+r6946 | vlefevre | 2010-06-10 10:46:21 +0000 (Thu, 10 Jun 2010) | 1 line
+Changed paths:
+   M /branches/3.0/VERSION
+   M /branches/3.0/configure.in
+   M /branches/3.0/mpfr.h
+   M /branches/3.0/mpfr.texi
+   M /branches/3.0/version.c
+
+Updated version to 3.0.0.
+------------------------------------------------------------------------
+r6944 | vlefevre | 2010-06-09 11:26:44 +0000 (Wed, 09 Jun 2010) | 2 lines
+Changed paths:
+   M /branches/3.0/INSTALL
+
+[INSTALL] Added a note on Mac OS X; thanks to FX Coudert and Fumihiro
+Chiba: http://websympa.loria.fr/wwsympa/arc/mpfr/2010-06/msg00011.html
+------------------------------------------------------------------------
+r6941 | vlefevre | 2010-06-08 16:18:45 +0000 (Tue, 08 Jun 2010) | 1 line
+Changed paths:
+   M /branches/3.0/INSTALL
+
+[INSTALL] Update concerning CC/CFLAGS and the --with-gmp-build option.
+------------------------------------------------------------------------
+r6939 | vlefevre | 2010-06-07 08:21:44 +0000 (Mon, 07 Jun 2010) | 2 lines
+Changed paths:
+   M /branches/3.0/NEWS
+
+[NEWS] Added an item about the --with-gmp-build configure option and
+the use of GMP's internal header files.
+------------------------------------------------------------------------
+r6936 | vlefevre | 2010-06-06 11:40:09 +0000 (Sun, 06 Jun 2010) | 1 line
+Changed paths:
+   M /branches/3.0/ChangeLog
+
+ChangeLog update with "LC_ALL=en_US.UTF8 TZ=UTC svn log -rHEAD:0 -v".
+------------------------------------------------------------------------
+r6935 | vlefevre | 2010-06-06 11:24:22 +0000 (Sun, 06 Jun 2010) | 2 lines
+Changed paths:
+   M /branches/3.0/exp_2.c
+
+[exp_2.c] Reverted incorrect optimization patch r6923 (added a comment).
+(merged changeset r6933 from the trunk)
+------------------------------------------------------------------------
+r6934 | vlefevre | 2010-06-06 11:23:18 +0000 (Sun, 06 Jun 2010) | 2 lines
+Changed paths:
+   M /branches/3.0/mpfr-impl.h
+
+[mpfr-impl.h] Added log messages for the MPFR_GROUP_* macros.
+(merged changeset r6932 from the trunk)
+------------------------------------------------------------------------
+r6931 | vlefevre | 2010-06-06 10:17:16 +0000 (Sun, 06 Jun 2010) | 2 lines
+Changed paths:
+   M /branches/3.0/mpfrlint
+
+[mpfrlint] Detect incorrect use of MPFR_LOG_MSG.
+(merged changeset r6930 from the trunk)
+------------------------------------------------------------------------
+r6928 | vlefevre | 2010-06-06 10:01:13 +0000 (Sun, 06 Jun 2010) | 1 line
+Changed paths:
+   M /branches/3.0/README.dev
+
+README.dev: updated "To make a release".
+------------------------------------------------------------------------
+r6926 | vlefevre | 2010-06-06 09:51:11 +0000 (Sun, 06 Jun 2010) | 1 line
+Changed paths:
+   M /branches/3.0/ai.c
+
+[ai.c] Merge from the trunk (mostly source formatting).
+------------------------------------------------------------------------
+r6924 | vlefevre | 2010-06-05 02:55:48 +0000 (Sat, 05 Jun 2010) | 1 line
+Changed paths:
+   M /branches/3.0/ChangeLog
+
+ChangeLog update with "LC_ALL=en_US.UTF8 TZ=UTC svn log -rHEAD:0 -v".
+------------------------------------------------------------------------
+r6923 | vlefevre | 2010-06-05 02:47:22 +0000 (Sat, 05 Jun 2010) | 2 lines
+Changed paths:
+   M /branches/3.0/exp_2.c
+
+[exp_2.c] speed improvement using MPFR_GROUP_* (from Patrick Pelissier)
+(merged changeset r6922 from the trunk)
+------------------------------------------------------------------------
+r6921 | vlefevre | 2010-06-04 10:18:38 +0000 (Fri, 04 Jun 2010) | 5 lines
+Changed paths:
+   M /branches/3.0/exp_2.c
+
+exp_2.c: replaced MY_INIT_MPZ (allocation on the stack) by mpz_init
+as GMP can reallocate mpz data even though the additional space isn't
+necessary (this could occur with low values of MPFR_EXP_2_THRESHOLD,
+such as 36), yielding buffer overflow.
+[merged 6917:6920 from the trunk]
+------------------------------------------------------------------------
+r6917 | vlefevre | 2010-06-03 15:11:57 +0000 (Thu, 03 Jun 2010) | 1 line
+Changed paths:
+   M /branches/3.0/ChangeLog
+
+ChangeLog update with "LC_ALL=en_US.UTF8 TZ=UTC svn log -rHEAD:0 -v".
+------------------------------------------------------------------------
+r6916 | vlefevre | 2010-06-03 15:08:55 +0000 (Thu, 03 Jun 2010) | 4 lines
+Changed paths:
+   M /branches/3.0/acinclude.m4
+
+[acinclude.m4] Math library check: removed rule specific to HP-UX
+(only -lM was tested while this library may not be available; so,
+let's use the default rule as -lm works).
+[merged changeset r6915 from the trunk]
+------------------------------------------------------------------------
+r6914 | vlefevre | 2010-06-03 08:29:14 +0000 (Thu, 03 Jun 2010) | 1 line
+Changed paths:
+   M /branches/3.0/ChangeLog
+
+ChangeLog update with "LC_ALL=en_US.UTF8 TZ=UTC svn log -rHEAD:0 -v".
+------------------------------------------------------------------------
+r6913 | vlefevre | 2010-06-03 08:25:20 +0000 (Thu, 03 Jun 2010) | 1 line
+Changed paths:
+   M /branches/3.0/mpfr.texi
+
+[mpfr.texi] Arenaire -> Arénaire.
+------------------------------------------------------------------------
+r6911 | vlefevre | 2010-06-03 08:09:16 +0000 (Thu, 03 Jun 2010) | 1 line
+Changed paths:
+   M /branches/3.0/VERSION
+   M /branches/3.0/configure.in
+   M /branches/3.0/mpfr.h
+   M /branches/3.0/mpfr.texi
+   M /branches/3.0/version.c
+
+Updated version to 3.0.0-rc2.
+------------------------------------------------------------------------
+r6910 | vlefevre | 2010-06-02 11:02:54 +0000 (Wed, 02 Jun 2010) | 1 line
+Changed paths:
+   M /branches/3.0/NEWS
+
+[NEWS] 3.0 -> 3.0.0.
+------------------------------------------------------------------------
+r6908 | vlefevre | 2010-06-02 11:01:39 +0000 (Wed, 02 Jun 2010) | 1 line
+Changed paths:
+   M /branches/3.0/NEWS
+
+[NEWS] Added test coverage for MPFR 3.0.0.
+------------------------------------------------------------------------
+r6906 | vlefevre | 2010-05-31 22:47:29 +0000 (Mon, 31 May 2010) | 1 line
+Changed paths:
+   M /branches/3.0/TODO
+
+[TODO] Update from the trunk.
+------------------------------------------------------------------------
+r6905 | vlefevre | 2010-05-31 22:44:19 +0000 (Mon, 31 May 2010) | 2 lines
+Changed paths:
+   M /branches/3.0/INSTALL
+
+[INSTALL] added instructions for "make tune"
+(merged changesets r6900 and r6904 from the trunk)
+------------------------------------------------------------------------
+r6903 | vlefevre | 2010-05-31 22:41:39 +0000 (Mon, 31 May 2010) | 2 lines
+Changed paths:
+   M /branches/3.0/README.dev
+
+[README.dev] completed missing instructions for "make tune"
+(merged changeset r6899 from the trunk)
+------------------------------------------------------------------------
+r6902 | vlefevre | 2010-05-31 22:35:51 +0000 (Mon, 31 May 2010) | 2 lines
+Changed paths:
+   M /branches/3.0/tests/tset_z_exp.c
+
+[tests/tset_z_exp.c] Correction from the trunk (possible overflow
+problem).
+------------------------------------------------------------------------
+r6894 | vlefevre | 2010-05-31 13:50:16 +0000 (Mon, 31 May 2010) | 8 lines
+Changed paths:
+   M /branches/3.0/NEWS
+   M /branches/3.0/TODO
+   M /branches/3.0/fdl.texi
+   M /branches/3.0/gammaonethird.c
+   M /branches/3.0/get_si.c
+   M /branches/3.0/get_sj.c
+   M /branches/3.0/get_ui.c
+   M /branches/3.0/get_uj.c
+   M /branches/3.0/get_z.c
+   M /branches/3.0/get_z_exp.c
+   M /branches/3.0/mpfr.h
+   M /branches/3.0/mpfr.texi
+   M /branches/3.0/stack_interface.c
+   M /branches/3.0/tests/tget_sj.c
+   M /branches/3.0/tests/tget_z.c
+   M /branches/3.0/tests/tset_si.c
+   M /branches/3.0/tests/tstckintc.c
+
+Merged latest changes from the trunk, more precisely:
+  * mpfr_custom_get_mantissa was renamed to mpfr_custom_get_significand.
+  * Functions mpfr_get_si, mpfr_get_ui, mpfr_get_sj, mpfr_get_uj,
+    mpfr_get_z and mpfr_get_z_2exp no longer have cases with undefined
+    behavior.
+  * mpfr.texi: many changes, and the encoding is now UTF-8.
+  * gammaonethird.c: do ... while(0) style for macros.
+  * TODO: update.
+------------------------------------------------------------------------
+r6887 | vlefevre | 2010-05-28 09:54:43 +0000 (Fri, 28 May 2010) | 2 lines
+Changed paths:
+   M /branches/3.0/Makefile.am
+   A /branches/3.0/examples/version.c (from /trunk/examples/version.c:6886)
+
+Added examples/version.c (and updated Makefile.am).
+[merged changeset r6886 from the trunk]
+------------------------------------------------------------------------
+r6884 | vlefevre | 2010-05-28 08:17:02 +0000 (Fri, 28 May 2010) | 1 line
+Changed paths:
+   M /branches/3.0/Makefile.am
+
+[Makefile.am] Improved dist-hook rule.
+------------------------------------------------------------------------
+r6876 | vlefevre | 2010-05-25 13:20:58 +0000 (Tue, 25 May 2010) | 1 line
+Changed paths:
+   M /branches/3.0/NEWS
+
+[NEWS] Correction.
+------------------------------------------------------------------------
+r6864 | vlefevre | 2010-05-25 07:28:55 +0000 (Tue, 25 May 2010) | 4 lines
+Changed paths:
+   M /branches/3.0/buildopt.c
+   M /branches/3.0/mpfrlint
+
+[buildopt.c] Missing #include "mpfr-impl.h" for cygwin builds.
+[mpfrlint] Detect such errors (mpfr-impl.h may be needed because it
+  includes config.h when there is one).
+[merged changeset r6863 from the trunk]
+------------------------------------------------------------------------
+r6861 | vlefevre | 2010-05-24 10:54:17 +0000 (Mon, 24 May 2010) | 1 line
+Changed paths:
+   M /branches/3.0/NEWS
+
+[NEWS] Reformat / fixed typography.
+------------------------------------------------------------------------
+r6857 | vlefevre | 2010-05-24 08:57:04 +0000 (Mon, 24 May 2010) | 1 line
+Changed paths:
+   M /branches/3.0/ChangeLog
+
+ChangeLog update with "LC_ALL=en_US.UTF8 TZ=UTC svn log -rHEAD:0 -v".
+------------------------------------------------------------------------
+r6856 | vlefevre | 2010-05-24 00:02:50 +0000 (Mon, 24 May 2010) | 6 lines
+Changed paths:
+   M /branches/3.0/sub1sp.c
+
+[sub1sp.c] Fixed a problem that appeared after mpfr_prec_t has been
+made signed. It was visible on PowerPC (tested on Linux 32 bits and
+on Mac OS X 32 & 64 bits), but could potentially affect any platform
+as a negative shift count was generated. As the faulty expressions
+were in a MPFR_ASSERTD, the failure could occur only when assertion
+checking had been enabled. [merged changeset r6855 from the trunk]
+------------------------------------------------------------------------
+r6854 | vlefevre | 2010-05-23 21:39:42 +0000 (Sun, 23 May 2010) | 2 lines
+Changed paths:
+   M /branches/3.0/VERSION
+   M /branches/3.0/configure.in
+   M /branches/3.0/mpfr.h
+   M /branches/3.0/mpfr.texi
+   M /branches/3.0/version.c
+
+Updated version to 3.0.0-rc1 (let's hope this one will be OK).
+Note: mpfr.texi will need to be updated before the final release.
+------------------------------------------------------------------------
+r6853 | vlefevre | 2010-05-22 23:08:57 +0000 (Sat, 22 May 2010) | 1 line
+Changed paths:
+   M /branches/3.0/README.dev
+
+[README.dev] Update from the trunk.
+------------------------------------------------------------------------
+r6850 | vlefevre | 2010-05-22 22:51:46 +0000 (Sat, 22 May 2010) | 7 lines
+Changed paths:
+   M /branches/3.0/acinclude.m4
+   M /branches/3.0/fits_intmax.c
+   M /branches/3.0/fits_uintmax.c
+   M /branches/3.0/get_sj.c
+   M /branches/3.0/get_uj.c
+   M /branches/3.0/mpfr-impl.h
+   M /branches/3.0/tests/tfits.c
+   M /branches/3.0/tests/tget_sj.c
+   M /branches/3.0/tests/tset_sj.c
+
+Detect when the intmax_t type is available but INTMAX_MAX doesn't work
+(e.g. with gcc -ansi -pedantic-errors in 32-bit mode under GNU/Linux).
+New macros MPFR_UINTMAX_MAX, MPFR_INTMAX_MAX and MPFR_INTMAX_MIN are
+defined and used internally instead of UINTMAX_MAX, INTMAX_MAX and
+INTMAX_MIN. If these C99 macros work, then the MPFR_* macros use them,
+otherwise MPFR uses its own definitions.
+[merged changeset r6849 from the trunk]
+------------------------------------------------------------------------
+r6848 | vlefevre | 2010-05-22 19:50:44 +0000 (Sat, 22 May 2010) | 1 line
+Changed paths:
+   M /branches/3.0/ai.c
+   M /branches/3.0/bernoulli.c
+   M /branches/3.0/buildopt.c
+   M /branches/3.0/digamma.c
+   M /branches/3.0/get_flt.c
+   M /branches/3.0/ieee_floats.h
+   M /branches/3.0/isregular.c
+   M /branches/3.0/mbench/mfv5.h
+   M /branches/3.0/mbench/timp.h
+   M /branches/3.0/min_prec.c
+   M /branches/3.0/scale2.c
+   M /branches/3.0/set_flt.c
+   M /branches/3.0/set_z_exp.c
+   M /branches/3.0/set_zero.c
+   M /branches/3.0/speed.c
+   M /branches/3.0/tests/tai.c
+   M /branches/3.0/tests/taway.c
+   M /branches/3.0/tests/tbuildopt.c
+   M /branches/3.0/tests/tdigamma.c
+   M /branches/3.0/tests/tfprintf.c
+   M /branches/3.0/tests/tget_flt.c
+   M /branches/3.0/tests/tmin_prec.c
+   M /branches/3.0/tests/tprintf.c
+   M /branches/3.0/tests/tset_z_exp.c
+   M /branches/3.0/tests/tstdint.c
+
+Updated Subversion properties.
+------------------------------------------------------------------------
+r6847 | vlefevre | 2010-05-22 19:49:23 +0000 (Sat, 22 May 2010) | 1 line
+Changed paths:
+   M /branches/3.0/Makefile.am
+   M /branches/3.0/ai.c
+   A /branches/3.0/gammaonethird.c
+   M /branches/3.0/mpfr-impl.h
+
+Merged latest changes concerning mpfr_ai from trunk.
+------------------------------------------------------------------------
+r6830 | vlefevre | 2010-05-19 23:08:42 +0000 (Wed, 19 May 2010) | 2 lines
+Changed paths:
+   M /branches/3.0/NEWS
+   M /branches/3.0/mpfr.texi
+
+[mpfr.texi, NEWS] Noted that the mpfr_ai implementation is incomplete
+and experimental. [merged changeset r6829 from the trunk]
+------------------------------------------------------------------------
+r6828 | vlefevre | 2010-05-19 23:05:34 +0000 (Wed, 19 May 2010) | 2 lines
+Changed paths:
+   M /branches/3.0/ai.c
+
+[ai.c] Use MPFR_IS_SINGULAR. Added a FIXME comment for Ai(0).
+[merged changeset r6827 from the trunk]
+------------------------------------------------------------------------
+r6826 | vlefevre | 2010-05-19 22:43:26 +0000 (Wed, 19 May 2010) | 2 lines
+Changed paths:
+   M /branches/3.0/mpfr-impl.h
+   M /branches/3.0/tests/texceptions.c
+   M /branches/3.0/tests/tget_f.c
+   M /branches/3.0/tests/tmodf.c
+   M /branches/3.0/tests/tpow_all.c
+   M /branches/3.0/tests/turandom.c
+
+Type corrections for C++ compilers (in particular, mpfr_rnd_t vs int).
+[merged changeset r6825 from the trunk]
+------------------------------------------------------------------------
+r6824 | vlefevre | 2010-05-19 14:33:00 +0000 (Wed, 19 May 2010) | 2 lines
+Changed paths:
+   M /branches/3.0/ai.c
+
+[ai.c] Fixed possible problem in reduced exponent range.
+[merged changeset r6822 from the trunk]
+------------------------------------------------------------------------
+r6823 | vlefevre | 2010-05-19 14:32:08 +0000 (Wed, 19 May 2010) | 1 line
+Changed paths:
+   M /branches/3.0/VERSION
+   M /branches/3.0/configure.in
+   M /branches/3.0/mpfr.h
+   M /branches/3.0/mpfr.texi
+   M /branches/3.0/version.c
+
+Updated version to 3.0.0-dev (various problems that need to be fixed).
+------------------------------------------------------------------------
+r6819 | vlefevre | 2010-05-19 13:12:47 +0000 (Wed, 19 May 2010) | 2 lines
+Changed paths:
+   M /branches/3.0/README.dev
+   D /branches/3.0/patch-aclocal-icc
+
+Removed obsolete patch-aclocal-icc and updated README.dev (about
+"To make a release"). [merged changeset r6818 from trunk]
+------------------------------------------------------------------------
+r6817 | vlefevre | 2010-05-19 12:51:16 +0000 (Wed, 19 May 2010) | 1 line
+Changed paths:
+   M /branches/3.0/ChangeLog
+
+ChangeLog update with "LC_ALL=en_US.UTF8 TZ=UTC svn log -rHEAD:0 -v".
+------------------------------------------------------------------------
+r6816 | vlefevre | 2010-05-19 12:49:32 +0000 (Wed, 19 May 2010) | 1 line
+Changed paths:
+   M /branches/3.0/VERSION
+   M /branches/3.0/configure.in
+   M /branches/3.0/mpfr.h
+   M /branches/3.0/mpfr.texi
+   M /branches/3.0/version.c
+
+Updated version to 3.0.0-rc1.
+------------------------------------------------------------------------
+r6815 | vlefevre | 2010-05-19 12:42:46 +0000 (Wed, 19 May 2010) | 1 line
+Changed paths:
+   M /branches/3.0/Makefile.am
+   M /branches/3.0/ai.c
+   D /branches/3.0/ai2.c
+   D /branches/3.0/gammaonethird.c
+   M /branches/3.0/mpfr.h
+
+Reverse-merged r6804 (not ready for MPFR 3.0.0).
+------------------------------------------------------------------------
+r6814 | vlefevre | 2010-05-19 12:38:51 +0000 (Wed, 19 May 2010) | 1 line
+Changed paths:
+   A /branches/3.0 (from /trunk:6813)
+
+Created branch 3.0.
+------------------------------------------------------------------------
+r6813 | vlefevre | 2010-05-19 12:38:01 +0000 (Wed, 19 May 2010) | 1 line
+Changed paths:
+   M /trunk/Makefile.am
+
+[Makefile.am] Added a comment concerning -version-info and MPFR 3.0.x.
+------------------------------------------------------------------------
+r6812 | vlefevre | 2010-05-19 11:53:33 +0000 (Wed, 19 May 2010) | 1 line
+Changed paths:
+   M /trunk/ChangeLog
+
+ChangeLog update with "LC_ALL=en_US.UTF8 TZ=UTC svn log -rHEAD:0 -v".
+------------------------------------------------------------------------
 r6811 | vlefevre | 2010-05-19 10:18:37 +0000 (Wed, 19 May 2010) | 1 line
 Changed paths:
    M /trunk/mpfr.texi
@@ -871,7 +1293,7 @@ Changed paths:
 [mpfr.texi] added Sylvain as contributor
 
 ------------------------------------------------------------------------
-r6723 | schevill | 2010-03-17 17:35:59 +0000 (Wed, 17 Mar 2010) | 15 lines
+r6723 | schevill | 2010-03-17 17:35:59 +0000 (Wed, 17 Mar 2010) | 18 lines
 Changed paths:
    M /trunk/Makefile.am
    M /trunk/README.dev
@@ -883,20 +1305,23 @@ Changed paths:
    M /trunk/tests/Makefile.am
    A /trunk/tests/tai.c
 
-* Added function mpfr_ai. The implementation is	the most naive:	it evaluates the series
-step by	step until it can stop.
-A special strategy is used to detect possible problems when Ai(x) is very close	to 0.   
+* Added function mpfr_ai. The implementation is the most naive: it evaluates
+  the series step by step until it can stop.
+  A special strategy is used to detect possible problems when Ai(x) is very
+  close to 0.
 
-* Updated algorithms.tex with the technical description	of the implementation of mpfr_ai.
+* Updated algorithms.tex with the technical description of the implementation
+  of mpfr_ai.
 
-* Added	algorithm2e.sty	and algorithm2e-compatibility.sty (necessary to	compile	algorithms.tex now)
+* Added algorithm2e.sty and algorithm2e-compatibility.sty (necessary to
+  compile algorithms.tex now).
 
 * Updated mpfr.texi to let it know this new function.
 
-* Added	a basic	test file for mpfr_ai. I will add other	test cases later.
+* Added a basic test file for mpfr_ai. I will add other test cases later.
 
-* Added	a small	HOWTO to README.dev about how to add a new test	file for new functions.
-
+* Added a small HOWTO to README.dev about how to add a new test file for new
+  functions.
 
 ------------------------------------------------------------------------
 r6720 | vlefevre | 2010-03-11 09:43:53 +0000 (Thu, 11 Mar 2010) | 1 line

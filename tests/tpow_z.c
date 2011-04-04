@@ -1,7 +1,7 @@
 /* Test file for mpfr_pow_z -- power function x^z with z a MPZ
 
 Copyright 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
-Contributed by the Arenaire and Caramel projects, INRIA.
+Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the GNU MPFR Library.
 
@@ -269,10 +269,9 @@ check_overflow (void)
   mpfr_set_str_binary (a, "1E10");
   mpz_init_set_ui (z, ULONG_MAX);
   res = mpfr_pow_z (a, a, z, MPFR_RNDN);
-  if (! MPFR_IS_INF (a) || MPFR_SIGN (a) < 0 || res <= 0)
+  if (!MPFR_IS_INF (a) || MPFR_SIGN (a) < 0)
     {
-      printf ("Error for (1e10)^ULONG_MAX, expected +Inf,\ngot ");
-      mpfr_dump (a);
+      printf ("Error for (1e10)^ULONG_MAX\n");
       exit (1);
     }
 
@@ -285,7 +284,7 @@ check_overflow (void)
   n = (ULONG_MAX ^ (ULONG_MAX >> 1)) + 1;
   mpz_set_ui (z, n);
   res = mpfr_pow_z (a, a, z, MPFR_RNDN);
-  if (! MPFR_IS_INF (a) || MPFR_SIGN (a) > 0 || res >= 0)
+  if (!MPFR_IS_INF (a) || MPFR_SIGN (a) > 0)
     {
       printf ("Error for (-1e10)^%lu, expected -Inf,\ngot ", n);
       mpfr_dump (a);

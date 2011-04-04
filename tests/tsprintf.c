@@ -2,7 +2,7 @@
    and mpfr_vsnprintf
 
 Copyright 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
-Contributed by the Arenaire and Caramel projects, INRIA.
+Contributed by the Arenaire and Cacao projects, INRIA.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -733,9 +733,7 @@ mixed (void)
   int n1;
   int n2;
   int i = 121;
-#ifndef NPRINTF_L
   long double d = 1. / 31.;
-#endif
   mpf_t mpf;
   mpq_t mpq;
   mpz_t mpz;
@@ -1071,11 +1069,7 @@ check_emax_aux (mpfr_exp_t e)
 
   if (strcmp (s1, s2) != 0)
     {
-      printf ("Error in check_emax_aux for emax = ");
-      if (e > LONG_MAX)
-        printf ("(>LONG_MAX)\n");
-      else
-        printf ("%ld\n", (long) e);
+      printf ("Error in check_emax_aux for emax = %ld\n", e);
       printf ("Expected %s\n", s2);
       printf ("Got      %s\n", s1);
       exit (1);
@@ -1090,11 +1084,7 @@ check_emax_aux (mpfr_exp_t e)
 
   if (strcmp (s1, s2) != 0)
     {
-      printf ("Error in check_emax_aux for emax = ");
-      if (e > LONG_MAX)
-        printf ("(>LONG_MAX)\n");
-      else
-        printf ("%ld\n", (long) e);
+      printf ("Error in check_emax_aux for emax = %ld\n", e);
       printf ("Expected %s\n", s2);
       printf ("Got      %s\n", s1);
       exit (1);
@@ -1167,7 +1157,7 @@ int
 main (void)
 {
   /* We have nothing to test. */
-  return 77;
+  return 0;
 }
 
 #endif  /* HAVE_STDARG */

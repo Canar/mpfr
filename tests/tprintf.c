@@ -1,7 +1,7 @@
 /* tprintf.c -- test file for mpfr_printf and mpfr_vprintf
 
 Copyright 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
-Contributed by the Arenaire and Caramel projects, INRIA.
+Contributed by the Arenaire and Cacao projects, INRIA.
 
 The GNU MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -18,7 +18,7 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
-#if HAVE_STDARG
+#if defined HAVE_STDARG
 #include <stdarg.h>
 
 #include <stdio.h>
@@ -26,10 +26,11 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #include <stddef.h>
 
 #if HAVE_INTTYPES_H
-# include <inttypes.h>
-#endif
-#if HAVE_STDINT_H
-# include <stdint.h>
+# include <inttypes.h> /* for intmax_t */
+#else
+# if HAVE_STDINT_H
+#  include <stdint.h>
+# endif
 #endif
 
 #include "mpfr-test.h"
@@ -66,7 +67,7 @@ const int prec_max_printf = 5000;
 int stdout_redirect;
 
 static void
-check (const char *fmt, mpfr_t x)
+check (char *fmt, mpfr_t x)
 {
   if (mpfr_printf (fmt, x) == -1)
     {
@@ -78,7 +79,7 @@ check (const char *fmt, mpfr_t x)
 }
 
 static void
-check_vprintf (const char *fmt, ...)
+check_vprintf (char *fmt, ...)
 {
   va_list ap;
 
@@ -95,7 +96,7 @@ check_vprintf (const char *fmt, ...)
 }
 
 static void
-check_vprintf_failure (const char *fmt, ...)
+check_vprintf_failure (char *fmt, ...)
 {
   va_list ap;
 
@@ -227,10 +228,8 @@ static void
 check_mixed (void)
 {
   int ch = 'a';
-#ifndef NPRINTF_HH
   signed char sch = -1;
   unsigned char uch = 1;
-#endif
   short sh = -1;
   unsigned short ush = 1;
   int i = -1;
@@ -240,13 +239,9 @@ check_mixed (void)
   unsigned long ulo = 1;
   float f = -1.25;
   double d = -1.25;
-#if !defined(NPRINTF_T) || !defined(NPRINTF_L)
   long double ld = -1.25;
-#endif
 
-#ifndef NPRINTF_T
   ptrdiff_t p = 1, saved_p;
-#endif
   size_t sz = 1;
 
   mpz_t mpz;
@@ -503,7 +498,7 @@ int
 main (void)
 {
   /* We have nothing to test. */
-  return 77;
+  return 0;
 }
 
 #endif  /* HAVE_STDARG */

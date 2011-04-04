@@ -1,7 +1,7 @@
 /* Test file for multiple mpfr.h inclusion and intmax_t related functions
 
 Copyright 2010, 2011 Free Software Foundation, Inc.
-Contributed by the Arenaire and Caramel projects, INRIA.
+Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the GNU MPFR Library.
 
@@ -51,7 +51,7 @@ main (void)
 int
 main (void)
 {
-  return 77;
+  return 0;
 }
 
 #endif  /* HAVE_STDINT_H */

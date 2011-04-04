@@ -1,7 +1,7 @@
 dnl  MPFR specific autoconf macros
 
 dnl  Copyright 2000, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
-dnl  Contributed by the Arenaire and Caramel projects, INRIA.
+dnl  Contributed by the Arenaire and Cacao projects, INRIA.
 dnl
 dnl  This file is part of the GNU MPFR Library.
 dnl
@@ -34,8 +34,6 @@ dnl   but the IEEE-754 specific flags must be set here.
 dnl   -GMP's linkage.
 dnl   -Libtool stuff.
 dnl   -Handling of special arguments of MPFR's configure.
-dnl FIXME: With autoconf 2.68, MPFR_CONFIGS generates warnings
-dnl   "warning: AC_LANG_CONFTEST: no AC_LANG_SOURCE call detected in body"
 AC_DEFUN([MPFR_CONFIGS],
 [
 AC_REQUIRE([AC_OBJEXT])
@@ -208,30 +206,6 @@ if test "$mpfr_cv_have_denorms" = "yes"; then
   AC_DEFINE(HAVE_DENORMS,1,[Define if denormalized floats work.])
 fi
 
-dnl Check the FP division by 0 fails (e.g. on a non-IEEE-754 platform).
-dnl In such a case, MPFR_ERRDIVZERO is defined to disable the tests
-dnl involving a FP division by 0.
-dnl For the developers: to check whether all these tests are disabled,
-dnl configure MPFR with "-DMPFR_TEST_DIVBYZERO=1 -DMPFR_ERRDIVZERO=1".
-AC_CACHE_CHECK([if the FP division by 0 fails], mpfr_cv_errdivzero, [
-AC_TRY_RUN([
-int main() {
-  volatile double d = 0.0, x;
-  x = 0.0 / d;
-  x = 1.0 / d;
-  return 0;
-}
-], [mpfr_cv_errdivzero="no"],
-   [mpfr_cv_errdivzero="yes"],
-   [mpfr_cv_errdivzero="cannot test, assume no"])
-])
-if test "$mpfr_cv_errdivzero" = "yes"; then
-  AC_DEFINE(MPFR_ERRDIVZERO,1,[Define if the FP division by 0 fails.])
-  AC_MSG_WARN([The floating-point division by 0 fails instead of])
-  AC_MSG_WARN([returning a special value: NaN or infinity. Tests])
-  AC_MSG_WARN([involving a FP division by 0 will be disabled.])
-fi
-
 dnl Check whether NAN != NAN (as required by the IEEE-754 standard,
 dnl but not by the ISO C standard). For instance, this is false with
 dnl MIPSpro 7.3.1.3m under IRIX64. By default, assume this is true.
@@ -362,14 +336,6 @@ LIBS="$saved_LIBS"
 dnl Now try to check the long double format
 MPFR_C_LONG_DOUBLE_FORMAT
 
-if test "$enable_logging" = yes; then
-  if test "$enable_thread_safe" = yes; then
-    AC_MSG_ERROR([Enable either `Logging' or `thread-safe', not both])
-  else
-    enable_thread_safe=no
-  fi
-fi
-
 dnl Check if thread-local variables are supported.
 dnl At least two problems can occur in practice:
 dnl 1. The compilation fails, e.g. because the compiler doesn't know
@@ -378,10 +344,11 @@ dnl 2. The compilation succeeds, but the system doesn't support TLS or
 dnl    there is some ld configuration problem. One of the effects can
 dnl    be that thread-local variables always evaluate to 0. So, it is
 dnl    important to run the test below.
-if test "$enable_thread_safe" != no; then
-AC_MSG_CHECKING(for TLS support)
+if test "$enable_thread_safe" = yes; then
+AC_CACHE_CHECK([for TLS support], mpfr_cv_working_tls, [
 saved_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS -I$srcdir/src"
+# The -I$srcdir is necessary when objdir is different from srcdir.
+CPPFLAGS="$CPPFLAGS -I$srcdir"
 AC_RUN_IFELSE([
 #define MPFR_USE_THREAD_SAFE 1
 #include "mpfr-thread.h"
@@ -389,22 +356,12 @@ MPFR_THREAD_ATTR int x = 17;
 int main() {
   return x != 17;
 }
-  ], [AC_MSG_RESULT(yes)
-      AC_DEFINE([MPFR_USE_THREAD_SAFE],1,[Build MPFR as thread safe])
-     ],
+  ], [mpfr_cv_working_tls="yes"],
      [AC_MSG_RESULT(no)
-      if test "$enable_thread_safe" = yes; then
-        AC_MSG_ERROR([please configure with --disable-thread-safe])
-      fi
-     ],
-     [if test "$enable_thread_safe" = yes; then
-        AC_MSG_RESULT([cannot test, assume yes])
-        AC_DEFINE([MPFR_USE_THREAD_SAFE],1,[Build MPFR as thread safe])
-      else
-        AC_MSG_RESULT([cannot test, assume no])
-      fi
-     ])
+      AC_MSG_ERROR([please configure with --disable-thread-safe])],
+     [mpfr_cv_working_tls="cannot test, assume yes"])
 CPPFLAGS="$saved_CPPFLAGS"
+])
 fi
 ])
 
@@ -644,7 +601,6 @@ BEGIN {
               got[9]  == "000" && \
               got[8]  == "000")
             {
-              # format used on HP 9000/785 under HP-UX
               print "IEEE quad, big endian"
               found = 1
               exit
@@ -689,7 +645,6 @@ BEGIN {
               got[9]  == "000" && \
               got[8]  == "000")
             {
-              # format used on 32-bit PowerPC (Mac OS X and Debian GNU/Linux)
               print "possibly double-double, big endian"
               found = 1
               exit
@@ -859,11 +814,11 @@ AC_DEFUN([MPFR_CHECK_PRINTF_SPEC], [
 AC_REQUIRE([MPFR_CONFIGS])dnl
 if test "$ac_cv_type_intmax_t" = yes; then
  MPFR_FUNC_GMP_PRINTF_SPEC([jd], [intmax_t], [
-#ifdef HAVE_INTTYPES_H
-# include <inttypes.h>
-#endif
 #ifdef HAVE_STDINT_H
 # include <stdint.h>
+#endif
+#ifdef HAVE_INTTYPES_H
+# include <inttypes.h>
 #endif
          ],,
          [AC_DEFINE([NPRINTF_J], 1, [gmp_printf cannot read intmax_t])])

@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+# Check possible problems in the MPFR source.
+
+grep '^# *include *<math\.h>' *.c
+
+grep -E 'mpfr_(underflow|overflow|nanflag|inexflag|erangeflag)_p' *.{c,h} | \
+  grep -v 'mpfr_clear_' | \
+  grep -v '^exceptions.c:' | \
+  grep -v '^mpfr-impl.h:#define mpfr_.*_p()' | \
+  grep -v '^mpfr.h:__MPFR_DECLSPEC '
+
+grep -E 'if +(test|\[).* == ' acinclude.m4 configure.in
+grep -E '="`' acinclude.m4 configure.in
+
+grep GMP_LIMB_BITS {,tests/}*.{c,h}
+
+grep GMP_RND {,tests/}*.{c,h} | grep -v '#define GMP_RND'
+
+for i in exp prec rnd
+do
+  grep mp_${i}_t {,tests/}*.{c,h} | \
+    grep -v "\(# *define\|# *ifndef\|typedef\) *mp_${i}_t" | \
+    grep -v "\[mp_${i}_t\]"
+done
+
+sp="[[:space:]]*"
+grep "MPFR_LOG_MSG$sp($sp($sp\".*\"$sp)$sp)$sp;" {,tests/}*.{c,h}
+
+for file in {,tests/}*.{c,h} {,tests/}Makefile.am acinclude.m4 configure.in
+do
+  # Note: this is one less that the POSIX minimum limit in case
+  # implementations are buggy like POSIX examples. :)
+  perl -ne "/.{2047,}/ and print \
+    \"Line \$. of file '$file' has more than 2046 bytes.\n\"" "$file"
+done
+
+# In general, one needs to include mpfr-impl.h (note that some platforms
+# such as MS Windows use a config.h, which is included by mpfr-impl.h).
+for file in *.c
+do
+  [ "$file" = ansi2knr.c ] || \
+    [ "$file" = div-short.c ] || \
+    [ "$file" = jyn_asympt.c ] || \
+    [ "$file" = round_raw_generic.c ] || \
+    grep -q '^# *include *"\(mpfr-impl\|fits.*\|gen_inverse\)\.h"' $file || \
+    echo "Missing '#include \"mpfr-impl.h\"' in $file?"
+done
+
+fdlv1="`sed -n '/Version / {s/.*Version //; s/,.*//; p; q}' fdl.texi`"
+fdlv2="`sed -n '/GNU Free Documentation License/ \
+  {s/.*Version //; s/ or.*//; p; q}' mpfr.texi`"
+[ "x$fdlv1" = "x$fdlv2" ] || cat <<EOF
+GFDL versions differ:
+   fdl.texi: $fdlv1
+  mpfr.texi: $fdlv2
+EOF
+
+# Note: if paragraphs are reformatted, this may need to be updated.
+lgpl="`sed -n '/version [0-9.]\+ or any later version/ \
+  {s/.*version //; s/ or.*//; p; q}' mpfr.texi`"
+for file in {,tests/}*.{c,h}
+do
+  [ "$file" = "get_patches.c" ] && file="get_patches.sh"
+  if grep -q "GNU MPFR Library" "$file"; then
+    grep -q "either version $lgpl of the License" "$file" || \
+      echo "Possibly missing or incorrect copyright notice in $file"
+  fi
+done
+
+texisvnd=`LC_ALL=C TZ=UTC svn info mpfr.texi 2> /dev/null | sed -n 's/Last Changed Date:.*, [0-9]* \([A-Z][a-z][a-z] [0-9][0-9][0-9][0-9]\)).*/\1/p'`
+if [ $? -eq 0 ] && [ -n "$texisvnd" ]; then
+  texidate=`sed -n 's/@set UPDATED-MONTH \([A-Z][a-z][a-z]\).*\( [0-9][0-9][0-9][0-9]\)/\1\2/p' mpfr.texi`
+  [ "$texidate" = "$texisvnd" ] || cat <<EOF
+mpfr.texi's UPDATED-MONTH seems to be incorrect:
+  mpfr.texi's UPDATED-MONTH: $texidate
+  Last Changed Date in WC:   $texisvnd
+EOF
+fi
+
+acv1="`sed -n 's/.*autoconf \([0-9.]\+\) (at least).*/\1/p' README.dev`"
+acv2="`sed -n 's/AC_PREREQ(\([0-9.]\+\).*/\1/p' acinclude.m4`"
+[ "x$acv1" = "x$acv2" ] || cat <<EOF
+autoconf minimal versions differ:
+  README.dev:   $acv1
+  acinclude.m4: $acv2
+EOF
+
+true

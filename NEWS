@@ -1,5 +1,5 @@
 Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
-Contributed by the Arenaire and Caramel projects, INRIA.
+Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the GNU MPFR Library.
 
@@ -20,30 +20,8 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 ##############################################################################
 
-Changes from versions 3.0.* to version 3.1.0:
-- The "" release.
-- The MPFR source has been reorganized.
-- Dropped ansi2knr support.
-- TLS support is now detected automatically. If TLS is supported, MPFR is
-  built as thread safe by default. To disable TLS explicitly, configure
-  MPFR with --disable-thread-safe.
-- New --enable-gmp-internals configure option to use GMP's undocumented
-  functions (not from the public API). Note that library versioning is
-  not guaranteed to work if this option is used.
-- The mpfr_urandom and mpfr_urandomb functions now return identical values
-  on processors with different word size (assuming the same random seed, and
-  since the GMP random generator does not depend itself on the word size,
-  cf http://gmplib.org/list-archives/gmp-devel/2010-September/001642.html).
-- The mpfr_add_one_ulp and mpfr_sub_one_ulp macros (which are obsolete and
-  no more documented) will be removed in a future release.
-- Speed improvement for the mpfr_sqr function using Mulders' algorithm,
-  and for mpfr_sqrt.
-- The --with-gmp-build configure option can now be used when the GMP
-  source directory and the GMP build directory are different (without
-  having to copy header files manually as before).
-- New functions mpfr_frexp, mpfr_grandom and mpfr_z_sub.
-- New division-by-zero exception (flag) and associated functions.
-- Bug fixes.
+Changes from version 3.0.0 to version 3.0.1:
+- Bug fixes (see <http://www.mpfr.org/mpfr-3.0.0/#fixed> or ChangeLog file).
   Note: The mpfr_subnormalize implementation up to MPFR 3.0.0 did not change
   the flags. In particular, it did not follow the generic rule concerning
   the inexact flag (and no special behavior was specified). The case of the

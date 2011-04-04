@@ -1,7 +1,7 @@
 /* Test file for mpfr_get_flt and mpfr_set_flt
 
 Copyright 2009, 2010, 2011 Free Software Foundation, Inc.
-Contributed by the Arenaire and Caramel projects, INRIA.
+Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the GNU MPFR Library.
 
@@ -38,7 +38,6 @@ main (void)
   mpfr_init2 (x, 24);
   mpfr_init2 (y, 24);
 
-#if !defined(MPFR_ERRDIVZERO)
   mpfr_set_nan (x);
   f = mpfr_get_flt (x, MPFR_RNDN);
   if (f == f)
@@ -74,7 +73,6 @@ main (void)
       printf ("got "); mpfr_dump (x);
       exit (1);
     }
-#endif
 
   mpfr_set_ui (x, 0, MPFR_RNDN);
   f = mpfr_get_flt (x, MPFR_RNDN);
@@ -127,8 +125,8 @@ main (void)
       if (mpfr_cmp (x, y) != 0)
         {
           printf ("Error for mpfr_set_flt(mpfr_get_flt(x))\n");
-          printf ("expected "); mpfr_dump (x);
-          printf ("got      "); mpfr_dump (y);
+          mpfr_printf ("expected %Ra\n", x);
+          mpfr_printf ("got      %Ra\n", y);
           exit (1);
         }
       mpfr_mul_2exp (x, x, 1, MPFR_RNDN);
@@ -145,8 +143,8 @@ main (void)
       if (mpfr_cmp (x, y) != 0)
         {
           printf ("Error for mpfr_set_flt(mpfr_get_flt(x))\n");
-          printf ("expected "); mpfr_dump (x);
-          printf ("got      "); mpfr_dump (y);
+          mpfr_printf ("expected %Ra\n", x);
+          mpfr_printf ("got      %Ra\n", y);
           exit (1);
         }
       mpfr_mul_2exp (x, x, 1, MPFR_RNDN);
@@ -163,8 +161,8 @@ main (void)
       if (mpfr_cmp (x, y) != 0)
         {
           printf ("Error for mpfr_set_flt(mpfr_get_flt(x))\n");
-          printf ("expected "); mpfr_dump (x);
-          printf ("got      "); mpfr_dump (y);
+          mpfr_printf ("expected %Ra\n", x);
+          mpfr_printf ("got      %Ra\n", y);
           exit (1);
         }
       mpfr_mul_2exp (x, x, 1, MPFR_RNDN);
@@ -302,7 +300,6 @@ main (void)
       printf ("expected %.8e, got %.8e\n", g, f);
       exit (1);
     }
-#if !defined(MPFR_ERRDIVZERO)
   f = mpfr_get_flt (x, MPFR_RNDN); /* 2^128 rounds to itself with extended
                                       exponent range, we should get +Inf */
   g = infp;
@@ -326,7 +323,6 @@ main (void)
       printf ("expected %.8e, got %.8e\n", g, f);
       exit (1);
     }
-#endif
 
   /* corner case: take x with 25 bits just below 2^128 */
   mpfr_set_prec (x, 25);

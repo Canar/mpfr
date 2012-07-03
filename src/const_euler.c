@@ -34,48 +34,34 @@ mpfr_const_euler (mpfr_ptr x, mpfr_rnd_t rnd_mode) {
 }
 
 
-static void mpfr_const_euler_S2 (mpfr_ptr, mpfr_t);
+static void mpfr_const_euler_S2 (mpfr_ptr, unsigned long);
 static void mpfr_const_euler_R (mpfr_ptr, unsigned long);
 
 int
 mpfr_const_euler_internal (mpfr_t x, mpfr_rnd_t rnd)
 {
   mpfr_prec_t prec = MPFR_PREC(x), m, log2m;
-  mpfr_t y, z, l2;
+  mpfr_t y, z;
   unsigned long n;
   int inexact;
   MPFR_ZIV_DECL (loop);
 
-  MPFR_LOG_FUNC (
-    ("rnd=%d", rnd),
-    ("x[%Pu]=%.*Rg inex=%d", mpfr_get_prec(x), mpfr_log_prec, x, inexact));
-
   log2m = MPFR_INT_CEIL_LOG2 (prec);
-  m = MPFR_ADD_PREC (prec, 2 * log2m + 23);
+  m = prec + 2 * log2m + 23;
 
   mpfr_init2 (y, m);
   mpfr_init2 (z, m);
-
-  mpfr_init2 (l2, sizeof (mpfr_prec_t) * CHAR_BIT);
-  mpfr_const_log2 (l2, MPFR_RNDU);
-  mpfr_div_2ui (l2, l2, 1, MPFR_RNDU);  /* log(2)/2, rounded upward */
 
   MPFR_ZIV_INIT (loop, m);
   for (;;)
     {
       mpfr_exp_t exp_S, err;
-      MPFR_BLOCK_DECL (flags);
-
       /* since prec >= 1, we have m >= 24 here, which ensures n >= 9 below */
-      /* Compute n >= prec * log(2)/2 (see algorithms.tex). */
-      mpfr_set_exp_t (z, m, MPFR_RNDU);
-      mpfr_mul (z, z, l2, MPFR_RNDU);
-      mpfr_ceil (z, z);
-      MPFR_LOG_VAR (z);
-      MPFR_BLOCK (flags, n = mpfr_get_ui (z, MPFR_RNDN));
-      MPFR_ASSERTD (n >= 9 && ! MPFR_ERANGEFLAG (flags));
-      mpfr_const_euler_S2 (y, z); /* error <= 3 ulps */
+      n = 1 + (unsigned long) ((double) m * LOG2 / 2.0);
+      MPFR_ASSERTD (n >= 9);
+      mpfr_const_euler_S2 (y, n); /* error <= 3 ulps */
       exp_S = MPFR_EXP(y);
+      mpfr_set_ui (z, n, MPFR_RNDN);
       mpfr_log (z, z, MPFR_RNDD); /* error <= 1 ulp */
       mpfr_sub (y, y, z, MPFR_RNDN); /* S'(n) - log(n) */
       /* the error is less than 1/2 + 3*2^(exp_S-EXP(y)) + 2^(EXP(z)-EXP(y))
@@ -104,22 +90,17 @@ mpfr_const_euler_internal (mpfr_t x, mpfr_rnd_t rnd)
 
   mpfr_clear (y);
   mpfr_clear (z);
-  mpfr_clear (l2);
 
   return inexact; /* always inexact */
 }
 
 static void
-mpfr_const_euler_S2_aux (mpz_t P, mpz_t Q, mpz_t T, mpfr_t n,
+mpfr_const_euler_S2_aux (mpz_t P, mpz_t Q, mpz_t T, unsigned long n,
                          unsigned long a, unsigned long b, int need_P)
 {
   if (a + 1 == b)
     {
-      int inex;
-      MPFR_BLOCK_DECL (flags);
-
-      MPFR_BLOCK (flags, MPFR_DBGRES (inex = mpfr_get_z (P, n, MPFR_RNDN)));
-      MPFR_ASSERTD (inex == 0 && ! MPFR_ERANGEFLAG (flags));
+      mpz_set_ui (P, n);
       if (a > 1)
         mpz_mul_si (P, P, 1 - (long) a);
       mpz_set (T, P);
@@ -171,21 +152,10 @@ mpfr_const_euler_S2_aux (mpz_t P, mpz_t Q, mpz_t T, mpfr_t n,
    thus f(k)/f(k-1) = -n*(k-1)/k^2
 */
 static void
-mpfr_const_euler_S2 (mpfr_t x, mpfr_t n)
+mpfr_const_euler_S2 (mpfr_t x, unsigned long n)
 {
   mpz_t P, Q, T;
-  unsigned long N;
-  mpfr_t NN;
-  MPFR_BLOCK_DECL (flags);
-
-  mpfr_init2 (NN, 64);
-  mpfr_set_str_binary (NN, /* a+2 = a*log(a), rounded to +infinity */
-    "100.01010001101100101110111100011011001011011111001111001111");
-  mpfr_mul (NN, NN, n, MPFR_RNDU);
-  MPFR_LOG_VAR (NN);
-  /* N = ceil(a.n) upper bound */
-  MPFR_BLOCK (flags, N = mpfr_get_ui (NN, MPFR_RNDU));
-  MPFR_ASSERTD (! MPFR_ERANGEFLAG (flags));
+  unsigned long N = (unsigned long) (ALPHA * (double) n + 1.0);
   mpz_init (P);
   mpz_init (Q);
   mpz_init (T);
@@ -195,7 +165,6 @@ mpfr_const_euler_S2 (mpfr_t x, mpfr_t n)
   mpz_clear (P);
   mpz_clear (Q);
   mpz_clear (T);
-  mpfr_clear (NN);
 }
 
 /* computes R(n) = exp(-n)/n * sum(k!/(-n)^k, k=0..n-2)

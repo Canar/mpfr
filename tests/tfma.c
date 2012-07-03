@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 /* When a * b is exact, the FMA is equivalent to the separate operations. */
@@ -304,8 +307,7 @@ test_underflow2 (void)
           if (__gmpfr_flags != MPFR_FLAGS_INEXACT)
             {
               printf (ERRTU2 "flags = %u instead of %u\n", b, i,
-                      (unsigned int) __gmpfr_flags,
-                      (unsigned int) MPFR_FLAGS_INEXACT);
+                      __gmpfr_flags, (unsigned int) MPFR_FLAGS_INEXACT);
               err = 1;
             }
           same = i == 15 || (i == 16 && b == 0);

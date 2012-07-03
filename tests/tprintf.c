@@ -23,6 +23,8 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #if HAVE_STDARG
 #include <stdarg.h>
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <stddef.h>
 
 #include "mpfr-intmax.h"
@@ -64,7 +66,7 @@ check (const char *fmt, mpfr_t x)
 {
   if (mpfr_printf (fmt, x) == -1)
     {
-      fprintf (stderr, "Error 1 in mpfr_printf(\"%s\", ...)\n", fmt);
+      fprintf (stderr, "Error in mpfr_printf(\"%s\", ...)\n", fmt);
 
       exit (1);
     }
@@ -79,7 +81,7 @@ check_vprintf (const char *fmt, ...)
   va_start (ap, fmt);
   if (mpfr_vprintf (fmt, ap) == -1)
     {
-      fprintf (stderr, "Error 2 in mpfr_vprintf(\"%s\", ...)\n", fmt);
+      fprintf (stderr, "Error in mpfr_vprintf(\"%s\", ...)\n", fmt);
 
       va_end (ap);
       exit (1);
@@ -97,7 +99,7 @@ check_vprintf_failure (const char *fmt, ...)
   if (mpfr_vprintf (fmt, ap) != -1)
    {
       putchar ('\n');
-      fprintf (stderr, "Error 3 in mpfr_vprintf(\"%s\", ...)\n", fmt);
+      fprintf (stderr, "Error in mpfr_vprintf(\"%s\", ...)\n", fmt);
 
       va_end (ap);
       exit (1);
@@ -153,41 +155,20 @@ check_invalid_format (void)
   check_vprintf_failure ("%Rx", i);
 }
 
-/* The goal of this test is to check cases where more INT_MAX characters
-   are output, in which case, it should be a failure, because like C's
-   *printf functions, the return type is int and the returned value must
-   be either the number of characters printed or a negative value. */
 static void
 check_long_string (void)
 {
   /* this test is VERY expensive both in time (~1 min on core2 @ 2.40GHz) and
      in memory (~2.5 GB) */
   mpfr_t x;
-  long large_prec = 2147483647;
 
-  /* With a 32-bit (4GB) address space, a realloc failure has been noticed
-     with a 2G precision (though allocating up to 4GB is possible):
-       MPFR: Can't reallocate memory (old_size=4096 new_size=2147487744)
-     The implementation might be improved to use less memory and avoid
-     this problem. In the mean time, let's choose a smaller precision,
-     but this will generally have the effect to disable the test. */
-  if (sizeof (void *) == 4)
-    large_prec /= 2;
-
-  /* We assume that the precision won't be increased internally. */
-  if (large_prec > MPFR_PREC_MAX)
-    large_prec = MPFR_PREC_MAX;
-
-  mpfr_init2 (x, large_prec);
+  mpfr_init2 (x, INT_MAX);
 
   mpfr_set_ui (x, 1, MPFR_RNDN);
   mpfr_nextabove (x);
 
-  if (large_prec >= INT_MAX - 512)
-    {
-      check_vprintf_failure ("%Rb %512d", x, 1);
-      check_vprintf_failure ("%RA %RA %Ra %Ra %512d", x, x, x, x, 1);
-    }
+  check_vprintf_failure ("%Rb", x);
+  check_vprintf_failure ("%RA %RA %Ra %Ra", x, x, x, x);
 
   mpfr_clear (x);
 }
@@ -450,54 +431,6 @@ check_random (int nb_tests)
   mpfr_clear (x);
 }
 
-#ifdef HAVE_LOCALE_H
-
-#include <locale.h>
-
-const char * const tab_locale[] = {
-  "en_US",
-  "en_US.iso88591",
-  "en_US.iso885915",
-  "en_US.utf8"
-};
-
-static void
-test_locale (void)
-{
-  int i;
-  char *s = NULL;
-  mpfr_t x;
-  double y;
-  int count;
-
-  for(i = 0; i < numberof(tab_locale) && s == NULL; i++)
-    s = setlocale (LC_ALL, tab_locale[i]);
-
-  if (s == NULL || MPFR_THOUSANDS_SEPARATOR != ',')
-    return;
-
-  mpfr_init2 (x, 113);
-  mpfr_set_ui (x, 10000, MPFR_RNDN);
-  y = 100000;
-
-  count = mpfr_printf ("(1) 10000=%'Rg 100000=%'g \n", x, y);
-  check_length (10000, count, 33, d);
-  count = mpfr_printf ("(2) 10000=%'Rf 100000=%'f \n", x, y);
-  check_length (10001, count, 47, d);
-
-  mpfr_clear (x);
-}
-
-#else
-
-static void
-test_locale (void)
-{
-  /* Nothing */
-}
-
-#endif
-
 int
 main (int argc, char *argv[])
 {
@@ -539,8 +472,6 @@ main (int argc, char *argv[])
     check_long_string();
 
   check_random (N);
-
-  test_locale ();
 
   if (stdout_redirect)
     {

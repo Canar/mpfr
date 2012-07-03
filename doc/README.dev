@@ -166,29 +166,29 @@ To make a release (for the MPFR team):
      UTF-8 locales, e.g. "LC_ALL=en_US.UTF8 TZ=UTC svn log -rHEAD:0 -v".
 
   5) Make sure that any change has been committed (with "svn st").
-     Generate the release version with "make dist".
+     Generate the release version with "make dist", but see below.
 
-  6) Test the release version on different machines, with --enable-assert
-     set to yes, no (default), none and full respectively, with and
-     without GMP's --disable-alloca configure option (or compile GMP with
-     --enable-alloca=debug and MPFR with --with-gmp-build to be able to
-     get the memory leak errors), with and without -DXDEBUG in $CFLAGS,
-     with and without gmp internal files (--enable-gmp-internals), with
-     and without GMP built as a shared library, with objdir equal to and
-     different from srcdir (e.g. ../mpfr-source/configure after making
+  6) Test the release version on different machines, with and without
+     --enable-assert (--enable-assert, though doing more checks, may
+     hide bugs due to the fact that <stdio.h> is always included) with
+     and without GMP's --disable-alloca configure option (or compile GMP
+     with --enable-alloca=debug and MPFR with --with-gmp-build to be
+     able to get the memory leak errors), with and without -DXDEBUG in
+     $CFLAGS, with and without gmp internal files (--enable-gmp-internals),
+     with and without GMP built as a shared library, with objdir equal to
+     and different from srcdir (e.g. ../mpfr-source/configure after making
      mpfr-source read-only), with and without --enable-logging.
 
      Try different gcc versions with different options: with and without
      "-std=c99 -O3 -D_XOPEN_SOURCE=500", with and without "-ansi" (which
      allows to turn off features that are incompatible with ISO C90),
      with and without [-ansi] -pedantic-errors (which has the effect to
-     disable extensions, such as long long when used together with -ansi),
-     with and without -std=c11, with and without --enable-thread-safe, in
-     various FPU precisions (double, double extended and single) if the
-     platform supports that (e.g. under Linux/x86), and in various locales
-     (LC_ALL=tr_TR in particular, if installed).
-     On x86, test with -m96bit-long-double and -m128bit-long-double.
-     Try also with gcc's -fno-common option.
+     disable extensions, such as long long when used together with -ansi)
+     with and without --enable-thread-safe, in various FPU precisions
+     (double, double extended and single) if the platform supports that
+     (e.g. under Linux/x86), and in various locales (LC_ALL=tr_TR in
+     particular, if installed). On x86, test with -m96bit-long-double
+     and -m128bit-long-double. Try also with gcc's -fno-common option.
      Check also with "-Wformat=2", but without logging support (in order
      to avoid too many spurious warnings).
 
@@ -210,9 +210,9 @@ To make a release (for the MPFR team):
      Test with -D_MPFR_PREC_FORMAT=2 when the "int" type is smaller
      than the "long" type.
 
-     Test with valgrind by setting the environment variable:
-       VALGRIND="valgrind -q --error-exitcode=1 --leak-check=full"
-     See below for more information about valgrind.
+     Test with valgrind: "valgrind --trace-children=yes make check"
+     (after a first "make check" for the compilation). See below for
+     more information about valgrind.
 
      Test with both "make check" and the worst cases.
 
@@ -229,36 +229,23 @@ To make a release (for the MPFR team):
       ln -nsf ../../../mpfr-new/src/.libs/libmpfr.so.1.* libmpfr.so.1)
      then "make check".
 
-     Also test with different environment variables set
-     (GMP_CHECK_RANDOMIZE, MPFR_CHECK_MAX, MPFR_CHECK_LIBC_PRINTF,
-     MPFR_CHECK_LARGEMEM, MPFR_SUSPICIOUS_OVERFLOW).
-
   7) For the release itself (not the release candidates), if no problems
      have been found, create a tag with:
        svn cp .../mpfr/branches/x.y .../mpfr/tags/x.y.z
 
-  8) For the release itself (not the release candidates), update
-     the version with the update-version script to indicate the
+  8) Update the version with the update-version script to indicate the
      next version (use the "dev" suffix).
 
-  9) * For the release itself (not the release candidates):
-     Create a web page for the MPFR release and add the documentation
+  9) Create a web page for the MPFR release and add the documentation
      (for mpfr.html, use "makeinfo --html --no-split mpfr.texi" from
      the doc directory).
      Upload the tarballs and the signatures to the MPFR web server
      (via svn), to INRIAGForge and to the GNU FTP site.
      Update the mpfr-current symbolic link and the history page.
-     Announce the release in the mpfr-announce, mpfr, gmp-discuss and
-     gcc mailing-lists, and on INRIAGForge.
+     Announce the release in the mpfr-announce, gmp-discuss and gcc
+     mailing-lists, and on INRIAGForge.
      In case of a new patchlevel release, add a link from the web page
      of the previous release.
-     * For the release candidates: Announce the RC in the mpfr-announce,
-     mpfr, gmp-discuss, gcc and platform-testers[1] mailing-lists.
-     [1] See https://lists.gnu.org/mailman/listinfo/platform-testers and
-     https://lists.gnu.org/archive/html/platform-testers/2011-09/msg00000.html
-
-Note: Mail sent to the mpfr-announce list should also be sent to
-the mpfr list, and the Reply-To should be set to the mpfr list.
 
 For major or minor releases (but not patchlevels), a branch may be
 created first to allow new features to be committed to the trunk.
@@ -303,10 +290,7 @@ List of the used macros for building MPFR:
 
 + XDEBUG:               Use generic 'double' code instead of IEEE specific one.
                         The IEEE code for double needs GMP internal files.
-+ WANT_ASSERT:          Define to 1 to turn on the assertions, 2 for complete
-                        assertions (debugging mode), -1 to disable assertions
-                        entirely.
-
++ WANT_ASSERT:          Define if we want to turn on the assertions.
 + MPFR_EXP_CHECK:       Define if we want to check the exp field.
 
 + MPFR_PREC_FORMAT:     Define the internal format of prec field
@@ -386,11 +370,14 @@ with code like MPFR_EXP_MIN/n).
 
    =====================================================================
 
-The headers <limits.h>, <stdio.h>, <stdlib.h> and <string.h> are always
-included in mpfr-impl.h; thus you need not (and should not) include them
-in usual source and test files.
+Though the ISO C standard requires that <stdlib.h> defines NULL,
+do not use NULL with #include <stdlib.h> only, because this will
+not work with the native SunOS 4 C compiler, whose headers are
+not conform to the standard (even with C90); other problems may
+occur on this architecture. You can either include <stdio.h> or
+use 0 (possibly casted to the target pointer type).
 
-   =====================================================================
+   ====================================================================
 
 For files that need intmax_t or similar, use:
 
@@ -410,7 +397,7 @@ References:
   http://git.savannah.gnu.org/gitweb/?p=autoconf.git;a=commitdiff;h=62ac9bbfebe879581dabeed78c6ac66b907dd51d
   https://sympa.inria.fr/sympa/arc/mpfr/2010-08/msg00015.html
 
-   =====================================================================
+   ====================================================================
 
 Use locale-dependent functions when the result needs to depend on the
 locales, e.g. the fractional point in mpfr_out_str.
@@ -424,7 +411,7 @@ not necessarily return the corresponding lowercase letter from these
 required characters. For instance, tolower('I') returns a dotless 'i'
 in Turkish locales.
 
-   =====================================================================
+   ====================================================================
 
 In the tests, do not use `mpfr_set_d` (except when testing it), as the
 result will depend on the floating-point arithmetic of the system;
@@ -458,7 +445,7 @@ In case of failure, freeing the memory explicitly is not necessary.
 We do this in case of success just to be able to detect memory leaks
 in MPFR.
 
-   =====================================================================
+   ====================================================================
 
 If you have to mix TMP_DECL and MPFR_SAVE_EXPO_DECL in the declaring
 section of your function, please declare MPFR_SAVE_EXPO_DECL before
@@ -473,16 +460,16 @@ use:
   MPFR_SAVE_EXPO_DECL (expo);                 mpfr_save_expo_t expo;
   TMP_DECL (marker);                          ;
 
-   =====================================================================
+   ====================================================================
 
 Do not use TMP_DECL / TMP_ALLOC, ... but MPFR_TMP_DECL, MPFR_TMP_ALLOC, ...
 
-   =====================================================================
+   ====================================================================
 
 Do not use C99-only features, such as empty macro arguments or C++-style
 comments.
 
-   =====================================================================
+   ====================================================================
 
 When testing a "boolean" macro M (i.e. which is normally either equal
 to 1 or undefined), do not use #if M, but #ifdef M or #if defined(M).
@@ -665,12 +652,7 @@ limited stack size) or an assertion failure (with unlimited stack size,
 e.g. with "make check").
 
 Do not use code with side effects inside MPFR_ASSERTD or MPFR_ASSERTN,
-as assertion checking can be disabled. If a variable is set only to test
-it in an MPFR_ASSERTD expression, the MPFR_DBGRES macro should be used
-with the assignment as its argument, e.g.
-  int inex;
-  MPFR_DBGRES (inex = mpfr_set (y, x, rnd));
-  MPFR_ASSERTD (inex == 0);
+as assertion checking can be disabled.
 
 Exception handling (overflow/underflow in particular):
   * Warning: To detect exceptions and/or possible error loss due to
@@ -724,15 +706,6 @@ and write the new THRESHOLD in the file `mparam.h':
            (unsigned long) mpfr_exp_threshold);
 
 More complex tuning is possible but needs special attention.
-
-===========================================================================
-
-MPFR uses many macros, thus finding where an error occurs exactly may
-be difficult when it is in some macro expansion. For GCC users, a new
-experimental -ftrack-macro-expansion option has been added in GCC 4.7.
-"It allows the compiler to emit diagnostic about the current macro
-expansion stack when a compilation error occurs in a macro expansion."
-<http://gcc.gnu.org/gcc-4.7/changes.html>
 
 ===========================================================================
 
@@ -898,7 +871,12 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
 #include "mpfr-test.h"
+
 
 #define TEST_FUNCTION mpfr_func
 #define TEST_RANDOM_EMIN -5

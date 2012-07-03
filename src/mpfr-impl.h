@@ -38,7 +38,6 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #include <stdio.h>
 #include <string.h>
 #endif
-#include <stdlib.h>
 #include <limits.h>
 
 #if _MPFR_EXP_FORMAT == 4
@@ -224,29 +223,13 @@ typedef __gmp_const mp_limb_t *mpfr_limb_srcptr;
 # error "Can't compute log2(GMP_NUMB_BITS)"
 #endif
 
-#if defined(MPFR_HAVE_NORETURN)
-/* _Noreturn is specified by ISO C11 (Section 6.7.4);
-   in GCC, it is supported as of version 4.7. */
-# define MPFR_NORETURN _Noreturn
-#elif !defined(noreturn)
-/* A noreturn macro could be defined if <stdnoreturn.h> has been included,
-   in which case it would make sense to #define MPFR_NORETURN noreturn.
-   But this is unlikely, as MPFR_HAVE_NORETURN should have been defined
-   in such a case. So, in doubt, let us avoid any code that would use a
-   noreturn macro, since it could be invalid. */
-# if __MPFR_GNUC(3,0) || __MPFR_ICC(8,1,0)
-#  define MPFR_NORETURN __attribute__ ((noreturn))
-# elif defined(_MSC_VER) && defined(_WIN32) && (_MSC_VER >= 1200)
-#  define MPFR_NORETURN __declspec (noreturn)
-# endif
-#endif
-#ifndef MPFR_NORETURN
-# define MPFR_NORETURN
-#endif
-
 #if __MPFR_GNUC(3,0) || __MPFR_ICC(8,1,0)
+/* For the future: N1478: Supporting the 'noreturn' property in C1x
+   http://www.open-std.org/JTC1/SC22/WG14/www/docs/n1478.htm */
+# define MPFR_NORETURN_ATTR __attribute__ ((noreturn))
 # define MPFR_CONST_ATTR    __attribute__ ((const))
 #else
+# define MPFR_NORETURN_ATTR
 # define MPFR_CONST_ATTR
 #endif
 
@@ -267,7 +250,7 @@ typedef struct __gmpfr_cache_s *mpfr_cache_ptr;
 extern "C" {
 #endif
 
-__MPFR_DECLSPEC extern MPFR_THREAD_ATTR mpfr_flags_t __gmpfr_flags;
+__MPFR_DECLSPEC extern MPFR_THREAD_ATTR unsigned int __gmpfr_flags;
 __MPFR_DECLSPEC extern MPFR_THREAD_ATTR mpfr_exp_t   __gmpfr_emin;
 __MPFR_DECLSPEC extern MPFR_THREAD_ATTR mpfr_exp_t   __gmpfr_emax;
 __MPFR_DECLSPEC extern MPFR_THREAD_ATTR mpfr_prec_t  __gmpfr_default_fp_bit_precision;
@@ -307,23 +290,35 @@ __MPFR_DECLSPEC extern const mpfr_t __gmpfr_four;
  }
 #endif
 
+/* Flags of __gmpfr_flags */
+#define MPFR_FLAGS_UNDERFLOW 1
+#define MPFR_FLAGS_OVERFLOW 2
+#define MPFR_FLAGS_NAN 4
+#define MPFR_FLAGS_INEXACT 8
+#define MPFR_FLAGS_ERANGE 16
+#define MPFR_FLAGS_DIVBY0 32
+#define MPFR_FLAGS_ALL 63
+
 /* Replace some common functions for direct access to the global vars */
 #define mpfr_get_emin() (__gmpfr_emin + 0)
 #define mpfr_get_emax() (__gmpfr_emax + 0)
 #define mpfr_get_default_rounding_mode() (__gmpfr_default_rounding_mode + 0)
 #define mpfr_get_default_prec() (__gmpfr_default_fp_bit_precision + 0)
 
-/* Flags related macros. */
-/* Note: Function-like macros that modify __gmpfr_flags are not defined
-   because of the risk to break the sequence point rules if two such
-   macros are used in the same expression (without a sequence point
-   between). For instance, mpfr_sgn currently uses mpfr_set_erangeflag(),
-   which mustn't be implemented as a macro for this reason. */
-
-#define mpfr_flags_test(mask) \
-  (__gmpfr_flags & (mpfr_flags_t) (mask))
-
-#if MPFR_FLAGS_ALL <= INT_MAX
+#define mpfr_clear_flags() \
+  ((void) (__gmpfr_flags = 0))
+#define mpfr_clear_underflow() \
+  ((void) (__gmpfr_flags &= MPFR_FLAGS_ALL ^ MPFR_FLAGS_UNDERFLOW))
+#define mpfr_clear_overflow() \
+  ((void) (__gmpfr_flags &= MPFR_FLAGS_ALL ^ MPFR_FLAGS_OVERFLOW))
+#define mpfr_clear_nanflag() \
+  ((void) (__gmpfr_flags &= MPFR_FLAGS_ALL ^ MPFR_FLAGS_NAN))
+#define mpfr_clear_inexflag() \
+  ((void) (__gmpfr_flags &= MPFR_FLAGS_ALL ^ MPFR_FLAGS_INEXACT))
+#define mpfr_clear_erangeflag() \
+  ((void) (__gmpfr_flags &= MPFR_FLAGS_ALL ^ MPFR_FLAGS_ERANGE))
+#define mpfr_clear_divby0() \
+  ((void) (__gmpfr_flags &= MPFR_FLAGS_ALL ^ MPFR_FLAGS_DIVBY0))
 #define mpfr_underflow_p() \
   ((int) (__gmpfr_flags & MPFR_FLAGS_UNDERFLOW))
 #define mpfr_overflow_p() \
@@ -336,31 +331,6 @@ __MPFR_DECLSPEC extern const mpfr_t __gmpfr_four;
   ((int) (__gmpfr_flags & MPFR_FLAGS_ERANGE))
 #define mpfr_divby0_p() \
   ((int) (__gmpfr_flags & MPFR_FLAGS_DIVBY0))
-#endif
-
-/* Use a do-while statement for the following macros in order to prevent
-   one from using them in an expression, as the sequence point rules could
-   be broken if __gmpfr_flags is assigned twice in the same expression
-   (via macro expansions). For instance, the mpfr_sgn macro currently uses
-   mpfr_set_erangeflag(), which mustn't be implemented as a function-like
-   macro for this reason. It is not clear whether an expression with
-   sequence points, like (void) (0, __gmpfr_flags = 0), would avoid UB. */
-#define MPFR_CLEAR_FLAGS() \
-  do __gmpfr_flags = 0; while (0)
-#define MPFR_CLEAR_UNDERFLOW() \
-  do __gmpfr_flags &= MPFR_FLAGS_ALL ^ MPFR_FLAGS_UNDERFLOW; while (0)
-#define MPFR_CLEAR_OVERFLOW() \
-  do __gmpfr_flags &= MPFR_FLAGS_ALL ^ MPFR_FLAGS_OVERFLOW; while (0)
-#define MPFR_CLEAR_NANFLAG() \
-  do __gmpfr_flags &= MPFR_FLAGS_ALL ^ MPFR_FLAGS_NAN; while (0)
-#define MPFR_CLEAR_INEXFLAG() \
-  do __gmpfr_flags &= MPFR_FLAGS_ALL ^ MPFR_FLAGS_INEXACT; while (0)
-#define MPFR_CLEAR_ERANGEFLAG() \
-  do __gmpfr_flags &= MPFR_FLAGS_ALL ^ MPFR_FLAGS_ERANGE; while (0)
-#define MPFR_CLEAR_DIVBY0() \
-  do __gmpfr_flags &= MPFR_FLAGS_ALL ^ MPFR_FLAGS_DIVBY0; while (0)
-#define MPFR_SET_ERANGEFLAG() \
-  do __gmpfr_flags |= MPFR_FLAGS_ERANGE; while (0)
 
 /* Testing an exception flag correctly is tricky. There are mainly two
    pitfalls: First, one needs to remember to clear the corresponding
@@ -375,14 +345,14 @@ __MPFR_DECLSPEC extern const mpfr_t __gmpfr_four;
    Note: _op can be either a statement or an expression.
    MPFR_BLOCK_EXCEP should be used only inside a block; it is useful to
    detect some exception in order to exit the block as soon as possible. */
-#define MPFR_BLOCK_DECL(_flags) mpfr_flags_t _flags
+#define MPFR_BLOCK_DECL(_flags) unsigned int _flags
 /* The (void) (_flags) makes sure that _flags is read at least once (it
    makes sense to use MPFR_BLOCK while _flags will never be read in the
    source, so that we wish to avoid the corresponding warning). */
 #define MPFR_BLOCK(_flags,_op)          \
   do                                    \
     {                                   \
-      MPFR_CLEAR_FLAGS ();              \
+      mpfr_clear_flags ();              \
       _op;                              \
       (_flags) = __gmpfr_flags;         \
       (void) (_flags);                  \
@@ -417,34 +387,13 @@ __MPFR_DECLSPEC extern const mpfr_t __gmpfr_four;
 #define MPFR_ASSERTN(expr)  \
    ((void) ((MPFR_UNLIKELY(expr)) || MPFR_UNLIKELY( (ASSERT_FAIL(expr),0) )))
 
-/* MPFR_ASSERTD(expr): assertions that should be checked when testing.
-   MPFR_DBGRES(assignment): to be used when the result is tested only
-     in an MPFR_ASSERTD expression (in order to avoid a warning, e.g.
-     with GCC's -Wunused-but-set-variable, in non-debug mode).
- */
+/* MPFR_ASSERTD(expr): assertions that should be checked when testing */
 #ifdef WANT_ASSERT
 # define MPFR_EXP_CHECK 1
 # define MPFR_ASSERTD(expr)  MPFR_ASSERTN (expr)
-# define MPFR_DBGRES(A)      (A)
 #else
 # define MPFR_ASSERTD(expr)  ((void) 0)
-# define MPFR_DBGRES(A)      ((void) (A))
 #endif
-
-/* Check if the user requested absolutly no assertion (including MPFR_ASSERTN) */
-#if defined(WANT_ASSERT)
-# if WANT_ASSERT < 0
-#  undef MPFR_ASSERTN
-#  undef MPFR_ASSERTD
-#  undef MPFR_DBGRES
-#  undef MPFR_EXP_CHECK
-# define MPFR_ASSERTN(expr)  ((void) 0)
-# define MPFR_ASSERTD(expr)  ((void) 0)
-# define MPFR_DBGRES(A)      ((void) (A))
-# endif
-#endif
-
-#include "mpfr-sassert.h"
 
 /* Code to deal with impossible
    WARNING: It doesn't use do { } while (0) for Insure++*/
@@ -459,6 +408,7 @@ __MPFR_DECLSPEC extern const mpfr_t __gmpfr_four;
    it needs to be used again in the future. */
 
 #ifdef MPFR_USE_WARNINGS
+# include <stdlib.h>
 # define MPFR_WARNING(W)                    \
   do                                        \
     {                                       \
@@ -481,6 +431,8 @@ __MPFR_DECLSPEC extern const mpfr_t __gmpfr_four;
 
 /* Definition of constants */
 #define LOG2 0.69314718055994528622 /* log(2) rounded to zero on 53 bits */
+#define ALPHA 4.3191365662914471407 /* a+2 = a*log(a), rounded to +infinity */
+#define EXPM1 0.36787944117144227851 /* exp(-1), rounded to zero */
 
 /* MPFR_DOUBLE_SPEC = 1 if the C type 'double' corresponds to IEEE-754
    double precision, 0 if it doesn't, and undefined if one doesn't know.
@@ -585,9 +537,6 @@ static double double_zero = 0.0;
 #endif
 #define MPFR_LIMBS_PER_LONG_DOUBLE \
   ((sizeof(long double)-1)/sizeof(mp_limb_t)+1)
-
-/* this is standardized by IEEE 754 */
-#define IEEE_FLOAT128_MANT_DIG 113
 
 /* LONGDOUBLE_NAN_ACTION executes the code "action" if x is a NaN. */
 
@@ -874,6 +823,8 @@ typedef intmax_t mpfr_eexp_t;
   (I) ? ((__gmpfr_flags |= MPFR_FLAGS_INEXACT), (I)) : 0
 #define MPFR_RET_NAN return (__gmpfr_flags |= MPFR_FLAGS_NAN), 0
 
+#define MPFR_SET_ERANGE() (__gmpfr_flags |= MPFR_FLAGS_ERANGE)
+
 #define SIGN(I) ((I) < 0 ? -1 : (I) > 0)
 #define SAME_SIGN(I1,I2) (SIGN (I1) == SIGN (I2))
 
@@ -989,6 +940,19 @@ typedef union { mp_size_t s; mp_limb_t l; } mpfr_size_limb_t;
 #define MPFR_TMP_FREE(x) TMP_FREE
 #endif
 
+/* This code is experimental: don't use it */
+#ifdef MPFR_USE_OWN_MPFR_TMP_ALLOC
+extern unsigned char *mpfr_stack;
+#undef MPFR_TMP_DECL
+#undef MPFR_TMP_MARK
+#undef MPFR_TMP_ALLOC
+#undef MPFR_TMP_FREE
+#define MPFR_TMP_DECL(_x) unsigned char *(_x)
+#define MPFR_TMP_MARK(_x) ((_x) = mpfr_stack)
+#define MPFR_TMP_ALLOC(_s) (mpfr_stack += (_s), mpfr_stack - (_s))
+#define MPFR_TMP_FREE(_x) (mpfr_stack = (_x))
+#endif
+
 #define MPFR_TMP_LIMBS_ALLOC(N) \
   ((mp_limb_t *) MPFR_TMP_ALLOC ((size_t) (N) * BYTES_PER_MP_LIMB))
 
@@ -1067,10 +1031,6 @@ typedef union { mp_size_t s; mp_limb_t l; } mpfr_size_limb_t;
  *   Computes ceil(log2(x)) only for x integer (unsigned long)
  *   Undefined if x is 0 */
 #if __MPFR_GNUC(2,95) || __MPFR_ICC(8,1,0)
-/* Note: This macro MPFR_INT_CEIL_LOG2 shouldn't be used in an MPFR_ASSERT*
-   macro, either directly or indirectly via other macros, otherwise it can
-   yield an error due to a too large stringized expression in ASSERT_FAIL.
-   A static inline function could be a better solution than this macro. */
 # define MPFR_INT_CEIL_LOG2(x)                            \
     (MPFR_UNLIKELY ((x) == 1) ? 0 :                       \
      __extension__ ({ int _b; mp_limb_t _limb;            \
@@ -1209,7 +1169,7 @@ do {                                                                  \
    temporarily */
 
 typedef struct {
-  mpfr_flags_t saved_flags;
+  unsigned int saved_flags;
   mpfr_exp_t saved_emin;
   mpfr_exp_t saved_emax;
 } mpfr_save_expo_t;
@@ -1496,7 +1456,7 @@ typedef struct {
         if (MPFR_UNLIKELY (_err > MPFR_PREC (_y) + 1))                  \
           {                                                             \
             int _inexact;                                               \
-            MPFR_CLEAR_FLAGS ();                                        \
+            mpfr_clear_flags ();                                        \
             _inexact = mpfr_round_near_x (_y,(v),_err,(dir),(rnd));     \
             if (_inexact != 0)                                          \
               {                                                         \
@@ -1513,26 +1473,11 @@ typedef struct {
  ***************  Ziv Loop Macro  *********************
  ******************************************************/
 
-/* To safely increase some precision, detecting integer overflows.
-   This macro is particularly useful when determining the initial
-   working precision before Ziv's loop. P is a precision, X is an
-   arbitrary non-negative integer.
-   Note: On 2012-02-23, the MPFR_PREC_MAX value has been decreased
-   by 256 from the maximum value representable in the mpfr_prec_t
-   type, in order to avoid some integer overflows when this macro
-   is not used (if the result is larger than MPFR_PREC_MAX, this
-   should be detected with a later assertion, e.g. in mpfr_init2).
-   But this change is mainly for existing code that has not been
-   updated yet. So, it is advised to always use MPFR_ADD_PREC if
-   the result can be larger than MPFR_PREC_MAX. */
-#define MPFR_ADD_PREC(P,X) \
-  (MPFR_ASSERTN ((X) <= MPFR_PREC_MAX - (P)), (P) + (X))
-
 #ifndef MPFR_USE_LOGGING
 
 #define MPFR_ZIV_DECL(_x) mpfr_prec_t _x
 #define MPFR_ZIV_INIT(_x, _p) (_x) = GMP_NUMB_BITS
-#define MPFR_ZIV_NEXT(_x, _p) ((_p) = MPFR_ADD_PREC (_p, _x), (_x) = (_p)/2)
+#define MPFR_ZIV_NEXT(_x, _p) ((_p) += (_x), (_x) = (_p)/2)
 #define MPFR_ZIV_FREE(x)
 
 #else
@@ -1580,7 +1525,7 @@ typedef struct {
 #define MPFR_ZIV_NEXT(_x, _p)                                           \
   do                                                                    \
     {                                                                   \
-      (_p) = MPFR_ADD_PREC (_p, _x);                                    \
+      (_p) += (_x);                                                     \
       (_x) = (_p) / 2;                                                  \
       if (mpfr_log_level >= 0)                                          \
         _x ## _bad += (_x ## _cpt == 1);                                \
@@ -1945,10 +1890,15 @@ __MPFR_DECLSPEC mp_limb_t mpfr_divhigh_n _MPFR_PROTO ((mpfr_limb_ptr,
 __MPFR_DECLSPEC int mpfr_round_p _MPFR_PROTO ((mp_limb_t *, mp_size_t,
                                                mpfr_exp_t, mpfr_prec_t));
 
+__MPFR_DECLSPEC void mpfr_dump_mant _MPFR_PROTO ((const mp_limb_t *,
+                                                  mpfr_prec_t, mpfr_prec_t,
+                                                  mpfr_prec_t));
+
 __MPFR_DECLSPEC int mpfr_round_near_x _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
                                                     mpfr_uexp_t, int,
                                                     mpfr_rnd_t));
-__MPFR_DECLSPEC MPFR_NORETURN void mpfr_abort_prec_max _MPFR_PROTO ((void));
+__MPFR_DECLSPEC void mpfr_abort_prec_max _MPFR_PROTO ((void))
+       MPFR_NORETURN_ATTR;
 
 __MPFR_DECLSPEC void mpfr_rand_raw _MPFR_PROTO((mpfr_limb_ptr, gmp_randstate_t,
                                                 mpfr_prec_t));

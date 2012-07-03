@@ -2,7 +2,7 @@
 @c %**start of header
 @setfilename mpfr.info
 @documentencoding UTF-8
-@set VERSION 3.2.0-dev
+@set VERSION 3.1.1
 @set UPDATED-MONTH July 2012
 @settitle GNU MPFR @value{VERSION}
 @synindex tp fn
@@ -463,7 +463,7 @@ specific to MPFR). Problems are also mentioned in the FAQ
 Please report problems to the MPFR mailing-list @samp{mpfr@@inria.fr}.
 @xref{Reporting Bugs}.
 Some bug fixes are available on the
-MPFR 3.2.0 web page @url{http://www.mpfr.org/mpfr-3.2.0/}.
+MPFR 3.1.1 web page @url{http://www.mpfr.org/mpfr-3.1.1/}.
 
 @section Getting the Latest Version of MPFR
 
@@ -478,7 +478,7 @@ The latest version of MPFR is available from
 @comment Warning! Do not split "MPFR ... @url{...}" across several lines
 @comment as this needs to be updated with update-version.
 If you think you have found a bug in the MPFR library, first have a look
-on the MPFR 3.2.0 web page @url{http://www.mpfr.org/mpfr-3.2.0/} and the
+on the MPFR 3.1.1 web page @url{http://www.mpfr.org/mpfr-3.1.1/} and the
 FAQ @url{http://www.mpfr.org/faq.html}:
 perhaps this bug is already known, in which case you may find there
 a workaround for it.
@@ -669,12 +669,6 @@ floating-point operation, in case the exact result can not be represented
 exactly in the destination significand;
 the corresponding C data type is @code{mpfr_rnd_t}.
 
-@cindex Group of flags
-@tindex @code{mpfr_flags_t}
-MPFR has a global (or per-thread) flag for each supported exception and
-provides operations on flags (@ref{Exceptions}). This C data type is used
-to represent a group of flags (or a mask).
-
 @node MPFR Variable Conventions, Rounding Modes, Nomenclature and Types, MPFR Basics
 @comment  node-name,  next,  previous,  up
 @section MPFR Variable Conventions
@@ -828,20 +822,11 @@ gives +Inf.
 @comment  node-name,  next,  previous,  up
 @section Exceptions
 
-MPFR defines a global (or per-thread) flag for each supported exception.
-A macro evaluating to a power of two is associated with each flag and
-exception, in order to be able to specify a group of flags (or a mask)
-by OR'ing such macros.
-
-Flags can be cleared (lowered), set (raised), and tested by functions
-described in @ref{Exception Related Functions}.
-
-The supported exceptions are listed below. The macro associated with
-each exception is in parentheses.
+MPFR supports 6 exception types:
 
 @itemize @bullet
 
-@item Underflow (@code{MPFR_FLAGS_UNDERFLOW}):
+@item Underflow:
 An underflow occurs when the exact result of a function is a non-zero
 real number and the result obtained after the rounding, assuming an
 unbounded exponent range (for the rounding), has an exponent smaller
@@ -864,7 +849,7 @@ it is rounded to @m{0.5 @times 2^e, 0.5 times 2 to @var{e}}, which is
 representable in the current exponent range. As a consequence, this will
 not yield an underflow in MPFR.
 
-@item Overflow (@code{MPFR_FLAGS_OVERFLOW}):
+@item Overflow:
 An overflow occurs when the exact result of a function is a non-zero
 real number and the result obtained after the rounding, assuming an
 unbounded exponent range (for the rounding), has an exponent larger
@@ -873,18 +858,18 @@ mode, the result is infinite.
 Note: unlike the underflow case, there is only one possible definition of
 overflow here.
 
-@item Divide-by-zero (@code{MPFR_FLAGS_DIVBY0}):
+@item Divide-by-zero:
 An exact infinite result is obtained from finite inputs.
 
-@item NaN (@code{MPFR_FLAGS_NAN}):
+@item NaN:
 A NaN exception occurs when the result of a function is NaN.
 @c NaN is defined above. So, we don't say anything more.
 
-@item Inexact (@code{MPFR_FLAGS_INEXACT}):
+@item Inexact:
 An inexact exception occurs when the result of a function cannot be
 represented exactly and must be rounded.
 
-@item Range error (@code{MPFR_FLAGS_ERANGE}):
+@item Range error:
 A range exception occurs when a function that does not return a MPFR
 number (such as comparisons and conversions to an integer) has an
 invalid result (e.g., an argument is NaN in @code{mpfr_cmp}, or a
@@ -892,9 +877,8 @@ conversion to an integer cannot be represented in the target type).
 
 @end itemize
 
-Moreover, the group consisting of all the flags is represented by
-the @code{MPFR_FLAGS_ALL} macro (if new flags are added in future
-MPFR versions, they will be added to this macro too).
+MPFR has a global flag for each exception, which can be cleared, set
+or tested by functions described in @ref{Exception Related Functions}.
 
 Differences with the ISO C99 standard:
 
@@ -1181,7 +1165,6 @@ These functions assign new values to already initialized floats
 @deftypefunx int mpfr_set_flt (mpfr_t @var{rop}, float @var{op}, mpfr_rnd_t @var{rnd})
 @deftypefunx int mpfr_set_d (mpfr_t @var{rop}, double @var{op}, mpfr_rnd_t @var{rnd})
 @deftypefunx int mpfr_set_ld (mpfr_t @var{rop}, long double @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_set_float128 (mpfr_t @var{rop}, __float128 @var{op}, mpfr_rnd_t @var{rnd})
 @deftypefunx int mpfr_set_decimal64 (mpfr_t @var{rop}, _Decimal64 @var{op}, mpfr_rnd_t @var{rnd})
 @deftypefunx int mpfr_set_z (mpfr_t @var{rop}, mpz_t @var{op}, mpfr_rnd_t @var{rnd})
 @deftypefunx int mpfr_set_q (mpfr_t @var{rop}, mpq_t @var{op}, mpfr_rnd_t @var{rnd})
@@ -1190,12 +1173,6 @@ Set the value of @var{rop} from @var{op}, rounded
 toward the given direction @var{rnd}.
 Note that the input 0 is converted to +0 by @code{mpfr_set_ui},
 @code{mpfr_set_si}, @code{mpfr_set_uj}, @code{mpfr_set_sj},
-The @code{mpfr_set_float128} function is built only with the configure
-option @samp{--enable-float128}, which requires the compiler or
-system provides the @samp{__float128} data type
-(GCC 4.3 or later supports this data type);
-to use @code{mpfr_set_float128}, one should define the macro
-@code{MPFR_WANT_FLOAT128} before including @file{mpfr.h}.
 @code{mpfr_set_z}, @code{mpfr_set_q} and
 @code{mpfr_set_f}, regardless of the rounding mode.
 If the system does not support the IEEE 754 standard,
@@ -1374,7 +1351,6 @@ See @code{mpfr_set_str}.
 @deftypefun float mpfr_get_flt (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
 @deftypefunx double mpfr_get_d (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
 @deftypefunx {long double} mpfr_get_ld (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
-@deftypefunx {__float128} mpfr_get_float128 (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
 @deftypefunx _Decimal64 mpfr_get_decimal64 (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
 Convert @var{op} to a @code{float} (respectively @code{double},
 @code{long double} or @code{_Decimal64}), using the rounding mode @var{rnd}.
@@ -1382,9 +1358,8 @@ If @var{op} is NaN, some fixed NaN (either quiet or signaling) or the result
 of 0.0/0.0 is returned. If @var{op} is @pom{}Inf, an infinity of the same
 sign or the result of @pom{}1.0/0.0 is returned. If @var{op} is zero, these
 functions return a zero, trying to preserve its sign, if possible.
-The @code{mpfr_get_float128} and @code{mpfr_get_decimal64} functions are built
-only under some conditions: see the documentation of @code{mpfr_set_float128}
-and @code{mpfr_set_decimal64} respectively.
+The @code{mpfr_get_decimal64} function is built only under some conditions:
+see the documentation of @code{mpfr_set_decimal64}.
 @end deftypefun
 
 @deftypefun long mpfr_get_si (mpfr_t @var{op}, mpfr_rnd_t @var{rnd})
@@ -2193,29 +2168,6 @@ Return the number of bytes read, or if an error occurred, return 0.
 @c @code{mpfr_out_raw}, and put the result in @var{float}.
 @c @end deftypefun
 
-@deftypefun int mpfr_fpif_export (FILE *@var{stream}, mpfr_t @var{op})
-Export the number @var{op} to the stream @var{stream} in a floating-point
-interchange format.
-In particular one can export on a 32-bit computer and import on a 64-bit
-computer, or export on a little-endian computer and import on a big-endian
-computer.
-The precision of @var{op} is stored too.
-Return 0 iff the export was successful.
-
-Note: this function is experimental and its interface might change in future
-versions.
-@end deftypefun
-
-@deftypefun int mpfr_fpif_import (mpfr_t @var{op}, FILE *@var{stream})
-Import the number @var{op} from the stream @var{stream} in a floating-point
-interchange format (see @code{mpfr_fpif_export}).
-The precision of @var{op} is set to the value read from the stream.
-Return 0 iff the import was successful.
-
-Note: this function is experimental and its interface might change in future
-versions.
-@end deftypefun
-
 @node Formatted Output Functions, Integer Related Functions, Input and Output Functions, MPFR Interface
 @comment  node-name,  next,  previous,  up
 @cindex Float output functions
@@ -2552,15 +2504,13 @@ corresponding precision of @var{iop} and @var{fop} (equivalent to
 @end deftypefun
 
 @deftypefun int mpfr_fmod (mpfr_t @var{r}, mpfr_t @var{x}, mpfr_t @var{y}, mpfr_rnd_t @var{rnd})
-@deftypefunx int mpfr_fmodquo (mpfr_t @var{r}, long* @var{q}, mpfr_t @var{x}, mpfr_t @var{y}, mpfr_rnd_t @var{rnd})
 @deftypefunx int mpfr_remainder (mpfr_t @var{r}, mpfr_t @var{x}, mpfr_t @var{y}, mpfr_rnd_t @var{rnd})
 @deftypefunx int mpfr_remquo (mpfr_t @var{r}, long* @var{q}, mpfr_t @var{x}, mpfr_t @var{y}, mpfr_rnd_t @var{rnd})
 Set @var{r} to the value of @math{@var{x} - @var{n}@var{y}}, rounded
 according to the direction @var{rnd}, where @var{n} is the integer quotient
 of @var{x} divided by @var{y}, defined as follows: @var{n} is rounded
-toward zero for @code{mpfr_fmod} and @code{mpfr_fmodquo},
-and to the nearest integer (ties rounded to even) for @code{mpfr_remainder}
-and @code{mpfr_remquo}.
+toward zero for @code{mpfr_fmod}, and to the nearest integer (ties rounded
+to even) for @code{mpfr_remainder} and @code{mpfr_remquo}.
 
 Special values are handled as described in Section F.9.7.1 of
 the ISO C99 standard:
@@ -2570,7 +2520,7 @@ to the precision of @var{r}.
 If @var{r} is zero, it has the sign of @var{x}.
 The return value is the ternary value corresponding to @var{r}.
 
-Additionally, @code{mpfr_fmodquo} and @code{mpfr_remquo} store
+Additionally, @code{mpfr_remquo} stores
 the low significant bits from the quotient @var{n} in @var{*q}
 (more precisely the number of bits in a @code{long} minus one),
 with the sign of @var{x} divided by @var{y}
@@ -2662,22 +2612,6 @@ The function name is subject to change.
 Return a string ("MPFR_RNDD", "MPFR_RNDU", "MPFR_RNDN", "MPFR_RNDZ",
 "MPFR_RNDA") corresponding to the rounding mode @var{rnd}, or a null pointer
 if @var{rnd} is an invalid rounding mode.
-@end deftypefun
-
-@deftypefun int mpfr_round_nearest_away (mpfr_t @var{rop}, mpfr_t @var{op}, int @var{foo} (mpfr_t, mpfr_t, mpfr_rnd_t))
-Given a function @var{foo} and a value @var{op},
-put in @var{rop} the round-to-nearest-away rounding of @var{foo}(@var{op}).
-This rounding is defined in the same way as round-to-nearest-even, except in
-case of tie, the value away from zero is returned.
-The function @var{foo} takes as input a MPFR number as second argument,
-a rounding mode as third argument,
-puts in its first argument the value @var{foo}(@var{op}) rounded according
-to this rounding mode, and returns the corresponding ternary value.
-Due to implementation constraints, this function should not be called when
-the minimal exponent @code{emin} is the smallest possible one.
-
-Note: this function is experimental and its interface might change in future
-versions.
 @end deftypefun
 
 @node Miscellaneous Functions, Exception Related Functions, Rounding Related Functions, MPFR Interface
@@ -2997,14 +2931,8 @@ in the subnormal range, which may not be the case for your hardware.
 @deftypefunx void mpfr_clear_nanflag (void)
 @deftypefunx void mpfr_clear_inexflag (void)
 @deftypefunx void mpfr_clear_erangeflag (void)
-Clear (lower) the underflow, overflow, divide-by-zero, invalid,
+Clear the underflow, overflow, divide-by-zero, invalid,
 inexact and @emph{erange} flags.
-@end deftypefun
-
-@deftypefun void mpfr_clear_flags (void)
-Clear (lower) all global flags (underflow, overflow, divide-by-zero, invalid,
-inexact, @emph{erange}). Note: a group of flags can be cleared by using
-@code{mpfr_flags_clear}.
 @end deftypefun
 
 @deftypefun void mpfr_set_underflow (void)
@@ -3013,8 +2941,13 @@ inexact, @emph{erange}). Note: a group of flags can be cleared by using
 @deftypefunx void mpfr_set_nanflag (void)
 @deftypefunx void mpfr_set_inexflag (void)
 @deftypefunx void mpfr_set_erangeflag (void)
-Set (raise) the underflow, overflow, divide-by-zero, invalid,
+Set the underflow, overflow, divide-by-zero, invalid,
 inexact and @emph{erange} flags.
+@end deftypefun
+
+@deftypefun void mpfr_clear_flags (void)
+Clear all global flags (underflow, overflow, divide-by-zero, invalid,
+inexact, @emph{erange}).
 @end deftypefun
 
 @deftypefun int mpfr_underflow_p (void)
@@ -3025,47 +2958,6 @@ inexact and @emph{erange} flags.
 @deftypefunx int mpfr_erangeflag_p (void)
 Return the corresponding (underflow, overflow, divide-by-zero, invalid,
 inexact, @emph{erange}) flag, which is non-zero iff the flag is set.
-@end deftypefun
-
-The @code{mpfr_flags_} functions below that take an argument @var{mask}
-can operate on any subset of the exception flags: a flag is part of this
-subset (or group) if and only if the corresponding bit of the argument
-@var{mask} is set.  The @code{MPFR_FLAGS_} macros will normally be used
-to build this argument.  @xref{Exceptions}.
-
-@deftypefun void mpfr_flags_clear (mpfr_flags_t @var{mask})
-Clear (lower) the group of flags specified by @var{mask}.
-@end deftypefun
-
-@deftypefun void mpfr_flags_set (mpfr_flags_t @var{mask})
-Set (raise) the group of flags specified by @var{mask}.
-@end deftypefun
-
-@deftypefun mpfr_flags_t mpfr_flags_test (mpfr_flags_t @var{mask})
-Return the flags specified by @var{mask}.  To test whether any flag from
-@var{mask} is set, compare the return value to 0.  You can also test
-individual flags by AND'ing the result with @code{MPFR_FLAGS_} macros.
-Example:
-@example
-mpfr_flags_t t = mpfr_flags_test (MPFR_FLAGS_UNDERFLOW|
-                                  MPFR_FLAGS_OVERFLOW)
-@dots{}
-if (t)  /* underflow and/or overflow (unlikely) */
-  @{
-    if (t & MPFR_FLAGS_UNDERFLOW)  @{ /* handle underflow */ @}
-    if (t & MPFR_FLAGS_OVERFLOW)   @{ /* handle overflow  */ @}
-  @}
-@end example
-@end deftypefun
-
-@deftypefun mpfr_flags_t mpfr_flags_save (void)
-Return all the flags. It is equivalent to
-@code{mpfr_flags_test(MPFR_FLAGS_ALL)}.
-@end deftypefun
-
-@deftypefun void mpfr_flags_restore (mpfr_flags_t @var{flags}, mpfr_flags_t @var{mask})
-Restore the flags specified by @var{mask} to their state represented
-in @var{flags}.
 @end deftypefun
 
 @node Compatibility with MPF, Custom Interface, Exception Related Functions, MPFR Interface
@@ -3377,11 +3269,6 @@ compatibility (this might change in future versions), using:
 The rounding mode ``round away from zero'' (@code{MPFR_RNDA}) was added in
 MPFR 3.0 (however no rounding mode @code{GMP_RNDA} exists).
 
-The flags-related macros, whose name starts with @code{MPFR_FLAGS_},
-were added in MPFR 3.2 (for the new functions @code{mpfr_flags_clear},
-@code{mpfr_flags_restore}, @code{mpfr_flags_set} and @code{mpfr_flags_test},
-in particular).
-
 @node Added Functions, Changed Functions, Type and Macro Changes, API Compatibility
 @section Added Functions
 
@@ -3432,17 +3319,9 @@ use @code{mpfr_custom_get_mantissa}.
 
 @item @code{mpfr_div_d} in MPFR 2.4.
 
-@item @code{mpfr_flags_clear}, @code{mpfr_flags_restore},
-@code{mpfr_flags_save}, @code{mpfr_flags_set} and @code{mpfr_flags_test}
-in MPFR 3.2.
-
 @item @code{mpfr_fmod} in MPFR 2.4.
 
-@item @code{mpfr_fmodquo} in MPFR 3.2.
-
 @item @code{mpfr_fms} in MPFR 2.3.
-
-@item @code{mpfr_fpif_export} and @code{mpfr_fpif_import} in MPFR 3.2.
 
 @item @code{mpfr_fprintf} in MPFR 2.4.
 

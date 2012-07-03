@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 int error;
@@ -127,17 +130,6 @@ check_ternary_value (void)
                   ((inexact < 0) && (cmp >= 0)))
                 {
                   printf ("Wrong ternary value in mpfr_set: expected %d,"
-                          " got %d\n", cmp, inexact);
-                  exit (1);
-                }
-              /* Test mpfr_set function too */
-              inexact = (mpfr_set) (y, x, (mpfr_rnd_t) rnd);
-              cmp = mpfr_cmp (y, x);
-              if (((inexact == 0) && (cmp != 0)) ||
-                  ((inexact > 0) && (cmp <= 0)) ||
-                  ((inexact < 0) && (cmp >= 0)))
-                {
-                  printf ("Wrong ternary value in mpfr_set(2): expected %d,"
                           " got %d\n", cmp, inexact);
                   exit (1);
                 }

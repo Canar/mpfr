@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 /* tlog2 [prec] [rnd] [0 = no print] */
@@ -66,27 +69,15 @@ check (mpfr_prec_t p0, mpfr_prec_t p1)
 static void
 check_large (void)
 {
-  mpfr_t x, y, z;
-
+  mpfr_t x, y;
   mpfr_init2 (x, 25000);
   mpfr_init2 (y, 26000);
-  mpfr_init2 (z, 26000);
   (mpfr_const_log2) (x, MPFR_RNDN); /* First one ! */
   (mpfr_const_log2) (y, MPFR_RNDN); /* Then the other - cache - */
-  mpfr_set (z, y, MPFR_RNDN);
   mpfr_prec_round (y, 25000, MPFR_RNDN);
-  if (mpfr_cmp (x, y) != 0)
+  if (mpfr_cmp (x, y))
     {
       printf ("const_log2: error for large prec\n");
-      printf ("x = ");
-      mpfr_out_str (stdout, 16, 0, x, MPFR_RNDN);
-      printf ("\n");
-      printf ("y = ");
-      mpfr_out_str (stdout, 16, 0, y, MPFR_RNDN);
-      printf ("\n");
-      printf ("z = ");
-      mpfr_out_str (stdout, 16, 0, z, MPFR_RNDN);
-      printf ("\n");
       exit (1);
     }
 
@@ -95,7 +86,7 @@ check_large (void)
   mpfr_set_prec (x, 26249);
   mpfr_const_log2 (x, MPFR_RNDZ);
 
-  mpfr_clears (x, y, z, (mpfr_ptr) 0);
+  mpfr_clears (x, y, (mpfr_ptr) 0);
 }
 
 static void
@@ -198,9 +189,9 @@ main (int argc, char *argv[])
       exit (1);
     }
 
-  mpfr_clear (x);
+  mpfr_clear(x);
 
-  check_large ();
+  check_large();
   check_cache ();
 
   test_generic (2, 200, 1);

@@ -23,7 +23,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 ])
 
 dnl Add check-news when it checks for more than 15 lines
-AC_INIT([MPFR],[3.2.0-dev])
+AC_INIT([MPFR],[3.1.1])
 
 AM_INIT_AUTOMAKE([1.11 no-define dist-bzip2 dist-xz dist-zip])
 AM_MAINTAINER_MODE(enable)
@@ -109,10 +109,9 @@ AC_ARG_ENABLE(assert,
    [  --enable-assert         enable ASSERT checking [[default=no]]],
    [ case $enableval in
       yes) AC_DEFINE([WANT_ASSERT],1,[Want assertion]) ;;
-      none) AC_DEFINE([WANT_ASSERT],-1,[Do no want any assertion]) ;;
       no)  ;;
       full) AC_DEFINE([WANT_ASSERT],2,[Want assertion]) ;;
-      *) AC_MSG_ERROR([bad value for --enable-assert: yes, no, none or full]) ;;
+      *) AC_MSG_ERROR([bad value for --enable-assert: yes, no or full]) ;;
      esac])
 AC_ARG_ENABLE(logging,
    [  --enable-logging        enable MPFR logging (the system must support it)
@@ -151,14 +150,6 @@ AC_ARG_ENABLE(tests-timeout,
       *)    AC_MSG_ERROR([bad value for --enable-tests-timeout]) ;;
      esac])
 
-AC_ARG_ENABLE(tune-for-coverage,
-   [  --tune-for-coverage     tune MPFR for coverage tests.],
-   [ case $enableval in
-      no)   ;;
-      yes)  AC_DEFINE([MPFR_TUNE_COVERAGE], 1, [tune for coverage]) ;;
-      *)    AC_MSG_ERROR([bad value for --enable-tune-for-coverage]) ;;
-     esac])
-
 
 dnl
 dnl Setup CC and CFLAGS
@@ -180,7 +171,7 @@ dnl (before we have the chance to get it from gmp.h) and does some
 dnl checking related to this compiler (such as dependency tracking
 dnl options); if the compiler changes due to __GMP_CC in gmp.h, one
 dnl would have incorrect settings.
-dnl FIXME: Move this in acinclude.m4 ?
+dnl FIXME: Move this in aclocal ?
 if test -z "$GMP_CC$GMP_CFLAGS" ; then
    AC_MSG_CHECKING(for CC and CFLAGS in gmp.h)
    GMP_CC=__GMP_CC
@@ -280,21 +271,6 @@ return y.d == 0.14894469406741037E-123 ? 0 :
       *)   AC_MSG_ERROR([bad value for --enable-decimal-float: yes or no]) ;;
      esac])
 
-AC_ARG_ENABLE(float128,
-   [  --enable-float128       build conversion functions from/to __float128
-                          [[default=no]]],
-   [ case $enableval in
-      yes) AC_DEFINE([MPFR_WANT_FLOAT128],1,
-              [Build float128 conversion functions])
-           AC_MSG_CHECKING(if compiler knows __float128)
-           AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[__float128 x;]])],
-              [AC_MSG_RESULT(yes)],
-              [AC_MSG_ERROR([Compiler doesn't know __float128; try GCC >= 4.3]
-           )]);;
-      no)  ;;
-      *)   AC_MSG_ERROR([bad value for --enable-float128: yes or no]) ;;
-     esac])
-
 dnl Check if compiler is ICC, and if such a case, disable GCC
 dnl And add some specific flags.
 dnl Don't add Warnings Flags (Otherwise you'll get more than 20000 warnings).
@@ -342,9 +318,6 @@ esac
 
 AC_C_CONST
 AC_C_VOLATILE
-dnl  Determine the endianness of integer
-AC_C_BIGENDIAN([AC_DEFINE(HAVE_BIG_ENDIAN)],[AC_DEFINE(HAVE_LITTLE_ENDIAN)])
-
 MPFR_CONFIGS
 
 dnl
@@ -489,9 +462,6 @@ dnl We do not set LD_LIBRARY_PATH, as it is not possible to set it just
 dnl before the test program is run, and we do not want to affect other
 dnl programs (such as the compiler), because the behavior could be
 dnl incorrect and even have security implications.
-dnl WARNING! LD_RUN_PATH is not taken into account by the GNU gold ld,
-dnl e.g. from binutils-gold 2.22-5 under Debian; see
-dnl   http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=660813
 saved_LD_RUN_PATH="$LD_RUN_PATH"
 LD_RUN_PATH="${LD_RUN_PATH:+$LD_RUN_PATH$PATH_SEPARATOR}$gmp_lib_path"
 export LD_RUN_PATH
@@ -523,7 +493,6 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([[
     AC_MSG_WARN([(such as /usr/include or /usr/local/include).])
     AC_MSG_WARN([However since we can't use 'libtool' inside the configure,])
     AC_MSG_WARN([we can't be sure. See 'config.log' for details.])
-    AC_MSG_WARN([Temporary LD_RUN_PATH was "$LD_RUN_PATH".])
     AC_MSG_WARN([==========================================================])
     ],AC_MSG_RESULT([can not test])
 )

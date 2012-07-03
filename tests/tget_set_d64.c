@@ -22,6 +22,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 #ifdef MPFR_WANT_DECIMAL_FLOATS
 
+#include <stdlib.h> /* for exit */
 #include "mpfr-test.h"
 
 /* #define DEBUG */

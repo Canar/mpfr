@@ -25,9 +25,9 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 /* Define MPFR version number */
 #define MPFR_VERSION_MAJOR 3
-#define MPFR_VERSION_MINOR 2
-#define MPFR_VERSION_PATCHLEVEL 0
-#define MPFR_VERSION_STRING "3.2.0-dev"
+#define MPFR_VERSION_MINOR 1
+#define MPFR_VERSION_PATCHLEVEL 1
+#define MPFR_VERSION_STRING "3.1.1"
 
 /* Macros dealing with MPFR VERSION */
 #define MPFR_VERSION_NUM(a,b,c) (((a) << 16L) | ((b) << 8) | (c))
@@ -46,7 +46,7 @@ MPFR_VERSION_NUM(MPFR_VERSION_MAJOR,MPFR_VERSION_MINOR,MPFR_VERSION_PATCHLEVEL)
    assumes that const is available; thus let's define it to const.
    Note: this is a temporary fix that can be backported to previous MPFR
    versions. In the future, __gmp_const should be replaced by const like
-   in GMP. See MPFR bug 13947. */
+   in GMP. */
 #ifndef __gmp_const
 # define __gmp_const const
 #endif
@@ -60,28 +60,6 @@ typedef unsigned int    mpfr_uint;
 typedef long            mpfr_long;
 typedef unsigned long   mpfr_ulong;
 typedef size_t          mpfr_size_t;
-
-/* Global (possibly TLS) flags. Might also be used in an mpfr_t in the
-   future (there would be room as mpfr_sign_t just needs 1 byte).
-   TODO: The tests currently assume that the flags fits in an unsigned int;
-   this should be cleaned up, e.g. by defining a function that outputs the
-   flags as a string or by using the flags_out function (from tests/tests.c
-   directly). */
-typedef unsigned int    mpfr_flags_t;
-
-/* Flags macros (in the public API) */
-#define MPFR_FLAGS_UNDERFLOW 1
-#define MPFR_FLAGS_OVERFLOW 2
-#define MPFR_FLAGS_NAN 4
-#define MPFR_FLAGS_INEXACT 8
-#define MPFR_FLAGS_ERANGE 16
-#define MPFR_FLAGS_DIVBY0 32
-#define MPFR_FLAGS_ALL (MPFR_FLAGS_UNDERFLOW | \
-                        MPFR_FLAGS_OVERFLOW  | \
-                        MPFR_FLAGS_NAN       | \
-                        MPFR_FLAGS_INEXACT   | \
-                        MPFR_FLAGS_ERANGE    | \
-                        MPFR_FLAGS_DIVBY0)
 
 /* Definition of rounding modes (DON'T USE MPFR_RNDNA!).
    Warning! Changing the contents of this enum should be seen as an
@@ -120,7 +98,7 @@ typedef enum {
 
 /* Define precision: 1 (short), 2 (int) or 3 (long) (DON'T USE IT!) */
 #ifndef _MPFR_PREC_FORMAT
-# if __GMP_MP_SIZE_T_INT
+# if __GMP_MP_SIZE_T_INT == 1
 #  define _MPFR_PREC_FORMAT 2
 # else
 #  define _MPFR_PREC_FORMAT 3
@@ -154,13 +132,10 @@ typedef unsigned long  mpfr_uprec_t;
 #endif
 
 /* Definition of precision limits without needing <limits.h> */
-/* Note: The casts allows the expression to yield the wanted behavior
-   for _MPFR_PREC_FORMAT == 1 (due to integer promotion rules). We
-   also make sure that MPFR_PREC_MIN and MPFR_PREC_MAX have a signed
-   integer type. The "- 256" allows more security, avoiding some
-   integer overflows in extreme cases; ideally it should be useless. */
+/* Note: the casts allows the expression to yield the wanted behavior
+   for _MPFR_PREC_FORMAT == 1 (due to integer promotion rules). */
 #define MPFR_PREC_MIN 2
-#define MPFR_PREC_MAX ((mpfr_prec_t) ((((mpfr_uprec_t) -1) >> 1) - 256))
+#define MPFR_PREC_MAX ((mpfr_prec_t)((mpfr_uprec_t)(~(mpfr_uprec_t)0)>>1))
 
 /* Definition of sign */
 typedef int          mpfr_sign_t;
@@ -344,13 +319,6 @@ __MPFR_DECLSPEC int mpfr_nanflag_p _MPFR_PROTO ((void));
 __MPFR_DECLSPEC int mpfr_inexflag_p _MPFR_PROTO ((void));
 __MPFR_DECLSPEC int mpfr_erangeflag_p _MPFR_PROTO ((void));
 
-__MPFR_DECLSPEC void mpfr_flags_clear _MPFR_PROTO ((mpfr_flags_t));
-__MPFR_DECLSPEC void mpfr_flags_set _MPFR_PROTO ((mpfr_flags_t));
-__MPFR_DECLSPEC mpfr_flags_t mpfr_flags_test _MPFR_PROTO ((mpfr_flags_t));
-__MPFR_DECLSPEC mpfr_flags_t mpfr_flags_save _MPFR_PROTO ((void));
-__MPFR_DECLSPEC void mpfr_flags_restore _MPFR_PROTO ((mpfr_flags_t,
-                                                      mpfr_flags_t));
-
 __MPFR_DECLSPEC int
   mpfr_check_range _MPFR_PROTO ((mpfr_ptr, int, mpfr_rnd_t));
 
@@ -388,12 +356,6 @@ __MPFR_DECLSPEC int mpfr_set_decimal64 _MPFR_PROTO ((mpfr_ptr, _Decimal64,
 #endif
 __MPFR_DECLSPEC int
   mpfr_set_ld _MPFR_PROTO ((mpfr_ptr, long double, mpfr_rnd_t));
-#ifdef MPFR_WANT_FLOAT128
-__MPFR_DECLSPEC int
-  mpfr_set_float128 _MPFR_PROTO ((mpfr_ptr, __float128, mpfr_rnd_t));
-__MPFR_DECLSPEC __float128
-  mpfr_get_float128 _MPFR_PROTO ((mpfr_srcptr, mpfr_rnd_t));
-#endif
 __MPFR_DECLSPEC int
   mpfr_set_z _MPFR_PROTO ((mpfr_ptr, mpz_srcptr, mpfr_rnd_t));
 __MPFR_DECLSPEC int
@@ -622,8 +584,6 @@ __MPFR_DECLSPEC int mpfr_remainder _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
                                                  mpfr_srcptr, mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_fmod _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
                                                  mpfr_srcptr, mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_fmodquo _MPFR_PROTO ((mpfr_ptr, long*, mpfr_srcptr,
-                                                 mpfr_srcptr, mpfr_rnd_t));
 
 __MPFR_DECLSPEC int mpfr_fits_ulong_p _MPFR_PROTO((mpfr_srcptr, mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_fits_slong_p _MPFR_PROTO((mpfr_srcptr, mpfr_rnd_t));
@@ -752,9 +712,6 @@ __MPFR_DECLSPEC int  mpfr_subnormalize _MPFR_PROTO ((mpfr_ptr, int,
 
 __MPFR_DECLSPEC int  mpfr_strtofr _MPFR_PROTO ((mpfr_ptr, __gmp_const char *,
                                                 char **, int, mpfr_rnd_t));
-
-__MPFR_DECLSPEC int mpfr_round_nearest_away _MPFR_PROTO ((mpfr_ptr,
-                       mpfr_srcptr, int foo(mpfr_t, mpfr_srcptr, mpfr_rnd_t)));
 
 __MPFR_DECLSPEC size_t mpfr_custom_get_size   _MPFR_PROTO ((mpfr_prec_t));
 __MPFR_DECLSPEC void   mpfr_custom_init    _MPFR_PROTO ((void *, mpfr_prec_t));
@@ -1042,10 +999,6 @@ __MPFR_DECLSPEC size_t mpfr_out_str _MPFR_PROTO ((FILE*, int, size_t,
 #define mpfr_fprintf __gmpfr_fprintf
 __MPFR_DECLSPEC int mpfr_fprintf _MPFR_PROTO ((FILE*, __gmp_const char*,
                                                ...));
-#define mpfr_fpif_export __gmpfr_fpif_export
-#define mpfr_fpif_import __gmpfr_fpif_import
-__MPFR_DECLSPEC int    mpfr_fpif_export _MPFR_PROTO ((FILE*, mpfr_ptr));
-__MPFR_DECLSPEC int    mpfr_fpif_import _MPFR_PROTO ((mpfr_ptr, FILE*));
 
 #if defined (__cplusplus)
 }

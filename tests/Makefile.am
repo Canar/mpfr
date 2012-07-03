@@ -17,34 +17,32 @@ AUTOMAKE_OPTIONS = 1.6 gnu
 #     other errors), and
 #   * at the end so that the error message is also near the end of the
 #     output.
-check_PROGRAMS = tversion tabort_prec_max tassert tabort_defalloc1      \
-     tabort_defalloc2 tinternals tinits tisqrt tsgn tcheck	  	\
-     tisnan texceptions tset_exp tset mpf_compat mpfr_compat	  	\
-     reuse tabs tacos tacosh tadd tadd1sp tadd_d tadd_ui tagm		\
-     tai tasin tasinh tatan tatanh taway tbuildopt tcan_round		\
-     tcbrt tcmp tcmp2 tcmp_d tcmp_ld tcmp_ui tcmpabs			\
-     tcomparisons tconst_catalan tconst_euler tconst_log2		\
-     tconst_pi tcopysign tcos tcosh tcot tcoth tcsc tcsch		\
-     td_div td_sub tdigamma tdim tdiv tdiv_d tdiv_ui teint teq		\
-     terf texp texp10 texp2 texpm1 tfactorial tfits tfma tfmod		\
-     tfms tfpif tfprintf tfrac tfrexp tgamma tget_flt tget_d 		\
-     tget_d_2exp tget_f tget_ld_2exp tget_set_d64 tget_sj tget_str 	\
-     tget_z tgmpop tgrandom thyperbolic thypot tinp_str tj0 tj1 tjn 	\
-     tl2b tlgamma tli2 tlngamma tlog tlog10 tlog1p tlog2 tmin_prec	\
-     tminmax tmodf tmul tmul_2exp tmul_d tmul_ui tnext			\
-     tout_str toutimpl tpow tpow3 tpow_all tpow_z tprintf		\
-     trandom trec_sqrt tremquo trint trndna troot tround_prec tsec	\
-     tsech tset_d tset_f tset_float128 tset_ld tset_q tset_si tset_sj	\
-     tset_str tset_z tset_z_exp tsi_op tsin tsin_cos tsinh		\
+check_PROGRAMS = tversion tinternals tinits tisqrt tsgn tcheck	\
+     tisnan texceptions tset_exp tset mpf_compat mpfr_compat	\
+     reuse tabs tacos tacosh tadd tadd1sp tadd_d tadd_ui tagm	\
+     tai tasin tasinh tatan tatanh taway tbuildopt tcan_round	\
+     tcbrt tcmp tcmp2 tcmp_d tcmp_ld tcmp_ui tcmpabs		\
+     tcomparisons tconst_catalan tconst_euler tconst_log2	\
+     tconst_pi tcopysign tcos tcosh tcot tcoth tcsc tcsch	\
+     td_div td_sub tdigamma tdim tdiv tdiv_d tdiv_ui teint teq	\
+     terf texp texp10 texp2 texpm1 tfactorial tfits tfma tfmod	\
+     tfms tfprintf tfrac tfrexp tgamma tget_flt tget_d tget_d_2exp \
+     tget_f tget_ld_2exp tget_set_d64 tget_sj tget_str tget_z	\
+     tgmpop tgrandom thyperbolic thypot tinp_str tj0 tj1 tjn tl2b	\
+     tlgamma tli2 tlngamma tlog tlog10 tlog1p tlog2 tmin_prec	\
+     tminmax tmodf tmul tmul_2exp tmul_d tmul_ui tnext		\
+     tout_str toutimpl tpow tpow3 tpow_all tpow_z tprintf	\
+     trandom trec_sqrt tremquo trint troot tround_prec tsec	\
+     tsech tset_d tset_f tset_ld tset_q tset_si tset_sj		\
+     tset_str tset_z tset_z_exp tsi_op tsin tsin_cos tsinh	\
      tsinh_cosh tsprintf tsqr tsqrt tsqrt_ui tstckintc tstdint tstrtofr	\
-     tsub tsub1sp tsub_d tsub_ui tsubnormal tsum tswap ttan		\
-     ttanh ttrunc tui_div tui_pow tui_sub turandom 	 		\
-     tvalist ty0 ty1 tyn tzeta tzeta_ui tversion
+     tsub tsub1sp tsub_d tsub_ui tsubnormal tsum tswap ttan	\
+     ttanh ttrunc tui_div tui_pow tui_sub turandom 	 \
+      tvalist ty0 ty1 tyn tzeta tzeta_ui tversion
 
 AM_CPPFLAGS = -DSRCDIR='"$(srcdir)"'
 
-EXTRA_DIST = tgeneric.c tgeneric_ui.c mpf_compat.h inp_str.dat tmul.dat \
-	mpfrtest.dat
+EXTRA_DIST = tgeneric.c tgeneric_ui.c mpf_compat.h inp_str.data tmul.dat
 
 LDADD = libfrtests.la $(MPFR_LIBM) $(top_builddir)/src/libmpfr.la
 INCLUDES = -I$(top_srcdir)/src -I$(top_builddir)/src

@@ -26,6 +26,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 # endif
 #endif
 
+#include <stdlib.h>
 #include <float.h>
 #include <errno.h>
 
@@ -54,10 +55,6 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 #ifdef MPFR_TESTS_TIMEOUT
 #include <sys/resource.h>
-#endif
-
-#if defined(HAVE_SIGNAL) || defined(HAVE_SIGACTION)
-# include <signal.h>
 #endif
 
 #include "mpfr-test.h"
@@ -666,7 +663,7 @@ void
 data_check (const char *f, int (*foo) (FLIST), const char *name)
 {
   FILE *fp;
-  long int xprec, yprec;  /* not mpfr_prec_t because of the fscanf */
+  int xprec, yprec;  /* not mpfr_prec_t because of the fscanf */
   mpfr_t x, y, z;
   mpfr_rnd_t rnd;
   char r;
@@ -734,7 +731,7 @@ data_check (const char *f, int (*foo) (FLIST), const char *name)
         {
           ungetc (c, fp);
 
-          c = fscanf (fp, "%ld %ld %c", &xprec, &yprec, &r);
+          c = fscanf (fp, "%d %d %c", &xprec, &yprec, &r);
           MPFR_ASSERTN (xprec >= MPFR_PREC_MIN && xprec <= MPFR_PREC_MAX);
           MPFR_ASSERTN (yprec >= MPFR_PREC_MIN && yprec <= MPFR_PREC_MAX);
           if (c == EOF)
@@ -819,11 +816,6 @@ data_check (const char *f, int (*foo) (FLIST), const char *name)
  * mode for some lower precision: see data_check).
  * fct, inv, name: data related to the function.
  * pos, emin, emax: arguments for tests_default_random.
- * For debugging purpose (e.g. in case of crash or infinite loop),
- * you can set the MPFR_DEBUG_BADCASES environment variable to 1 in
- * order to output information about the tested worst cases. You can
- * also enable logging (when supported), but this may give too much
- * information.
  */
 void
 bad_cases (int (*fct)(FLIST), int (*inv)(FLIST), const char *name,
@@ -963,36 +955,4 @@ flags_out (unsigned int flags)
   if (none)
     printf (" none");
   printf (" (%u)\n", flags);
-}
-
-static void
-abort_called (int x)
-{
-  /* Ok, abort has been called */
-  exit (0);
-}
-
-/* This function has to be called for a test
-   that will call the abort function */
-void
-tests_expect_abort (void)
-{
-#if defined(HAVE_SIGACTION)
-  struct sigaction act;
-  int ret;
-
-  memset (&act, 0, sizeof act);
-  act.sa_handler = abort_called;
-  ret = sigaction (SIGABRT, &act, NULL);
-  if (ret != 0)
-    {
-      /* Can't register error handler: Skip test */
-      exit (77);
-    }
-#elif defined(HAVE_SIGNAL)
-  signal (SIGABRT, abort_called);
-#else
-  /* Can't register error handler: Skip test */
-  exit (77);
-#endif
 }

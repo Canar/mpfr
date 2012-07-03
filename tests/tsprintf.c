@@ -24,6 +24,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #ifdef HAVE_STDARG
 #include <stdarg.h>
 
+#include <stdlib.h>
 #include <float.h>
 
 #ifdef HAVE_LOCALE_H
@@ -547,9 +548,6 @@ decimal (void)
   /* assertion failure in r6320 */
   mpfr_set_str (x, "-9.996", 10, MPFR_RNDN);
   check_sprintf ("-10.0", "%.1Rf", x);
-
-  /* regression in MPFR 3.1.0 (bug introduced in r7761, fixed in r7931) */
-  check_sprintf ("-10", "%.2Rg", x);
 
   mpfr_clears (x, z, (mpfr_ptr) 0);
   return 0;

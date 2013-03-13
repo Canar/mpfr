@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 /* Note: there could be an incorrect test about suspicious overflow
@@ -524,7 +527,7 @@ test20120426 (void)
 
   mpfr_init2 (xa, 53);
   mpfr_init2 (xb, 53);
-  mpfr_set_si_2exp (xb, -337, -1, MPFR_RNDN);
+  mpfr_set_d (xb, -168.5, MPFR_RNDN);
   emin = mpfr_get_emin ();
   mpfr_set_emin (-1073);
   i = mpfr_gamma (xa, xb, MPFR_RNDN);

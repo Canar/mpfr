@@ -25,24 +25,9 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 /* Define MPFR version number */
 #define MPFR_VERSION_MAJOR 3
-#define MPFR_VERSION_MINOR 2
-#define MPFR_VERSION_PATCHLEVEL 0
-#define MPFR_VERSION_STRING "3.2.0-dev"
-
-/* User macros:
-   MPFR_USE_FILE:        Define it to make MPFR define functions dealing
-                         with FILE* (auto-detect).
-   MPFR_USE_INTMAX_T:    Define it to make MPFR define functions dealing
-                         with intmax_t (auto-detect).
-   MPFR_USE_VA_LIST:     Define it to make MPFR define functions dealing
-                         with va_list (auto-detect).
-   MPFR_USE_C99_FEATURE: Define it to 1 to make MPFR support C99-feature
-                         (auto-detect), to 0 to bypass the detection.
-   MPFR_USE_EXTENSION:   Define it to make MPFR use GCC extension to
-                         reduce warnings.
-   MPFR_USE_NO_MACRO:    Define it to make MPFR remove any overriding
-                         function macro.
-*/
+#define MPFR_VERSION_MINOR 1
+#define MPFR_VERSION_PATCHLEVEL 2
+#define MPFR_VERSION_STRING "3.1.2"
 
 /* Macros dealing with MPFR VERSION */
 #define MPFR_VERSION_NUM(a,b,c) (((a) << 16L) | ((b) << 8) | (c))
@@ -61,7 +46,7 @@ MPFR_VERSION_NUM(MPFR_VERSION_MAJOR,MPFR_VERSION_MINOR,MPFR_VERSION_PATCHLEVEL)
    assumes that const is available; thus let's define it to const.
    Note: this is a temporary fix that can be backported to previous MPFR
    versions. In the future, __gmp_const should be replaced by const like
-   in GMP. See MPFR bug 13947. */
+   in GMP. */
 #ifndef __gmp_const
 # define __gmp_const const
 #endif
@@ -75,28 +60,6 @@ typedef unsigned int    mpfr_uint;
 typedef long            mpfr_long;
 typedef unsigned long   mpfr_ulong;
 typedef size_t          mpfr_size_t;
-
-/* Global (possibly TLS) flags. Might also be used in an mpfr_t in the
-   future (there would be room as mpfr_sign_t just needs 1 byte).
-   TODO: The tests currently assume that the flags fits in an unsigned int;
-   this should be cleaned up, e.g. by defining a function that outputs the
-   flags as a string or by using the flags_out function (from tests/tests.c
-   directly). */
-typedef unsigned int    mpfr_flags_t;
-
-/* Flags macros (in the public API) */
-#define MPFR_FLAGS_UNDERFLOW 1
-#define MPFR_FLAGS_OVERFLOW 2
-#define MPFR_FLAGS_NAN 4
-#define MPFR_FLAGS_INEXACT 8
-#define MPFR_FLAGS_ERANGE 16
-#define MPFR_FLAGS_DIVBY0 32
-#define MPFR_FLAGS_ALL (MPFR_FLAGS_UNDERFLOW | \
-                        MPFR_FLAGS_OVERFLOW  | \
-                        MPFR_FLAGS_NAN       | \
-                        MPFR_FLAGS_INEXACT   | \
-                        MPFR_FLAGS_ERANGE    | \
-                        MPFR_FLAGS_DIVBY0)
 
 /* Definition of rounding modes (DON'T USE MPFR_RNDNA!).
    Warning! Changing the contents of this enum should be seen as an
@@ -135,7 +98,7 @@ typedef enum {
 
 /* Define precision: 1 (short), 2 (int) or 3 (long) (DON'T USE IT!) */
 #ifndef _MPFR_PREC_FORMAT
-# if __GMP_MP_SIZE_T_INT
+# if __GMP_MP_SIZE_T_INT == 1
 #  define _MPFR_PREC_FORMAT 2
 # else
 #  define _MPFR_PREC_FORMAT 3
@@ -169,13 +132,10 @@ typedef unsigned long  mpfr_uprec_t;
 #endif
 
 /* Definition of precision limits without needing <limits.h> */
-/* Note: The casts allows the expression to yield the wanted behavior
-   for _MPFR_PREC_FORMAT == 1 (due to integer promotion rules). We
-   also make sure that MPFR_PREC_MIN and MPFR_PREC_MAX have a signed
-   integer type. The "- 256" allows more security, avoiding some
-   integer overflows in extreme cases; ideally it should be useless. */
+/* Note: the casts allows the expression to yield the wanted behavior
+   for _MPFR_PREC_FORMAT == 1 (due to integer promotion rules). */
 #define MPFR_PREC_MIN 2
-#define MPFR_PREC_MAX ((mpfr_prec_t) ((((mpfr_uprec_t) -1) >> 1) - 256))
+#define MPFR_PREC_MAX ((mpfr_prec_t)((mpfr_uprec_t)(~(mpfr_uprec_t)0)>>1))
 
 /* Definition of sign */
 typedef int          mpfr_sign_t;
@@ -276,28 +236,6 @@ typedef enum {
 # endif
 #endif
 
-/* If the user hasn't requested his/her preference
-   and if the intension of support by the compiler is C99
-   and if the compiler is known to support the C99 feature
-   then we can auto-detect the C99 support as OK.
-   __GNUC__ is used to detect GNU-C, ICC & CLANG compilers.
-   Currently we need only variadic macros, and they are present
-   since GCC >= 3. We don't test library version since we don't
-   use any feature present in the library too (except intmax_t,
-   but they use another detection).*/
-#ifndef MPFR_USE_C99_FEATURE
-# if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
-#  if defined (__GNUC__)
-#   if __GNUC__ >= 3
-#    define MPFR_USE_C99_FEATURE 1
-#   endif
-#  endif
-# endif
-# ifndef MPFR_USE_C99_FEATURE
-#  define MPFR_USE_C99_FEATURE 0
-# endif
-#endif
-
 /* Prototypes: Support of K&R compiler */
 #if defined (__GMP_PROTO)
 # define _MPFR_PROTO __GMP_PROTO
@@ -381,13 +319,6 @@ __MPFR_DECLSPEC int mpfr_nanflag_p _MPFR_PROTO ((void));
 __MPFR_DECLSPEC int mpfr_inexflag_p _MPFR_PROTO ((void));
 __MPFR_DECLSPEC int mpfr_erangeflag_p _MPFR_PROTO ((void));
 
-__MPFR_DECLSPEC void mpfr_flags_clear _MPFR_PROTO ((mpfr_flags_t));
-__MPFR_DECLSPEC void mpfr_flags_set _MPFR_PROTO ((mpfr_flags_t));
-__MPFR_DECLSPEC mpfr_flags_t mpfr_flags_test _MPFR_PROTO ((mpfr_flags_t));
-__MPFR_DECLSPEC mpfr_flags_t mpfr_flags_save _MPFR_PROTO ((void));
-__MPFR_DECLSPEC void mpfr_flags_restore _MPFR_PROTO ((mpfr_flags_t,
-                                                      mpfr_flags_t));
-
 __MPFR_DECLSPEC int
   mpfr_check_range _MPFR_PROTO ((mpfr_ptr, int, mpfr_rnd_t));
 
@@ -420,19 +351,11 @@ __MPFR_DECLSPEC mpfr_prec_t mpfr_get_default_prec _MPFR_PROTO((void));
 __MPFR_DECLSPEC int mpfr_set_d _MPFR_PROTO ((mpfr_ptr, double, mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_set_flt _MPFR_PROTO ((mpfr_ptr, float, mpfr_rnd_t));
 #ifdef MPFR_WANT_DECIMAL_FLOATS
-/* _Decimal64 is not defined in C++,
-   cf http://gcc.gnu.org/bugzilla/show_bug.cgi?id=51364 */
 __MPFR_DECLSPEC int mpfr_set_decimal64 _MPFR_PROTO ((mpfr_ptr, _Decimal64,
                                                      mpfr_rnd_t));
 #endif
 __MPFR_DECLSPEC int
   mpfr_set_ld _MPFR_PROTO ((mpfr_ptr, long double, mpfr_rnd_t));
-#ifdef MPFR_WANT_FLOAT128
-__MPFR_DECLSPEC int
-  mpfr_set_float128 _MPFR_PROTO ((mpfr_ptr, __float128, mpfr_rnd_t));
-__MPFR_DECLSPEC __float128
-  mpfr_get_float128 _MPFR_PROTO ((mpfr_srcptr, mpfr_rnd_t));
-#endif
 __MPFR_DECLSPEC int
   mpfr_set_z _MPFR_PROTO ((mpfr_ptr, mpz_srcptr, mpfr_rnd_t));
 __MPFR_DECLSPEC int
@@ -661,8 +584,6 @@ __MPFR_DECLSPEC int mpfr_remainder _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
                                                  mpfr_srcptr, mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_fmod _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
                                                  mpfr_srcptr, mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_fmodquo _MPFR_PROTO ((mpfr_ptr, long*, mpfr_srcptr,
-                                                 mpfr_srcptr, mpfr_rnd_t));
 
 __MPFR_DECLSPEC int mpfr_fits_ulong_p _MPFR_PROTO((mpfr_srcptr, mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_fits_slong_p _MPFR_PROTO((mpfr_srcptr, mpfr_rnd_t));
@@ -792,9 +713,6 @@ __MPFR_DECLSPEC int  mpfr_subnormalize _MPFR_PROTO ((mpfr_ptr, int,
 __MPFR_DECLSPEC int  mpfr_strtofr _MPFR_PROTO ((mpfr_ptr, __gmp_const char *,
                                                 char **, int, mpfr_rnd_t));
 
-__MPFR_DECLSPEC void mpfr_round_nearest_away_begin _MPFR_PROTO((mpfr_t));
-__MPFR_DECLSPEC int  mpfr_round_nearest_away_end   _MPFR_PROTO((mpfr_t, int));
-
 __MPFR_DECLSPEC size_t mpfr_custom_get_size   _MPFR_PROTO ((mpfr_prec_t));
 __MPFR_DECLSPEC void   mpfr_custom_init    _MPFR_PROTO ((void *, mpfr_prec_t));
 __MPFR_DECLSPEC void * mpfr_custom_get_significand _MPFR_PROTO ((mpfr_srcptr));
@@ -823,18 +741,6 @@ __MPFR_DECLSPEC int    mpfr_custom_get_kind   _MPFR_PROTO ((mpfr_srcptr));
 #define MPFR_DECL_INIT(_x, _p)                                        \
   MPFR_EXTENSION mp_limb_t __gmpfr_local_tab_##_x[((_p)-1)/GMP_NUMB_BITS+1]; \
   MPFR_EXTENSION mpfr_t _x = {{(_p),1,__MPFR_EXP_NAN,__gmpfr_local_tab_##_x}}
-
-#if MPFR_USE_C99_FEATURE
-/* C99 & C11 version: functions with multiple inputs supported */
-#define mpfr_round_nearest_away(func, rop, ...)                         \
-  (mpfr_round_nearest_away_begin(rop),                                  \
-   mpfr_round_nearest_away_end((rop), func((rop), __VA_ARGS__, MPFR_RNDN)))
-#else
-/* C89 version: function with one input supported */
-#define mpfr_round_nearest_away(func, rop, op)                          \
-  (mpfr_round_nearest_away_begin(rop),                                  \
-   mpfr_round_nearest_away_end((rop), func((rop), (op), MPFR_RNDN)))
-#endif
 
 /* Fast access macros to replace function interface.
    If the USER don't want to use the macro interface, let him make happy
@@ -1044,8 +950,7 @@ __MPFR_DECLSPEC int    mpfr_custom_get_kind   _MPFR_PROTO ((mpfr_srcptr));
 */
 #if (defined (INTMAX_C) && defined (UINTMAX_C) && !defined(__cplusplus)) || \
   defined (MPFR_USE_INTMAX_T) || \
-  defined (_STDINT_H) || defined (_STDINT_H_) || defined (_STDINT) || \
-  defined (_SYS_STDINT_H_) /* needed for FreeBSD */
+  defined (_STDINT_H) || defined (_STDINT_H_) || defined (_STDINT)
 # ifndef _MPFR_H_HAVE_INTMAX_T
 # define _MPFR_H_HAVE_INTMAX_T 1
 
@@ -1094,10 +999,6 @@ __MPFR_DECLSPEC size_t mpfr_out_str _MPFR_PROTO ((FILE*, int, size_t,
 #define mpfr_fprintf __gmpfr_fprintf
 __MPFR_DECLSPEC int mpfr_fprintf _MPFR_PROTO ((FILE*, __gmp_const char*,
                                                ...));
-#define mpfr_fpif_export __gmpfr_fpif_export
-#define mpfr_fpif_import __gmpfr_fpif_import
-__MPFR_DECLSPEC int    mpfr_fpif_export _MPFR_PROTO ((FILE*, mpfr_ptr));
-__MPFR_DECLSPEC int    mpfr_fpif_import _MPFR_PROTO ((mpfr_ptr, FILE*));
 
 #if defined (__cplusplus)
 }

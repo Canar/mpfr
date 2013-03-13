@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 #ifdef CHECK_EXTERNAL
@@ -351,13 +354,11 @@ special (void)
       mpfr_set_exp (x, GMP_NUMB_BITS);
       mpfr_add_ui (x, x, 1, MPFR_RNDN);
       /* now x = 2^(GMP_NUMB_BITS - 1) + 1 (GMP_NUMB_BITS bits) */
-      inexact = mpfr_mul (x, x, x, MPFR_RNDN);
-      MPFR_ASSERTN (inexact == 0); /* exact */
+      MPFR_ASSERTN (mpfr_mul (x, x, x, MPFR_RNDN) == 0); /* exact */
       inexact = test_sqrt (z, x, MPFR_RNDN);
       /* even rule: z should be 2^(GMP_NUMB_BITS - 1) */
       MPFR_ASSERTN (inexact < 0);
-      inexact = mpfr_cmp_ui_2exp (z, 1, GMP_NUMB_BITS - 1);
-      MPFR_ASSERTN (inexact == 0);
+      MPFR_ASSERTN (mpfr_cmp_ui_2exp (z, 1, GMP_NUMB_BITS - 1) == 0);
       mpfr_nextbelow (x);
       /* now x is just below [2^(GMP_NUMB_BITS - 1) + 1]^2 */
       inexact = test_sqrt (z, x, MPFR_RNDN);

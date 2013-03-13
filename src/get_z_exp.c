@@ -48,7 +48,7 @@ mpfr_get_z_2exp (mpz_ptr z, mpfr_srcptr f)
   if (MPFR_UNLIKELY (MPFR_IS_SINGULAR (f)))
     {
       if (MPFR_UNLIKELY (MPFR_NOTZERO (f)))
-        MPFR_SET_ERANGEFLAG ();
+        MPFR_SET_ERANGE ();
       mpz_set_ui (z, 0);
       return __gmpfr_emin;
     }
@@ -71,7 +71,7 @@ mpfr_get_z_2exp (mpz_ptr z, mpfr_srcptr f)
                      < (mpfr_uexp_t) MPFR_PREC (f)))
     {
       /* The exponent isn't representable in an mpfr_exp_t. */
-      MPFR_SET_ERANGEFLAG ();
+      MPFR_SET_ERANGE ();
       return MPFR_EXP_MIN;
     }
 

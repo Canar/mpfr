@@ -29,13 +29,11 @@ AC_PREREQ(2.60)
 dnl ------------------------------------------------------------
 dnl You must put in MPFR_CONFIGS everything which configure MPFR
 dnl except:
-dnl   - Everything dealing with CC and CFLAGS in particular the ABI
-dnl     but the IEEE-754 specific flags must be set here.
-dnl   - Tests that depend on gmp.h (see MPFR_CHECK_DBL2INT_BUG as an example:
-dnl     a function needs to be defined and called in configure.ac).
-dnl   - GMP's linkage.
-dnl   - Libtool stuff.
-dnl   - Handling of special arguments of MPFR's configure.
+dnl   -everything dealing with CC and CFLAGS in particular the ABI
+dnl   but the IEEE-754 specific flags must be set here.
+dnl   -GMP's linkage.
+dnl   -Libtool stuff.
+dnl   -Handling of special arguments of MPFR's configure.
 AC_DEFUN([MPFR_CONFIGS],
 [
 AC_REQUIRE([AC_OBJEXT])
@@ -60,10 +58,6 @@ AC_CHECK_HEADER([stdarg.h],[AC_DEFINE([HAVE_STDARG],1,[Define if stdarg])],
 
 dnl sys/fpu.h - MIPS specific
 AC_CHECK_HEADERS([sys/time.h sys/fpu.h])
-
-dnl Android has a <locale.h>, but not the following members.
-AC_CHECK_MEMBERS([struct lconv.decimal_point, struct lconv.thousands_sep],,,
-  [#include <locale.h>])
 
 dnl Check how to get `alloca'
 AC_FUNC_ALLOCA
@@ -94,26 +88,7 @@ dnl MPFR, but if they are implemented as macros, this is also OK (in our
 dnl case).  So, we do not return an error, but their tests are currently
 dnl useless.
 dnl gettimeofday is not defined for MinGW
-AC_CHECK_FUNCS([memmove memset setlocale strtol gettimeofday signal])
-
-dnl We cannot use AC_CHECK_FUNCS on sigaction, because while this
-dnl function may be provided by the C library, its prototype and
-dnl associated structure may not be available, e.g. when compiling
-dnl with "gcc -std=c99".
-AC_MSG_CHECKING(for sigaction and its associated structure)
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#include <signal.h>
-int f (int (*func)(int, const struct sigaction *, struct sigaction *))
-{ return 0; }
-]], [[
- struct sigaction act;
- f (sigaction);
- return 0;
-]])], [
-   AC_MSG_RESULT(yes)
-   AC_DEFINE(HAVE_SIGACTION, 1,
-    [Define if you have a working sigaction function.])
-],[AC_MSG_RESULT(no)])
+AC_CHECK_FUNCS([memmove memset setlocale strtol gettimeofday])
 
 dnl Check for IEEE-754 switches on Alpha
 case $host in
@@ -126,7 +101,7 @@ alpha*-*-*)
     mpfr_cv_ieee_switches="-fprm d -ieee_with_inexact"
   fi
   CFLAGS="$CFLAGS $mpfr_cv_ieee_switches"
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[]])], , mpfr_cv_ieee_switches="none")
+  AC_TRY_COMPILE(,,, mpfr_cv_ieee_switches="none")
   ])
   if test "$mpfr_cv_ieee_switches" = "none"; then
     CFLAGS="$saved_CFLAGS"
@@ -145,7 +120,7 @@ if test "$ac_cv_type_intmax_t" = yes; then
   AC_CACHE_CHECK([for working INTMAX_MAX], mpfr_cv_have_intmax_max, [
     saved_CPPFLAGS="$CPPFLAGS"
     CPPFLAGS="$CPPFLAGS -I$srcdir/src"
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include "mpfr-intmax.h"]], [[intmax_t x = INTMAX_MAX;]])],
+    AC_TRY_COMPILE([#include "mpfr-intmax.h"], [intmax_t x = INTMAX_MAX;],
       mpfr_cv_have_intmax_max=yes, mpfr_cv_have_intmax_max=no)
     CPPFLAGS="$saved_CPPFLAGS"
   ])
@@ -162,20 +137,11 @@ AC_CHECK_TYPE( [union fpc_csr],
 #endif
 ])
 
-dnl Check for _Noreturn function specifier (ISO C11)
-AC_CACHE_CHECK([for _Noreturn], mpfr_cv_have_noreturn, [
-  AC_COMPILE_IFELSE([AC_LANG_SOURCE([[_Noreturn void foo(int);]])],
-    mpfr_cv_have_noreturn=yes, mpfr_cv_have_noreturn=no)
-])
-if test "$mpfr_cv_have_noreturn" = "yes"; then
-  AC_DEFINE(MPFR_HAVE_NORETURN,1,[Define if the _Noreturn function specifier is supported.])
-fi
-
 dnl Check for fesetround
 AC_CACHE_CHECK([for fesetround], mpfr_cv_have_fesetround, [
 saved_LIBS="$LIBS"
 LIBS="$LIBS $MPFR_LIBM"
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <fenv.h>]], [[fesetround(FE_TONEAREST);]])],
+AC_TRY_LINK([#include <fenv.h>], [fesetround(FE_TONEAREST);],
   mpfr_cv_have_fesetround=yes, mpfr_cv_have_fesetround=no)
 LIBS="$saved_LIBS"
 ])
@@ -192,7 +158,7 @@ if test -n "$GCC"; then
   AC_CACHE_CHECK([for gcc float-conversion bug], mpfr_cv_gcc_floatconv_bug, [
   saved_LIBS="$LIBS"
   LIBS="$LIBS $MPFR_LIBM"
-  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+  AC_TRY_RUN([
 #include <float.h>
 #ifdef MPFR_HAVE_FESETROUND
 #include <fenv.h>
@@ -217,8 +183,7 @@ int main() {
   return 0;
 }
 static double get_max (void) { static volatile double d = DBL_MAX; return d; }
-  ]])],
-     [mpfr_cv_gcc_floatconv_bug="no"],
+  ], [mpfr_cv_gcc_floatconv_bug="no"],
      [mpfr_cv_gcc_floatconv_bug="yes, use -ffloat-store"],
      [mpfr_cv_gcc_floatconv_bug="cannot test, use -ffloat-store"])
   LIBS="$saved_LIBS"
@@ -228,38 +193,20 @@ static double get_max (void) { static volatile double d = DBL_MAX; return d; }
   fi
 fi
 
-dnl Check if subnormal (denormalized) numbers are supported
-AC_CACHE_CHECK([for subnormal numbers], mpfr_cv_have_denorms, [
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
+dnl Check if denormalized numbers are supported
+AC_CACHE_CHECK([for denormalized numbers], mpfr_cv_have_denorms, [
+AC_TRY_RUN([
+#include <math.h>
 #include <stdio.h>
 int main() {
   double x = 2.22507385850720138309e-308;
   fprintf (stderr, "%e\n", x / 2.0);
   return 2.0 * (x / 2.0) != x;
 }
-]])],
-   [mpfr_cv_have_denorms="yes"],
-   [mpfr_cv_have_denorms="no"],
-   [mpfr_cv_have_denorms="cannot test, assume no"])
+], mpfr_cv_have_denorms=yes, mpfr_cv_have_denorms=no, mpfr_cv_have_denorms=no)
 ])
 if test "$mpfr_cv_have_denorms" = "yes"; then
-  AC_DEFINE(HAVE_DENORMS,1,[Define if subnormal (denormalized) floats work.])
-fi
-
-dnl Check if signed zeros are supported. Note: the test will fail
-dnl if the division by 0 generates a trap.
-AC_CACHE_CHECK([for signed zeros], mpfr_cv_have_signedz, [
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
-int main() {
-  return 1.0 / 0.0 == 1.0 / -0.0;
-}
-]])],
-   [mpfr_cv_have_signedz="yes"],
-   [mpfr_cv_have_signedz="no"],
-   [mpfr_cv_have_signedz="cannot test, assume no"])
-])
-if test "$mpfr_cv_have_signedz" = "yes"; then
-  AC_DEFINE(HAVE_SIGNEDZ,1,[Define if signed zeros are supported.])
+  AC_DEFINE(HAVE_DENORMS,1,[Define if denormalized floats work.])
 fi
 
 dnl Check the FP division by 0 fails (e.g. on a non-IEEE-754 platform).
@@ -268,15 +215,14 @@ dnl involving a FP division by 0.
 dnl For the developers: to check whether all these tests are disabled,
 dnl configure MPFR with "-DMPFR_TEST_DIVBYZERO=1 -DMPFR_ERRDIVZERO=1".
 AC_CACHE_CHECK([if the FP division by 0 fails], mpfr_cv_errdivzero, [
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
+AC_TRY_RUN([
 int main() {
   volatile double d = 0.0, x;
   x = 0.0 / d;
   x = 1.0 / d;
   return 0;
 }
-]])],
-   [mpfr_cv_errdivzero="no"],
+], [mpfr_cv_errdivzero="no"],
    [mpfr_cv_errdivzero="yes"],
    [mpfr_cv_errdivzero="cannot test, assume no"])
 ])
@@ -291,7 +237,7 @@ dnl Check whether NAN != NAN (as required by the IEEE-754 standard,
 dnl but not by the ISO C standard). For instance, this is false with
 dnl MIPSpro 7.3.1.3m under IRIX64. By default, assume this is true.
 AC_CACHE_CHECK([if NAN == NAN], mpfr_cv_nanisnan, [
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
+AC_TRY_RUN([
 #include <stdio.h>
 #include <math.h>
 #ifndef NAN
@@ -302,8 +248,7 @@ int main() {
   d = NAN;
   return d != d;
 }
-]])],
-   [mpfr_cv_nanisnan="yes"],
+], [mpfr_cv_nanisnan="yes"],
    [mpfr_cv_nanisnan="no"],
    [mpfr_cv_nanisnan="cannot test, assume no"])
 ])
@@ -435,12 +380,11 @@ dnl    there is some ld configuration problem. One of the effects can
 dnl    be that thread-local variables always evaluate to 0. So, it is
 dnl    important to run the test below.
 if test "$enable_thread_safe" != no; then
-AC_MSG_CHECKING(for TLS support using C11)
+AC_MSG_CHECKING(for TLS support)
 saved_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS -I$srcdir/src"
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #define MPFR_USE_THREAD_SAFE 1
-#define MPFR_USE_C11_THREAD_SAFE 1
 #include "mpfr-thread.h"
 MPFR_THREAD_ATTR int x = 17;
 int main() {
@@ -449,114 +393,23 @@ int main() {
   ]])],
      [AC_MSG_RESULT(yes)
       AC_DEFINE([MPFR_USE_THREAD_SAFE],1,[Build MPFR as thread safe])
-      AC_DEFINE([MPFR_USE_C11_THREAD_SAFE],1,[Build MPFR as thread safe using C11])
-      tls_c11_support=yes
      ],
      [AC_MSG_RESULT(no)
+      if test "$enable_thread_safe" = yes; then
+        AC_MSG_ERROR([please configure with --disable-thread-safe])
+      fi
      ],
-     [AC_MSG_RESULT([cannot test, assume no])
+     [if test "$enable_thread_safe" = yes; then
+        AC_MSG_RESULT([cannot test, assume yes])
+        AC_DEFINE([MPFR_USE_THREAD_SAFE],1,[Build MPFR as thread safe])
+      else
+        AC_MSG_RESULT([cannot test, assume no])
+      fi
      ])
 CPPFLAGS="$saved_CPPFLAGS"
-
-if test "$tls_c11_support" != "yes"
-then
-
- AC_MSG_CHECKING(for TLS support)
- saved_CPPFLAGS="$CPPFLAGS"
- CPPFLAGS="$CPPFLAGS -I$srcdir/src"
- AC_RUN_IFELSE([AC_LANG_SOURCE([[
- #define MPFR_USE_THREAD_SAFE 1
- #include "mpfr-thread.h"
- MPFR_THREAD_ATTR int x = 17;
- int main() {
-   return x != 17;
- }
-   ]])],
-      [AC_MSG_RESULT(yes)
-       AC_DEFINE([MPFR_USE_THREAD_SAFE],1,[Build MPFR as thread safe])
-      ],
-      [AC_MSG_RESULT(no)
-       if test "$enable_thread_safe" = yes; then
-         AC_MSG_ERROR([please configure with --disable-thread-safe])
-       fi
-      ],
-      [if test "$enable_thread_safe" = yes; then
-         AC_MSG_RESULT([cannot test, assume yes])
-         AC_DEFINE([MPFR_USE_THREAD_SAFE],1,[Build MPFR as thread safe])
-       else
-         AC_MSG_RESULT([cannot test, assume no])
-       fi
-      ])
- CPPFLAGS="$saved_CPPFLAGS"
- fi
 fi
-
-dnl Check if Static Assertions are supported.
-AC_MSG_CHECKING(for Static Assertion support)
-saved_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS -I$srcdir/src"
-AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
-#define MPFR_USE_STATIC_ASSERT 1
-#include "mpfr-sassert.h"
-
-/* Test if Static Assertions work */
-MPFR_DECL_STATIC_ASSERT(sizeof(char) <= sizeof(int));
-
-int main() {
-  MPFR_DECL_STATIC_ASSERT(sizeof(int) <= sizeof(long));
-  int x;
-  x = 1;
-  MPFR_STAT_STATIC_ASSERT(sizeof(short) <= sizeof(int));
-  return 0;
-}
-  ]])],
-     [AC_MSG_RESULT(yes)
-      AC_DEFINE([MPFR_USE_STATIC_ASSERT],1,[Build MPFR with Static Assertions])
-     ],
-     [AC_MSG_RESULT(no)
-     ],
-     [AC_MSG_RESULT([cannot test, assume no])
-     ])
-CPPFLAGS="$saved_CPPFLAGS"
-
 ])
 dnl end of MPFR_CONFIGS
-
-
-dnl MPFR_CHECK_DBL2INT_BUG
-dnl ----------------------
-dnl Check for double-to-integer conversion bug
-dnl https://gforge.inria.fr/tracker/index.php?func=detail&aid=14435
-AC_DEFUN([MPFR_CHECK_DBL2INT_BUG], [
-AC_REQUIRE([MPFR_CONFIGS])dnl
-AC_CACHE_CHECK([for double-to-integer conversion bug], mpfr_cv_dbl_int_bug, [
-AC_RUN_IFELSE([AC_LANG_PROGRAM([[
-#include <gmp.h>
-]], [[
-  double d;
-  mp_limb_t u;
-  int i;
-
-  d = 1.0;
-  for (i = 0; i < GMP_NUMB_BITS - 1; i++)
-    d = d + d;
-  u = (mp_limb_t) d;
-  for (; i > 0; i--)
-    {
-      if (u & 1)
-        break;
-      u = u >> 1;
-    }
-  return (i == 0 && u == 1UL) ? 0 : 1;
-]])], [mpfr_cv_dbl_int_bug="no"],
-      [mpfr_cv_dbl_int_bug="yes"],
-      [mpfr_cv_dbl_int_bug="cannot test, assume not present"])
-])
-if test "$mpfr_cv_dbl_int_bug" = "yes"; then
-  AC_MSG_ERROR([double-to-integer conversion is incorrect.
-You need to use another compiler (or lower the optimization level).])
-fi
-])
 
 
 dnl  MPFR_C_LONG_DOUBLE_FORMAT
@@ -616,7 +469,7 @@ struct {
 };
 ]
 EOF
-  mpfr_compile="$CC $CFLAGS $CPPFLAGS -c conftest.c >&AS_MESSAGE_LOG_FD 2>&1"
+  mpfr_compile="$CC $CFLAGS $CPPFLAGS -c conftest.c >&AC_FD_CC 2>&1"
   if AC_TRY_EVAL(mpfr_compile); then
     cat >conftest.awk <<\EOF
 [
@@ -876,8 +729,8 @@ EOF
     mpfr_cv_c_long_double_format=`od -b conftest.$OBJEXT | $AWK -f conftest.awk`
     case $mpfr_cv_c_long_double_format in
     unknown*)
-      echo "cannot match anything, conftest.$OBJEXT contains" >&AS_MESSAGE_LOG_FD
-      od -b conftest.$OBJEXT >&AS_MESSAGE_LOG_FD
+      echo "cannot match anything, conftest.$OBJEXT contains" >&AC_FD_CC
+      od -b conftest.$OBJEXT >&AC_FD_CC
       ;;
     esac
   else
@@ -898,17 +751,8 @@ AH_VERBATIM([HAVE_LDOUBLE],
 #undef HAVE_LDOUBLE_IEEE_QUAD_BIG])
 
 case $mpfr_cv_c_long_double_format in
-  "IEEE double, big endian")
-    AC_DEFINE(HAVE_LDOUBLE_IS_DOUBLE, 1)
-    ;;
-  "IEEE double, little endian")
-    AC_DEFINE(HAVE_LDOUBLE_IS_DOUBLE, 1)
-    ;;
   "IEEE extended, little endian")
     AC_DEFINE(HAVE_LDOUBLE_IEEE_EXT_LITTLE, 1)
-    ;;
-  "IEEE extended, big endian")
-    AC_DEFINE(HAVE_LDOUBLE_IEEE_EXT_BIG, 1)
     ;;
   "IEEE quad, big endian")
     AC_DEFINE(HAVE_LDOUBLE_IEEE_QUAD_BIG, 1)
@@ -929,6 +773,7 @@ case $mpfr_cv_c_long_double_format in
     ;;
 esac
 ])
+
 
 dnl  MPFR_CHECK_LIBM
 dnl  ---------------
@@ -990,7 +835,7 @@ dnl  as a fallback.
 AC_DEFUN([GMP_C_ATTRIBUTE_MODE],
 [AC_CACHE_CHECK([whether gcc __attribute__ ((mode (XX))) works],
                gmp_cv_c_attribute_mode,
-[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[typedef int SItype __attribute__ ((mode (SI)));]], [[]])],
+[AC_TRY_COMPILE([typedef int SItype __attribute__ ((mode (SI)));], ,
  gmp_cv_c_attribute_mode=yes, gmp_cv_c_attribute_mode=no)
 ])
 if test $gmp_cv_c_attribute_mode = yes; then
@@ -1023,9 +868,7 @@ $3
   [AC_MSG_RESULT(yes)
   $4],
   [AC_MSG_RESULT(no)
-  $5],
-  [AC_MSG_RESULT(cross-compiling, assuming yes)
-  $4])
+  $5])
 ])
 
 
@@ -1069,7 +912,7 @@ MPFR_FUNC_GMP_PRINTF_SPEC([td], [ptrdiff_t], [
 #else
 #include <stddef.h>
 #endif
-#include <gmp.h>
+#include "gmp.h"
     ],,
     [AC_DEFINE([NPRINTF_T], 1, [gmp_printf cannot read ptrdiff_t])])
 ])

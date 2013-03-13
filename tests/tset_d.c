@@ -20,6 +20,8 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <float.h>
 
 #include "mpfr-test.h"
@@ -90,7 +92,6 @@ main (int argc, char *argv[])
     }
 #endif  /* MPFR_ERRDIVZERO */
 
-#ifdef HAVE_SIGNEDZ
   d = 0.0;
   mpfr_set_d (x, d, MPFR_RNDN);
   MPFR_ASSERTN(mpfr_cmp_ui (x, 0) == 0 && MPFR_IS_POS(x));
@@ -101,7 +102,6 @@ main (int argc, char *argv[])
       printf ("Error in mpfr_set_d on -0\n");
       exit (1);
     }
-#endif  /* HAVE_SIGNEDZ */
 
 #if !defined(MPFR_ERRDIVZERO)
   mpfr_set_inf (x, 1);
@@ -119,9 +119,9 @@ main (int argc, char *argv[])
 
   mpfr_set_prec (x, 2);
 
-  /* checks that subnormals are not flushed to zero */
+  /* checks that denormalized are not flushed to zero */
   d = DBL_MIN; /* 2^(-1022) */
-  for (n = 0; n < 52; n++, d /= 2.0)
+  for (n=0; n<52; n++, d /= 2.0)
     if (d != 0.0) /* should be 2^(-1022-n) */
       {
         mpfr_set_d (x, d, MPFR_RNDN);

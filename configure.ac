@@ -23,7 +23,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 ])
 
 dnl Add check-news when it checks for more than 15 lines
-AC_INIT([MPFR],[3.2.0-dev])
+AC_INIT([MPFR],[3.1.2])
 
 AM_INIT_AUTOMAKE([1.11 no-define dist-bzip2 dist-xz dist-zip])
 AM_MAINTAINER_MODE(enable)
@@ -108,11 +108,10 @@ AC_ARG_ENABLE(gmp-internals,
 AC_ARG_ENABLE(assert,
    [  --enable-assert         enable ASSERT checking [[default=no]]],
    [ case $enableval in
-      yes) AC_DEFINE([MPFR_WANT_ASSERT],1,[Want assertion]) ;;
-      none) AC_DEFINE([MPFR_WANT_ASSERT],-1,[Do no want any assertion]) ;;
+      yes) AC_DEFINE([WANT_ASSERT],1,[Want assertion]) ;;
       no)  ;;
-      full) AC_DEFINE([MPFR_WANT_ASSERT],2,[Want assertion]) ;;
-      *) AC_MSG_ERROR([bad value for --enable-assert: yes, no, none or full]) ;;
+      full) AC_DEFINE([WANT_ASSERT],2,[Want assertion]) ;;
+      *) AC_MSG_ERROR([bad value for --enable-assert: yes, no or full]) ;;
      esac])
 AC_ARG_ENABLE(logging,
    [  --enable-logging        enable MPFR logging (the system must support it)
@@ -151,14 +150,6 @@ AC_ARG_ENABLE(tests-timeout,
       *)    AC_MSG_ERROR([bad value for --enable-tests-timeout]) ;;
      esac])
 
-AC_ARG_ENABLE(tune-for-coverage,
-   [  --tune-for-coverage     tune MPFR for coverage tests.],
-   [ case $enableval in
-      no)   ;;
-      yes)  AC_DEFINE([MPFR_TUNE_COVERAGE], 1, [tune for coverage]) ;;
-      *)    AC_MSG_ERROR([bad value for --enable-tune-for-coverage]) ;;
-     esac])
-
 
 dnl
 dnl Setup CC and CFLAGS
@@ -180,7 +171,7 @@ dnl (before we have the chance to get it from gmp.h) and does some
 dnl checking related to this compiler (such as dependency tracking
 dnl options); if the compiler changes due to __GMP_CC in gmp.h, one
 dnl would have incorrect settings.
-dnl FIXME: Move this in acinclude.m4 ?
+dnl FIXME: Move this in aclocal ?
 if test -z "$GMP_CC$GMP_CFLAGS" ; then
    AC_MSG_CHECKING(for CC and CFLAGS in gmp.h)
    GMP_CC=__GMP_CC
@@ -236,12 +227,6 @@ AC_PROG_CC
 AC_PROG_CPP
 AC_LANG(C)
 
-dnl For GCC, _Decimal64 was introduced in GCC 4.3 for some targets
-dnl (note that it is not guaranteed to be available because it may
-dnl be disabled in the GCC build). See:
-dnl   http://gcc.gnu.org/gcc-4.3/changes.html
-dnl _Decimal64 is not yet defined in GCC for C++:
-dnl   http://gcc.gnu.org/bugzilla/show_bug.cgi?id=51364
 AC_ARG_ENABLE(decimal-float,
    [  --enable-decimal-float  build conversion functions from/to decimal floats
                           [[default=no]]],
@@ -250,11 +235,21 @@ AC_ARG_ENABLE(decimal-float,
               [Build decimal float functions])
            AC_MSG_CHECKING(if compiler knows _Decimal64)
            AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[_Decimal64 x;]])],
-              [AC_MSG_RESULT(yes)],
-              [AC_MSG_RESULT(no)
-AC_MSG_ERROR([Compiler doesn't know _Decimal64 (ISO/IEC TR 24732).
-Please use another compiler or build MPFR without --enable-decimal-float.])]
-           )
+              [AC_MSG_RESULT(yes)
+               if test "$use_gmp_build" != yes ; then
+                  AC_MSG_ERROR([decimal float support requires --with-gmp-build])
+               fi
+               AC_MSG_CHECKING(if _GMP_IEEE_FLOATS is defined)
+               AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+#include "gmp.h"
+#include "gmp-impl.h"
+#ifndef _GMP_IEEE_FLOATS
+#error "_GMP_IEEE_FLOATS is not defined"
+#endif]])],[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)
+                  AC_MSG_ERROR([decimal float support requires _GMP_IEEE_FLOATS])])
+              ],
+              [AC_MSG_ERROR([Compiler doesn't know _Decimal64; try GCC >= 4.2, configured with --enable-decimal-float]
+           )])
            AC_MSG_CHECKING(decimal float format)
            AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 #include <stdlib.h>
@@ -274,21 +269,6 @@ return y.d == 0.14894469406741037E-123 ? 0 :
            ;;
       no)  ;;
       *)   AC_MSG_ERROR([bad value for --enable-decimal-float: yes or no]) ;;
-     esac])
-
-AC_ARG_ENABLE(float128,
-   [  --enable-float128       build conversion functions from/to __float128
-                          [[default=no]]],
-   [ case $enableval in
-      yes) AC_DEFINE([MPFR_WANT_FLOAT128],1,
-              [Build float128 conversion functions])
-           AC_MSG_CHECKING(if compiler knows __float128)
-           AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[__float128 x;]])],
-              [AC_MSG_RESULT(yes)],
-              [AC_MSG_ERROR([Compiler doesn't know __float128; try GCC >= 4.3]
-           )]);;
-      no)  ;;
-      *)   AC_MSG_ERROR([bad value for --enable-float128: yes or no]) ;;
      esac])
 
 dnl Check if compiler is ICC, and if such a case, disable GCC
@@ -338,13 +318,6 @@ esac
 
 AC_C_CONST
 AC_C_VOLATILE
-dnl Determine the endianness of integer. But since MPFR doesn't use
-dnl AC_CONFIG_HEADERS, configure cannot provide such information for
-dnl universal binaries containing variants with different endianness
-dnl (i.e. generic code must be used).
-AC_C_BIGENDIAN([AC_DEFINE(HAVE_BIG_ENDIAN)],[AC_DEFINE(HAVE_LITTLE_ENDIAN)],
-[true],[true])
-
 MPFR_CONFIGS
 
 # (Based on GMP 5.1)
@@ -384,7 +357,7 @@ dnl but it's "ar" format and cannot be used by the MS linker.  There
 dnl doesn't seem to be any GNU tool for generating or converting to .lib.
 AC_SUBST(MPFR_LDFLAGS)
 AC_SUBST(LIBMPFR_LDFLAGS)
-LT_INIT(win32-dll)
+AC_LIBTOOL_WIN32_DLL
 case $host in
   *-*-cygwin* | *-*-mingw* | *-*-pw32* | *-*-os2*)
    AC_MSG_CHECKING(for DLL/static GMP)
@@ -414,6 +387,8 @@ error
   fi
   ;;
 esac
+dnl Finally set up LibTool
+AC_PROG_LIBTOOL
 
 
 dnl
@@ -499,9 +474,6 @@ dnl We do not set LD_LIBRARY_PATH, as it is not possible to set it just
 dnl before the test program is run, and we do not want to affect other
 dnl programs (such as the compiler), because the behavior could be
 dnl incorrect and even have security implications.
-dnl WARNING! LD_RUN_PATH is not taken into account by the GNU gold ld,
-dnl e.g. from binutils-gold 2.22-5 under Debian; see
-dnl   http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=660813
 saved_LD_RUN_PATH="$LD_RUN_PATH"
 LD_RUN_PATH="${LD_RUN_PATH:+$LD_RUN_PATH$PATH_SEPARATOR}$gmp_lib_path"
 export LD_RUN_PATH
@@ -522,7 +494,6 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([[
   return (strcmp (buffer, gmp_version) != 0) ? 1 : 0;
 ]])],
    [AC_MSG_RESULT(yes)
-    MPFR_CHECK_DBL2INT_BUG
     MPFR_CHECK_PRINTF_SPEC],
    [AC_MSG_RESULT(no)
     AC_MSG_WARN([==========================================================])
@@ -534,7 +505,6 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([[
     AC_MSG_WARN([(such as /usr/include or /usr/local/include).])
     AC_MSG_WARN([However since we can't use 'libtool' inside the configure,])
     AC_MSG_WARN([we can't be sure. See 'config.log' for details.])
-    AC_MSG_WARN([Temporary LD_RUN_PATH was "$LD_RUN_PATH".])
     AC_MSG_WARN([==========================================================])
     ],AC_MSG_RESULT([can not test])
 )

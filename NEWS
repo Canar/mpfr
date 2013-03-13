@@ -20,23 +20,17 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 ##############################################################################
 
-Changes from versions 3.1.* to version 3.2.0:
-- The "dinde aux marrons" release.
-- New functions: mpfr_fpif_export and mpfr_fpif_import to export and import
-  numbers in a floating-point interchange format, independent both on the
-  number of bits per word and on the endianness.
-- New function mpfr_fmodquo to return the low bits of the quotient
-  corresponding to mpfr_fmod.
-- New functions mpfr_flags_clear, mpfr_flags_set, mpfr_flags_test,
-  mpfr_flags_save and mpfr_flags_restore to operate on groups of flags.
-- New functions mpfr_set_float128 and mpfr_get_float128 to convert from/to
-  the __float128 type (requires --enable-float128 and compiler support).
-- New function mpfr_round_nearest_away to add partial emulation of the
-  rounding to nearest-away (as defined in IEEE 754-2008).
-- Added configure option --enable-assert=none to avoid checking any assertion.
-- Updated tuning parameters.
+Changes from version 3.1.1 to version 3.1.2:
+- Bug fixes (see <http://www.mpfr.org/mpfr-3.1.1/#fixed> or ChangeLog file).
+- Updated examples to the MPFR 3.x API.
+- Note: The official tarballs for MPFR up to 3.1.1 were affected by a
+  vulnerability for "make distcheck" due to a bug in old GNU Automake
+  versions: http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-3386
+
+Changes from version 3.1.0 to version 3.1.1:
 - Improved MPFR manual.
-- Bug fixes.
+- Test coverage: 96.5% lines of code.
+- Bug fixes (see <http://www.mpfr.org/mpfr-3.1.0/#fixed> or ChangeLog file).
 
 Changes from versions 3.0.* to version 3.1.0:
 - The "canard à l'orange" release.

@@ -25,13 +25,6 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 #include <stdio.h>
 
-/* The no assertion request doesn't apply to the tests */
-#if defined(MPFR_WANT_ASSERT)
-# if MPFR_WANT_ASSERT < 0
-#  undef MPFR_WANT_ASSERT
-# endif
-#endif
-
 #include "mpfr-impl.h"
 
 /* generates a random long int, a random double,
@@ -81,8 +74,6 @@ void tests_memory_end _MPFR_PROTO ((void));
 
 void tests_start_mpfr _MPFR_PROTO ((void));
 void tests_end_mpfr _MPFR_PROTO ((void));
-
-void tests_expect_abort _MPFR_PROTO ((void));
 
 int mpfr_set_machine_rnd_mode _MPFR_PROTO ((mpfr_rnd_t));
 void mpfr_test_init _MPFR_PROTO ((void));

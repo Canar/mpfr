@@ -1,7 +1,12 @@
 #!/bin/bash
 
-# to compute the coverage of mpfr-x.y.z, just copy this script
-# into mpfr-x.y.z/tools and run it
+# To compute the coverage of mpfr-x.y.z, just copy this script
+# into mpfr-x.y.z/tools and run it.
+
+# Note: the exact results will depend on the platform, the configure
+# options, and the build-time and run-time environments (in particular,
+# they will depend on the #if and getenv tests in the src and tests
+# directories).
 
 # Set up the right directoy
 cd $(dirname $0)/..
@@ -18,20 +23,16 @@ cd /tmp/ompfr-gcov || exit 1
 echo "Remove previous coverage information."
 rm -f $(find . -name '*.gc*')
 
-# Remove MPFR_* environment variables to get reproducible coverage results.
-for i in `env | sed -n 's/^\(MPFR_[^=]*\).*/\1/p'`; do unset "$i"; done
-
 echo "Reconfiguring MPFR"
 autoreconf -i || exit 1
 
 echo "Building MPFR"
-./configure --enable-assert=none --enable-tune-for-coverage --disable-shared --enable-static \
+./configure --enable-assert --disable-shared --enable-static \
   CFLAGS="-fprofile-arcs -ftest-coverage -g"  || exit 1
 make clean  || exit 1
 make all -j4 || exit 1
 
 # Note: we want to compute the coverage even in case of failure of some tests.
-unset GMP_CHECK_RANDOMIZE
 make check -j4
 
 # Check version of gcov:

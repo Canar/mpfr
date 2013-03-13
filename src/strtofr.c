@@ -20,6 +20,7 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdlib.h> /* For strtol */
 #include <ctype.h>  /* For isspace */
 
 #define MPFR_NEED_LONGLONG_H
@@ -815,7 +816,7 @@ mpfr_strtofr (mpfr_t x, const char *string, char **end, int base,
   /* For base <= 36, parsing is case-insensitive. */
   MPFR_ASSERTN (base == 0 || (base >= 2 && base <= 62));
 
-  /* If an error occurred, it must return 0. */
+  /* If an error occured, it must return 0 */
   MPFR_SET_ZERO (x);
   MPFR_SET_POS (x);
 

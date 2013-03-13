@@ -20,8 +20,8 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdlib.h>
 #include <float.h>     /* for FLT_MIN */
-
 #include "mpfr-test.h"
 
 int
@@ -91,7 +91,6 @@ main (void)
       exit (1);
     }
 
-#ifdef HAVE_SIGNEDZ
   mpfr_set_ui (x, 0, MPFR_RNDN);
   mpfr_neg (x, x, MPFR_RNDN);
   f = mpfr_get_flt (x, MPFR_RNDN);
@@ -101,7 +100,6 @@ main (void)
       printf ("Error for mpfr_set_flt(mpfr_get_flt(-0))\n");
       exit (1);
     }
-#endif  /* HAVE_SIGNEDZ */
 
   mpfr_set_ui (x, 17, MPFR_RNDN);
   f = mpfr_get_flt (x, MPFR_RNDN);

@@ -64,7 +64,7 @@ mpfr_exp (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
   {
     mpfr_t e, bound;
 
-    /* We extend the exponent range and save the flags. */
+    /* We must extended the exponent range and save the flags now. */
     MPFR_SAVE_EXPO_MARK (expo);
 
     mpfr_init2 (e, sizeof (mpfr_exp_t) * CHAR_BIT);

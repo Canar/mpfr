@@ -157,7 +157,6 @@ __MPFR_DECLSPEC void mpfr_assert_fail _MPFR_PROTO((const char *, int,
                                                    const char *));
 
 #define ASSERT_FAIL(expr)  mpfr_assert_fail (__FILE__, __LINE__, #expr)
-/* ASSERT() is for mpfr-longlong.h only. */
 #define ASSERT(expr)       MPFR_ASSERTD(expr)
 
 /* Access fileds of GMP struct */
@@ -227,12 +226,6 @@ __MPFR_DECLSPEC extern const struct bases mpfr_bases[257];
 #define numberof(x)  (sizeof (x) / sizeof ((x)[0]))
 
 /* Random */
-/* TODO: these variables and macros seem to be used only in the tests.
-   Remove them from the MPFR source (src directory) so that the symbols
-   mpfr_rands_initialized and mpfr_rands are not defined in the MPFR
-   library? Moreover, whether the GMP build directory is used or not,
-   we could use our own rand state, so that __gmp_rands_initialized and
-   __gmp_rands would no longer be needed. */
 #undef  __gmp_rands_initialized
 #undef  __gmp_rands
 #define __gmp_rands_initialized mpfr_rands_initialized

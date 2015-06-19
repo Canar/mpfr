@@ -72,10 +72,7 @@ mpfr_agm (mpfr_ptr r, mpfr_srcptr op2, mpfr_srcptr op1, mpfr_rnd_t rnd_mode)
             }
         }
       else /* a and b are neither NaN nor Inf, and one is zero */
-        {  /* If a or b is 0, the result is +0, in particular because the
-              result is always >= 0 with our definition (Maple sometimes
-              chooses a different sign for GaussAGM, but it uses another
-              definition, with possible negative results). */
+        {  /* If a or b is 0, the result is +0 since a sqrt is positive */
           MPFR_ASSERTD (MPFR_IS_ZERO (op1) || MPFR_IS_ZERO (op2));
           MPFR_SET_POS (r);
           MPFR_SET_ZERO (r);
@@ -207,7 +204,7 @@ mpfr_agm (mpfr_ptr r, mpfr_srcptr op2, mpfr_srcptr op1, mpfr_rnd_t rnd_mode)
           goto retry;
         }
 
-      MPFR_CLEAR_FLAGS ();
+      mpfr_clear_flags ();
       mpfr_sqrt (u, u, MPFR_RNDN);
       mpfr_div_2ui (v, v, 1, MPFR_RNDN);
 
@@ -251,7 +248,7 @@ mpfr_agm (mpfr_ptr r, mpfr_srcptr op2, mpfr_srcptr op1, mpfr_rnd_t rnd_mode)
                  method. */
               MPFR_LOG_MSG (("4*eq > p -> underflow\n", 0));
               mpfr_clear (w);
-              MPFR_CLEAR_UNDERFLOW ();
+              mpfr_clear_underflow ();
             }
           /* U(k) increases, so that U.V can overflow (but not underflow). */
           MPFR_BLOCK (flags2, mpfr_mul (uf, u, v, MPFR_RNDN););
@@ -267,7 +264,7 @@ mpfr_agm (mpfr_ptr r, mpfr_srcptr op2, mpfr_srcptr op1, mpfr_rnd_t rnd_mode)
               MPFR_LOG_MSG (("Overflow in iteration n = %lu, scaleit = %"
                              MPFR_EXP_FSPEC "d (%" MPFR_EXP_FSPEC "d)\n",
                              n, scaleit, scale2));
-              MPFR_CLEAR_OVERFLOW ();
+              mpfr_clear_overflow ();
               goto retry2;
             }
           mpfr_sqrt (u, uf, MPFR_RNDN);

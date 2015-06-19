@@ -20,6 +20,10 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
 #include "mpfr-test.h"
 
 static void
@@ -156,13 +160,13 @@ main (int argc, char *argv[])
   mpfr_init (x);
   mpfr_init (y);
 
-  do n = randlimb (); while (n <= 1);
+  n = randlimb ();
 
   MPFR_SET_INF(x);
   mpfr_ui_pow (y, n, x, MPFR_RNDN);
   if(!MPFR_IS_INF(y))
     {
-      printf ("evaluation of function at INF does not return INF\n");
+      printf ("evaluation of function in INF does not return INF\n");
       exit (1);
     }
 

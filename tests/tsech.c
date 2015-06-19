@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 #define TEST_FUNCTION mpfr_sech
@@ -45,7 +48,7 @@ check_specials (void)
 
   mpfr_set_inf (x, 1);
   mpfr_sech (y, x, MPFR_RNDN);
-  if (! (MPFR_IS_ZERO (y) && MPFR_IS_POS (y)))
+  if (! (MPFR_IS_ZERO (y) && MPFR_SIGN (y) > 0))
     {
       printf ("Error: sech(+Inf) != +0\n");
       exit (1);
@@ -53,7 +56,7 @@ check_specials (void)
 
   mpfr_set_inf (x, -1);
   mpfr_sech (y, x, MPFR_RNDN);
-  if (! (MPFR_IS_ZERO (y) && MPFR_IS_POS (y)))
+  if (! (MPFR_IS_ZERO (y) && MPFR_SIGN (y) > 0))
     {
       printf ("Error: sech(-Inf) != +0\n");
       exit (1);
@@ -78,14 +81,14 @@ check_specials (void)
   /* check huge x */
   mpfr_set_str (x, "8e8", 10, MPFR_RNDN);
   mpfr_sech (y, x, MPFR_RNDN);
-  if (! (mpfr_zero_p (y) && MPFR_IS_POS (y)))
+  if (! (mpfr_zero_p (y) && MPFR_SIGN (y) > 0))
     {
       printf ("Error: sech(8e8) != +0\n");
       exit (1);
     }
   mpfr_set_str (x, "-8e8", 10, MPFR_RNDN);
   mpfr_sech (y, x, MPFR_RNDN);
-  if (! (mpfr_zero_p (y) && MPFR_IS_POS (y)))
+  if (! (mpfr_zero_p (y) && MPFR_SIGN (y) > 0))
     {
       printf ("Error: sech(-8e8) != +0\n");
       exit (1);
@@ -154,7 +157,7 @@ overflowed_sech0 (void)
                             i, mpfr_print_rnd_mode ((mpfr_rnd_t) rnd));
                     err = 1;
                   }
-                if (! (mpfr_inf_p (x) && MPFR_IS_POS (x)))
+                if (! (mpfr_inf_p (x) && MPFR_SIGN (x) > 0))
                   {
                     printf ("Error in overflowed_sech0 (i = %d, rnd = %s):\n"
                             "  Got ", i, mpfr_print_rnd_mode ((mpfr_rnd_t) rnd));

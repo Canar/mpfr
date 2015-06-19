@@ -7,7 +7,11 @@
 
 <!--
 XSLT stylesheet to generate the FAQ.html file distributed in MPFR from
-the faq.html file on the MPFR web site. See the update-faq script.
+the faq.html file on the MPFR web site. Use the following command:
+wget -q -O - http://www.mpfr.org/faq.html | \
+  xsltproc -''-nodtdattr faq.xsl - | \
+  perl -pe 's,(<(h:)?style.*),<style type="text/css">/*<![CDATA[*/,;
+            s,(</(h:)?style>),/*]]>*/</style>,' > FAQ.html
 -->
 
 <xsl:stylesheet version="1.0"

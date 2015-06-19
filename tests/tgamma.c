@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 /* Note: there could be an incorrect test about suspicious overflow
@@ -222,7 +225,7 @@ special_overflow (void)
   mpfr_set_prec (y, 29);
   mpfr_set_str (x, "-200000000.5", 10, MPFR_RNDN); /* exact */
   mpfr_gamma (y, x, MPFR_RNDN);
-  if (!(mpfr_zero_p (y) && MPFR_IS_NEG (y)))
+  if (!(mpfr_zero_p (y) && MPFR_SIGN (y) < 0))
     {
       printf ("Error for gamma(-200000000.5)\n");
       printf ("expected -0");
@@ -235,7 +238,7 @@ special_overflow (void)
   mpfr_set_prec (y, 53);
   mpfr_set_str (x, "-200000000.1", 10, MPFR_RNDN);
   mpfr_gamma (y, x, MPFR_RNDN);
-  if (!(mpfr_zero_p (y) && MPFR_IS_NEG (y)))
+  if (!(mpfr_zero_p (y) && MPFR_SIGN (y) < 0))
     {
       printf ("Error for gamma(-200000000.1), prec=53\n");
       printf ("expected -0");
@@ -349,7 +352,7 @@ special_overflow (void)
   mpfr_set_prec (y, 71);
   mpfr_set_str (x, "-200000000.1", 10, MPFR_RNDN);
   mpfr_gamma (y, x, MPFR_RNDN);
-  if (!(mpfr_zero_p (y) && MPFR_IS_NEG (y)))
+  if (!(mpfr_zero_p (y) && MPFR_SIGN (y) < 0))
     {
       printf ("Error for gamma (test 8)\n");
       printf ("expected "); mpfr_dump (x);
@@ -524,7 +527,7 @@ test20120426 (void)
 
   mpfr_init2 (xa, 53);
   mpfr_init2 (xb, 53);
-  mpfr_set_si_2exp (xb, -337, -1, MPFR_RNDN);
+  mpfr_set_d (xb, -168.5, MPFR_RNDN);
   emin = mpfr_get_emin ();
   mpfr_set_emin (-1073);
   i = mpfr_gamma (xa, xb, MPFR_RNDN);
@@ -824,7 +827,7 @@ tiny_aux (int stop, mpfr_exp_t e)
                 {
                   printf ("Error in tiny for s = %d, r = %s, emax = %"
                           MPFR_EXP_FSPEC "d%s\n  on ",
-                          s, mpfr_print_rnd_mode (rr), (mpfr_eexp_t) emax,
+                          s, mpfr_print_rnd_mode (rr), emax,
                           exponent > emax ? " (overflow)" : "");
                   mpfr_dump (x);
                   printf ("  expected inex = %2d, ", expected_inex);

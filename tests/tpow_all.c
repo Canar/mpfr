@@ -29,6 +29,8 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 /* Execute with at least an argument to report all the errors found by
    comparisons. */
 
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 /* Behavior of cmpres (called by test_others):
@@ -361,7 +363,7 @@ my_setstr (mpfr_ptr t, const char *s)
 static void
 tst (void)
 {
-  int sv = numberof (val);
+  int sv = sizeof (val) / sizeof (*val);
   int i, j;
   int rnd;
   mpfr_t x, y, z, tmp;

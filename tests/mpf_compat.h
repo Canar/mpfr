@@ -20,6 +20,16 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#if defined (__cplusplus)
+#include <cstdio>
+#else
+#include <stdio.h>
+#endif
+#include <stdlib.h>
+#include <string.h>
+
+#include "gmp.h"
+#include "mpfr.h"
 #ifdef MPFR
 #include "mpf2mpfr.h"
 #endif
@@ -27,14 +37,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 int
 main (void)
 {
-
-#if defined (MPFR) && _MPFR_EXP_FORMAT != 3 /* because exp is a long below */
-
-  return 77;
-
-#else
-
-  unsigned long int prec, old_prec;
+  unsigned long int prec;
   unsigned long int prec2;
   mpf_t x, y;
   mpz_t z;
@@ -47,8 +50,6 @@ main (void)
   int i;
   FILE *f;
   gmp_randstate_t state;
-
-  tests_start_mpfr ();
 
   /* Initialization Functions */
   prec = 53;
@@ -82,7 +83,6 @@ main (void)
       exit (1);
     }
 
-  old_prec = mpf_get_prec (x);
   mpf_set_prec_raw (x, prec);
   prec2 = mpf_get_prec (x);
   if (prec2 < prec)
@@ -92,7 +92,6 @@ main (void)
       mpf_clear (x);
       exit (1);
     }
-  mpf_set_prec_raw (x, old_prec);  /* needed with MPF (see GMP manual) */
 
   /* Assignment Functions */
 
@@ -133,7 +132,7 @@ main (void)
   l = mpf_get_si (x);
   u = mpf_get_ui (x);
   s = mpf_get_str (NULL, &exp, 10, 10, x);
-  /* MPF doesn't have mpf_free_str */
+  /* MPF doen't have mpf_free_str */
   mpfr_free_str (s);
 
   /* Use d, l and u to avoid a warning with -Wunused-but-set-variable
@@ -233,9 +232,5 @@ main (void)
   mpf_clear (y);
   mpf_clear (x);
 
-  tests_end_mpfr ();
   return 0;
-
-#endif
-
 }

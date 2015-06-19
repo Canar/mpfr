@@ -68,14 +68,6 @@ public:
     return mpfr_mul (a,b,c,r);
   }
 };
-
-class mpfr_fma_test {
-public:
-  int func(mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t r) {
-    return mpfr_fma (a,b,b,c,r);
-  }
-};
-
 class mpfr_div_test {
 public:
   int func(mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t r) {
@@ -196,7 +188,6 @@ public:
 static mpfr_test<mpfr_add_test> test1 ("mpfr_add");
 static mpfr_test<mpfr_sub_test> test2 ("mpfr_sub");
 static mpfr_test<mpfr_mul_test> test3 ("mpfr_mul");
-static mpfr_test<mpfr_fma_test> test10 ("mpfr_fma");
 static mpfr_test<mpfr_div_test> test4 ("mpfr_div");
 static mpfr_test<mpfr_set_test> test5 ("mpfr_set");
 
@@ -236,17 +227,17 @@ bool mpfr_test<T>::test (const vector<string> &base, const option_test &opt) {
     table = new mpfr_t[size];
     for (i = 0 ; i < size ; i++) {
       mpfr_init2 (table[i], opt.prec);
-      mpfr_set_str (table[i], base[i].c_str(), 10, MPFR_RNDN);
+      mpfr_set_str (table[i], base[i].c_str(), 10, GMP_RNDN);
     }
     mpfr_inits2 (opt.prec, a, b, c, NULL);
   }
 
   /* Do Measure */
   for(i = 0 ; i < (size-1) ; i++) {
-    mpfr_set (b, table[i], MPFR_RNDN);
-    mpfr_set (c, table[i+1], MPFR_RNDN);
+    mpfr_set (b, table[i], GMP_RNDN);
+    mpfr_set (c, table[i+1], GMP_RNDN);
     TIMP_OVERHEAD ();
-    m = TIMP_MEASURE (f.func (a, b, c, MPFR_RNDN) ); 
+    m = TIMP_MEASURE (f.func (a, b, c, GMP_RNDN) ); 
     cont = tim->update (i, m) || cont;
   }
 

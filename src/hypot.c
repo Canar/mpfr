@@ -111,7 +111,7 @@ mpfr_hypot (mpfr_ptr z, mpfr_srcptr x, mpfr_srcptr y, mpfr_rnd_t rnd_mode)
           else
             {
               MPFR_SET_EXP (z, Ex);
-              MPFR_SET_SIGN (z, MPFR_SIGN_POS);
+              MPFR_SET_SIGN (z, 1);
               MPFR_RNDRAW_GEN (inexact, z, MPFR_MANT (x), N, rnd_mode, 1,
                                goto addoneulp,
                                if (MPFR_UNLIKELY (++ MPFR_EXP (z) >
@@ -139,29 +139,11 @@ mpfr_hypot (mpfr_ptr z, mpfr_srcptr x, mpfr_srcptr y, mpfr_rnd_t rnd_mode)
 
   MPFR_SAVE_EXPO_MARK (expo);
 
-  /* Scale x and y to avoid any overflow and underflow in x^2
-     (as |x| >= |y|), and to limit underflow cases for y or y^2.
-     We have: x = Mx * 2^Ex with 1/2 <= |Mx| < 1, and we choose:
-     sh = floor((Emax - 1) / 2) - Ex.
-     Thus (x * 2^sh)^2 = Mx^2 * 2^(2*floor((Emax-1)/2)), which has an
-     exponent of at most Emax - 1. Therefore (x * 2^sh)^2 + (y * 2^sh)^2
-     will have an exponent of at most Emax, even after rounding as we
-     round toward zero. Using a larger sh wouldn't guarantee an absence
-     of overflow. Note that the scaling of y can underflow only when the
-     target precision is huge, otherwise the case would already have been
-     handled by the diff_exp > threshold code.
-     FIXME: Friedland in "Algorithm 312: Absolute Value and Square Root of a
-     Complex Number" (Communications of the ACM, 1967) avoids overflow by
-     computing |x|*sqrt(1+(y/x)^2) if |x| >= |y|, and |y|*sqrt(1+(x/y)^2)
-     otherwise.
-     [VL] This trick (which is a scaling by a non-power of 2, thus doesn't
-     really bring new behavior w.r.t. overflow/underflow exceptions) may be
-     useful for hardware floating-point formats because a whole power-of-2
-     scaling code is likely to take more time than the additional division,
-     but in the context of multiple-precision, I doubt that it is a good
-     idea. Ideally scaling by a power of 2 could be done in a constant time,
-     e.g. with MPFR_ALIAS; but one needs to be very careful... */
-  sh = (mpfr_get_emax () - 1) / 2 - Ex;
+  /* Scale x and y to avoid overflow/underflow in x^2 and overflow in y^2
+     (as |x| >= |y|). The scaling of y can underflow only when the target
+     precision is huge, otherwise the case would already have been handled
+     by the diff_exp > threshold code. */
+  sh = mpfr_get_emax () / 2 - Ex - 1;
 
   MPFR_ZIV_INIT (loop, Nt);
   for (;;)
@@ -205,7 +187,7 @@ mpfr_hypot (mpfr_ptr z, mpfr_srcptr x, mpfr_srcptr y, mpfr_rnd_t rnd_mode)
   MPFR_SAVE_EXPO_FREE (expo);
 
   if (MPFR_OVERFLOW (flags))
-    MPFR_SET_OVERFLOW ();
+    mpfr_set_overflow ();
   /* hypot(x,y) >= |x|, thus underflow is not possible. */
 
   return mpfr_check_range (z, inexact, rnd_mode);

@@ -22,6 +22,8 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 #define N 30000
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <float.h>
 
 #include "mpfr-test.h"
@@ -81,8 +83,8 @@ check (const char *xs, const char *ys, mpfr_rnd_t rnd_mode,
   if (mpfr_cmp_str1 (zz, zs) )
     {
       printf ("expected sum is %s, got ", zs);
-      mpfr_out_str (stdout, 10, 0, zz, MPFR_RNDN);
-      printf ("\nmpfr_add failed for x=%s y=%s with rnd_mode=%s\n",
+      mpfr_out_str(stdout, 10, 0, zz, MPFR_RNDN);
+      printf ("mpfr_add failed for x=%s y=%s with rnd_mode=%s\n",
               xs, ys, mpfr_print_rnd_mode (rnd_mode));
       exit (1);
     }
@@ -248,7 +250,8 @@ check64 (void)
       printf ("Error in mpfr_sub: u=x-t and x=x-t give different results\n");
       exit (1);
     }
-  if (! MPFR_IS_NORMALIZED (u))
+  if ((MPFR_MANT(u)[(MPFR_PREC(u)-1)/mp_bits_per_limb] &
+       ((mp_limb_t)1<<(mp_bits_per_limb-1)))==0)
     {
       printf ("Error in mpfr_sub: result is not msb-normalized (1)\n");
       exit (1);
@@ -305,7 +308,8 @@ check64 (void)
   mpfr_set_str_binary(x, "0.10000000000000000000000000000000E1");
   mpfr_set_str_binary(t, "0.1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100000110001110100000100011110000101110110011101110100110110111111011010111100100000000000000000000000000E0");
   mpfr_sub(u, x, t, MPFR_RNDN);
-  if (! MPFR_IS_NORMALIZED (u))
+  if ((MPFR_MANT(u)[(MPFR_PREC(u)-1)/mp_bits_per_limb] &
+       ((mp_limb_t)1<<(mp_bits_per_limb-1)))==0)
     {
       printf ("Error in mpfr_sub: result is not msb-normalized (2)\n");
       exit (1);
@@ -318,7 +322,8 @@ check64 (void)
   mpfr_set_str_binary (x, "0.11100100101101001100111011111111110001101001000011101001001010010E-35");
   mpfr_set_str_binary (t, "0.10000000000000000000000000000000000001110010010110100110011110000E1");
   mpfr_sub (u, t, x, MPFR_RNDU);
-  if (! MPFR_IS_NORMALIZED (u))
+  if ((MPFR_MANT(u)[(MPFR_PREC(u)-1)/mp_bits_per_limb] &
+       ((mp_limb_t)1<<(mp_bits_per_limb-1)))==0)
     {
       printf ("Error in mpfr_sub: result is not msb-normalized (3)\n");
       exit (1);
@@ -331,7 +336,8 @@ check64 (void)
   mpfr_set_str_binary (x, "0.10111001001111010010001000000010111111011011011101000001001000101000000000000000000000000000000000000000000E315");
   mpfr_set_str_binary (t, "0.10000000000000000000000000000000000101110100100101110110000001100101011111001000011101111100100100111011000E350");
   mpfr_sub (u, x, t, MPFR_RNDU);
-  if (! MPFR_IS_NORMALIZED (u))
+  if ((MPFR_MANT(u)[(MPFR_PREC(u)-1)/mp_bits_per_limb] &
+       ((mp_limb_t)1<<(mp_bits_per_limb-1)))==0)
     {
       printf ("Error in mpfr_sub: result is not msb-normalized (4)\n");
       exit (1);
@@ -753,7 +759,7 @@ check_1minuseps (void)
   mpfr_init2 (c, MPFR_PREC_MIN);
 
   for (ia = 0; ia < numberof (prec_a); ia++)
-    for (ib = 0; ib < numberof (supp_b); ib++)
+    for (ib = 0; ib < numberof(supp_b); ib++)
       {
         mpfr_prec_t prec_b;
         int rnd_mode;
@@ -767,7 +773,7 @@ check_1minuseps (void)
         mpfr_div_ui (b, c, prec_a[ia], MPFR_RNDN);
         mpfr_sub (b, c, b, MPFR_RNDN);  /* b = 1 - 2^(-prec_a) */
 
-        for (ic = 0; ic < numberof (supp_b); ic++)
+        for (ic = 0; ic < numberof(supp_b); ic++)
           for (rnd_mode = 0; rnd_mode < MPFR_RND_MAX; rnd_mode++)
             {
               mpfr_t s;
@@ -1090,40 +1096,6 @@ tests (void)
   check_1minuseps ();
 }
 
-static void
-check_extreme (void)
-{
-  mpfr_t u, v, w, x, y;
-  int i, inex, r;
-
-  mpfr_inits2 (32, u, v, w, x, y, (mpfr_ptr) 0);
-  mpfr_setmin (u, mpfr_get_emax ());
-  mpfr_setmax (v, mpfr_get_emin ());
-  mpfr_setmin (w, mpfr_get_emax () - 40);
-  RND_LOOP (r)
-    for (i = 0; i < 2; i++)
-      {
-        mpfr_add (x, u, v, (mpfr_rnd_t) r);
-        mpfr_set_prec (y, 64);
-        inex = mpfr_add (y, u, w, MPFR_RNDN);
-        MPFR_ASSERTN (inex == 0);
-        mpfr_prec_round (y, 32, (mpfr_rnd_t) r);
-        if (! mpfr_equal_p (x, y))
-          {
-            printf ("Error in check_extreme (%s, i = %d)\n",
-                    mpfr_print_rnd_mode ((mpfr_rnd_t) r), i);
-            printf ("Expected ");
-            mpfr_dump (y);
-            printf ("Got      ");
-            mpfr_dump (x);
-            exit (1);
-          }
-        mpfr_neg (v, v, MPFR_RNDN);
-        mpfr_neg (w, w, MPFR_RNDN);
-      }
-  mpfr_clears (u, v, w, x, y, (mpfr_ptr) 0);
-}
-
 #define TEST_FUNCTION test_add
 #define TWO_ARGS
 #define RAND_FUNCTION(x) mpfr_random2(x, MPFR_LIMB_SIZE (x), randlimb () % 100, RANDS)
@@ -1141,9 +1113,6 @@ main (int argc, char *argv[])
   usesp = 1;
   tests ();
 #endif
-
-  check_extreme ();
-
   test_generic (2, 1000, 100);
 
   tests_end_mpfr ();

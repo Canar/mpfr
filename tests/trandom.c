@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 static void
@@ -45,9 +48,8 @@ test_urandomb (long nbtests, mpfr_prec_t prec, int verbose)
   for (k = 0; k < nbtests; k++)
     {
       mpfr_urandomb (x, RANDS);
-      MPFR_ASSERTN (MPFR_IS_FP (x));
       /* check that lower bits are zero */
-      if (MPFR_NOTZERO(x) && (MPFR_MANT(x)[0] & MPFR_LIMB_MASK(sh)))
+      if (MPFR_MANT(x)[0] & MPFR_LIMB_MASK(sh))
         {
           printf ("Error: mpfr_urandomb() returns invalid numbers:\n");
           mpfr_print_binary (x); puts ("");
@@ -174,17 +176,12 @@ main (int argc, char *argv[])
       test_urandomb (nbtests, 2, 0);
     }
 
-#ifndef MPFR_USE_MINI_GMP
-
-  /* Since these tests assume a deterministic random generator, and this
-     is not implemented in mini-gmp, we omit them with mini-gmp. */
-
   bug20100914 ();
 
 #if __MPFR_GMP(4,2,0)
   /* Get a non-zero fixed-point number whose first 32 bits are 0 with the
      default GMP PRNG. This corresponds to the case cnt == 0 && k != 0 in
-     src/urandomb.c (fixed in r8762) with the 32-bit ABI. */
+     src/urandomb.c with the 32-bit ABI. */
   {
     gmp_randstate_t s;
     mpfr_t x;
@@ -213,8 +210,6 @@ main (int argc, char *argv[])
     mpfr_clear (x);
     gmp_randclear (s);
   }
-#endif
-
 #endif
 
   tests_end_mpfr ();

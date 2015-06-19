@@ -1,5 +1,3 @@
-% see http://hal.inria.fr/hal-00934443 to simplify/improve the ulp calculus
-
 \documentclass[12pt]{amsart}
 
 \usepackage{fullpage}
@@ -1096,7 +1094,7 @@ $t = c^2 + \epsilon_2 = \cos^2 x + 4 \epsilon_3$;
 $u = 1 - t - \epsilon_4 = 1 - \cos^2 x - 5 \epsilon_5$;
 $|s| = \sqrt{u} - \epsilon_6 =
 \sqrt{1 - \cos^2 x - 5 \epsilon_5} - \epsilon_6
-\geq \left|\sin x\right| - \frac{5 \epsilon_5}{2 |s|} + \epsilon_6$
+\geq |\sin x| - \frac{5 \epsilon_5}{2 |s|} + \epsilon_6$
 (by Rolle's theorem,
 $|\sqrt{u} - \sqrt{u'}| \le \frac{1}{2 \sqrt{v}} |u-u'|$ for
 $v \in [u, u']$, we apply it here with $u=1 - \cos^2 x - 5 \epsilon_5$,
@@ -1211,39 +1209,6 @@ giving a total complexity of $\O(n^{1/3} M(n))$.
 This is implemented in the function {\tt mpfr\_exp2\_aux2}.
 (Note: the algorithm from Paterson and Stockmeyer was rediscovered by Smith,
 who named it ``concurrent series'' in \cite{Smith91}.)
-
-\subsection{The logarithm function}
-
-The logarithm function \verb!mpfr_log! is defined using this
-approximated formula~\cite{Muller97} based on the arithmetic-geometric
-mean (denoted by AG):
-$$ \log x \approx \frac{\pi}{\mbox{2~AG(1,4/s)}} - m \log 2  + o(\log x ~2^{-p})$$
-with $ s = x \cdot 2^m > 2^{p/2}$.\\
-
-
-First, the arithmetic-geometric mean $\mbox{AG}(u_0,v_0)$ is computed as in
-mathematics with rounding to nearest:
-$$ {\tilde u_{n+1}} = {\mathcal N} \left( \sqrt{{\mathcal N}({\tilde u_n}~{\tilde v_n})}~\right) \qquad
- {\tilde v_{n+1}} = \frac{{\mathcal N} ({\tilde u_n} + {\tilde v_n})}{2} $$
-
-We denote by $u_n$ and $v_n$ the exact mathematical values. By
-induction, it can be proved that:
-$$ u_n~ {\left(1-\frac{\ulp(1)}{2}\right)}^{\frac{3}{2}n+1} \leq {\tilde u_n} \leq  u_n~ {\left(1+\frac{\ulp(1)}{2}\right)}^{\frac{3}{2}n+1}$$
-$$ v_n~ {\left(1-\frac{\ulp(1)}{2}\right)}^{\frac{3}{2}n+1} \leq {\tilde v_n} \leq  {\tilde v_n}~ {\left(1+\frac{\ulp(1)}{2}\right)}^{\frac{3}{2}n+1}$$
-
-Then, if $n \ge \lceil \log \left( \frac{v_0 - u_0}{2~u_0}\right) \rceil$,
-$$\frac{|{\tilde v_n} - AG(u_0,v_0)|}{v_0} \le n~2^{\frac{3}{2}n+2-p}+8 \cdot 4^{- \frac{2^n~u_0}{v_0 - u_0}}.$$
-Therefore the arithmetic-geometric mean can be computed using the
-previous error bound and the \verb!mpfr_can_round! function. It
-should be noted that the arithmetic-geometric mean of two different
-non-zero floating-point numbers is transcendental, therefore there is
-no table maker's dilemma here.
-
-
-From the arithmetic-geometric mean, we deduce the logarithm, naively
-bounding the round-off errors. The only point is that the subtraction
-may be a cancellation: a maximum of $\log \left(\frac{p \log
-  2}{|x-1|}\right)$ bits can be lost.
 
 \subsection{The error function}
 
@@ -2440,9 +2405,8 @@ a similar way that $z=\circ_{p_z}(x)$, except that we need to add one ulp
 to the result when rounding toward plus infinity and $x$ is exactly
 representable with $p_z$ bits of precision.
 
-When none of the above conditions are satisfied, we use the following
-algorithm, whose precision is guaranteed when
-$\Exp(x) - \Exp(y) \leq e_{max} - 1$:
+When none of the above conditions are satisfied and when $\Exp(x) - \Exp(y)
+\leq e_{max} - 2$, we use the following algorithm:
 
 \begin{quote}
   Algorithm {\tt hypot\_1}\\
@@ -2450,10 +2414,10 @@ $\Exp(x) - \Exp(y) \leq e_{max} - 1$:
   $p$ the working precision with $p \geq p_z$.\\
   Output: $\sqrt{x^2+y^2}$ with $\left\{
   \begin{array}{l}
-    p-4 \textnormal{ bits of precision if } p < \max(p_x, p_y),\\
-    p-2 \textnormal{ bits of precision if } p \geq \max(p_x, p_y).
+    p-4 \textnormal{ bits of precision if } p <\max(p_x, p_y),\\
+    p-2 \textnormal{ bits of precision if } \max(p_x, p_y) \leq p.
   \end{array}\right.$\\
-  $s \leftarrow \lfloor (e_{max}-1)/2 \rfloor - \Exp(x)$\\
+  $s \leftarrow \lfloor e_{max}/2\rfloor - \Exp(x) -1$\\
   $x_s \leftarrow \Z(x\times 2^s)$\\
   $y_s \leftarrow \Z(y\times 2^s)$\\
   $u \leftarrow \Z(x_s^2)$\\
@@ -2464,32 +2428,26 @@ $\Exp(x) - \Exp(y) \leq e_{max} - 1$:
 \end{quote}
 
 In order to avoid undue overflow during computation, we shift inputs'
-exponents by $s = \lfloor\frac{e_{max}-1}{2}\rfloor - \Exp(x)$ before
+exponents by $s = \lfloor\frac{e_{max}}{2}\rfloor -1 -\Exp(x)$ before
 computing squares and shift back the output's exponent by $-s$ using the fact
 that $\sqrt{(x.2^s)^2+(y.2^s)^2}/2^s = \sqrt{x^2+y^2}$. We show below that
-overflow cannot occur, and underflow cannot occur either when
-$\Exp(x) - \Exp(y) \leq e_{max} - 1$.
+neither overflow nor underflow goes on.
 
 We check first that the exponent shift does not cause overflow and, in the
-same time, that the squares of the shifted inputs never overflow.
-For $x$, we have $\Exp(x) + s = \lfloor (e_{max}-1)/2 \rfloor$, so
-$\Exp(x_s^2) \leq e_{max} - 1$ and neither $x_s$ nor $x_s^2$ overflows.
-Therefore we have: $\Z(x_s^2) \leq x_s^2 < 2^{e_{max} - 1}$.
-For $y$, note that we have $y_s \leq x_s$ because $y \leq x$, thus $y_s$
-and $y_s^2$ do not overflow.
+same time, that the squares of the shifted inputs never overflow. For $x$, we
+have $\Exp(x) + s = \lfloor e_{max}/2\rfloor - 1$, so $\Exp(x_s^2) < e_{max} -
+1$ and neither $x_s$ nor $x_s^2$ overflows. For $y$, note that we have $y_s
+\leq x_s$ because $y \leq x$, thus $y_s$ and $y_s^2$ do not overflow.
 
 Secondly, let us see that the exponent shift does not cause underflow. For
 $x$, we know that $0 \leq \Exp(x) + s$, thus neither $x_s$ nor $x_s^2$
-underflows. For $y$, the condition $\Exp(x) - \Exp(y) \leq e_{max} - 1$
-implies that $\lfloor(e_{max}-1)/2\rfloor - s - \Exp(y) \leq e_{max} - 1$,
-and since $e_{max}/2-1 \leq \lfloor(e_{max}-1)/2\rfloor$, we deduce
-$e_{min}/2 = -e_{max}/2 \leq \Exp(y) + s$, which shows that $y_s$ and
-its square do not underflow (even when taking the rounding into account
-since the scaling is exact).
+underflows. For $y$, the condition $\Exp(x) - \Exp(y) \leq e_{max} - 2$
+ensures that $-e_{max}/2 \leq \Exp(y) + s$ which shows that $y_s$ and its
+square do not underflow.
 
 Thirdly, the addition does not overflow because $u + v < 2 x_s^2$ and it was
-shown above that $\Z(x_s^2) < 2^{e_{max} - 1}$. It cannot underflow because
-both operands are positive.
+shown above that $x_s^2 < 2^{e_{max} - 1}$. It cannot underflow because both
+operands are positive.
 
 Fourthly, as $x_s < t$, the square root does not underflow. Due to the
 exponent shift, we have $1 \leq x_s$, then $w$ is greater than 1 and thus
@@ -3505,7 +3463,7 @@ diverging series:
 % (2*z)^(2*k+1),k=0..4) end:
 % J:=proc(n,z) sqrt(2/Pi/z)*(P(n,z)*cos(z-(n/2+1/4)*Pi)-Q(n,z)*
 % sin(z-(n/2+1/4)*Pi)) end:
-If $n$ is real and nonnegative --- which is the case here ---,
+If $n$ is real and non-negative --- which is the case here ---,
 the remainder of $P(n,z)$ after $k$ terms does not exceed the $(k+1)$th term
 and is of the same sign, provided $k > n/2 - 1/4$; the same holds for
 $Q(n,z)$ as long as $k > n/2 - 3/4$ \cite[9.2.10]{AbSt73}.
@@ -4330,14 +4288,10 @@ $$  \wprec = \precc + 1 + 4 + \lceil \log_2(4\kvar)\rceil + \cond - \Exp(\svar).
 
 The \texttt{mpfr\_get\_str} function with size $0$ and base $b$ chooses an
 output precision of $1 + \lceil e \log(2)/\log(b) \rceil$ for a precision
-of $e$ bits if $b$ is not a power of two \cite{Mat68}.
+of $e$ bits.
 However the code uses instead $1 + \lceil e y \rceil$, where $y$ is
 an upper $76$-bit approximation of $\log(2)/\log(b)$. When do both values
 differ?
-In the case $b=2^k$, the worst case is when the first output digit contains
-only one significant bit, thus
-$1 + \lceil (e-1) \log(2)/\log(b) \rceil$ digits are necessary, and also
-sufficient.
 
 Let $y$ be the $76$-bit upper approximation of $x=\log(2)/\log(b)$.
 Both values differ when there is an integer $n$ such that
@@ -4492,9 +4446,6 @@ $|\epsilon''| \leq 2 \epsilon + \epsilon' \leq (26 + 2^{k+7}) 2^{k-p}
 \leq 2^{2k-p+8}$, assuming $|\epsilon'| \leq 1$.
 
 \subsection{Euler's constant} \label{gamma}
-
-% see the talk "Ramanujan and Euler's constant" by Richard Brent on July 8,
-% 2010 at http://maths-people.anu.edu.au/~brent/talks.html
 
 Euler's constant is computed using the formula $\gamma = S(n) - R(n) - \log n$
 where:

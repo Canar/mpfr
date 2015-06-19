@@ -21,9 +21,10 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
-#if defined(HAVE_STDARG) && !defined(MPFR_USE_MINI_GMP)
+#ifdef HAVE_STDARG
 #include <stdarg.h>
 
+#include <stdlib.h>
 #include <float.h>
 
 #ifdef HAVE_LOCALE_H
@@ -554,9 +555,6 @@ decimal (void)
   mpfr_set_str (x, "-9.996", 10, MPFR_RNDN);
   check_sprintf ("-10.0", "%.1Rf", x);
 
-  /* regression in MPFR 3.1.0 (bug introduced in r7761, fixed in r7931) */
-  check_sprintf ("-10", "%.2Rg", x);
-
   mpfr_clears (x, z, (mpfr_ptr) 0);
   return 0;
 }
@@ -789,7 +787,7 @@ mixed (void)
   int n1;
   int n2;
   int i = 121;
-#ifdef PRINTF_L
+#ifndef NPRINTF_L
   long double d = 1. / 31.;
 #endif
   mpf_t mpf;
@@ -826,7 +824,7 @@ mixed (void)
       exit (1);
     }
 
-#ifdef PRINTF_L
+#ifndef NPRINTF_L
   check_vsprintf ("00000010610209857723, -1.2345678875e+07, 0.032258",
                   "%.*Zi, %R*e, %Lf", 20, mpz, rnd, x, d);
 #endif
@@ -998,7 +996,7 @@ random_double (void)
          the sign of a zero exponent (the C99 rationale says: "The sign
          of a zero exponent in %e format is unspecified.  The committee
          knows of different implementations and choose not to require
-         implementations to document their behavior in this case
+         implementations to document their behaviour in this case
          (by making this be implementation defined behaviour).  Most
          implementations use a "+" sign, e.g., 1.2e+00; but there is at
          least one implementation that uses the sign of the unlimited

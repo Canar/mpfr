@@ -84,7 +84,7 @@ mpfr_sqrt (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
   MPFR_SET_POS(r);
 
   MPFR_TMP_MARK (marker);
-  MPFR_UNSIGNED_MINUS_MODULO (sh, MPFR_GET_PREC (r));
+  MPFR_UNSIGNED_MINUS_MODULO(sh,MPFR_PREC(r));
   if (sh == 0 && rnd_mode == MPFR_RNDN)
     sh = GMP_NUMB_BITS; /* ugly case */
   rsize = MPFR_LIMB_SIZE(r) + (sh == GMP_NUMB_BITS);
@@ -133,16 +133,13 @@ mpfr_sqrt (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
 
   /* sticky0 is non-zero iff the truncated part of the input is non-zero */
 
-  /* for size above about 500 limbs, mpn_rootrem with NULL 2nd argument is
-     faster than mpn_sqrtrem, thus use it if available and if the user asked
-     to use GMP internal functions
-     (https://gmplib.org/list-archives/gmp-devel/2010-September/001654.html) */
+  /* mpn_rootrem with NULL 2nd argument is faster than mpn_sqrtrem, thus use
+     it if available and if the user asked to use GMP internal functions */
 #if defined(WANT_GMP_INTERNALS) && defined(HAVE___GMPN_ROOTREM)
-  if (rrsize >= 500)
-    tsize = __gmpn_rootrem (rp, NULL, sp, rrsize, 2);
-  else
+  tsize = __gmpn_rootrem (rp, NULL, sp, rrsize, 2);
+#else
+  tsize = mpn_sqrtrem (rp, NULL, sp, rrsize);
 #endif
-  tsize = mpn_sqrtrem (rp, sp, sp, rrsize);
 
   /* a return value of zero in mpn_sqrtrem indicates a perfect square */
   sticky = sticky0 || tsize != 0;
@@ -226,7 +223,6 @@ mpfr_sqrt (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
     MPN_COPY (rp0, rp + 1, rsize - 1);
 
  end:
-  /* Do not use MPFR_SET_EXP because the range has not been checked yet. */
   MPFR_ASSERTN (expr >= MPFR_EMIN_MIN && expr <= MPFR_EMAX_MAX);
   MPFR_EXP (r) = expr;
   MPFR_TMP_FREE(marker);

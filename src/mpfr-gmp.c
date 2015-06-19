@@ -21,9 +21,14 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdlib.h> /* For malloc, free, realloc and abort */
+
 #include "mpfr-impl.h"
 
 #ifndef MPFR_HAVE_GMP_IMPL
+
+char             mpfr_rands_initialized = 0;
+gmp_randstate_t  mpfr_rands;
 
 const struct bases mpfr_bases[257] =
 {
@@ -286,9 +291,9 @@ const struct bases mpfr_bases[257] =
   /* 256 */ {0.1250000000000000},
 };
 
-MPFR_COLD_FUNCTION_ATTR void
+void
 mpfr_assert_fail (const char *filename, int linenum,
-                  const char *expr)
+                     const char *expr)
 {
   if (filename != NULL && filename[0] != '\0')
     {
@@ -299,6 +304,8 @@ mpfr_assert_fail (const char *filename, int linenum,
   fprintf (stderr, "MPFR assertion failed: %s\n", expr);
   abort();
 }
+
+#ifdef mp_get_memory_functions
 
 /* putting 0 as initial values forces those symbols to be fully defined,
    and always resolved, otherwise they are only tentatively defined, which
@@ -311,14 +318,51 @@ MPFR_THREAD_ATTR void * (*mpfr_allocate_func) (size_t) = 0;
 MPFR_THREAD_ATTR void * (*mpfr_reallocate_func) (void *, size_t, size_t) = 0;
 MPFR_THREAD_ATTR void   (*mpfr_free_func) (void *, size_t) = 0;
 
+#endif
+
+void *
+mpfr_default_allocate (size_t size)
+{
+  void *ret;
+  ret = malloc (size);
+  if (ret == NULL)
+    {
+      fprintf (stderr, "MPFR: Can't allocate memory (size=%lu)\n",
+               (unsigned long) size);
+      abort ();
+    }
+  return ret;
+}
+
+void *
+mpfr_default_reallocate (void *oldptr, size_t old_size, size_t new_size)
+{
+  void *ret;
+  ret = realloc (oldptr, new_size);
+  if (ret == NULL)
+    {
+      fprintf (stderr,
+               "MPFR: Can't reallocate memory (old_size=%lu new_size=%lu)\n",
+               (unsigned long) old_size, (unsigned long) new_size);
+      abort ();
+    }
+  return ret;
+}
+
+void
+mpfr_default_free (void *blk_ptr, size_t blk_size)
+{
+  free (blk_ptr);
+}
+
 void *
 mpfr_tmp_allocate (struct tmp_marker **tmp_marker, size_t size)
 {
   struct tmp_marker *head;
 
   head = (struct tmp_marker *)
-    (*__gmp_allocate_func) (sizeof (struct tmp_marker));
-  head->ptr = (*__gmp_allocate_func) (size);
+    mpfr_default_allocate (sizeof (struct tmp_marker));
+  head->ptr = mpfr_default_allocate (size);
   head->size = size;
   head->next = *tmp_marker;
   *tmp_marker = head;
@@ -333,9 +377,9 @@ mpfr_tmp_free (struct tmp_marker *tmp_marker)
   while (tmp_marker != NULL)
     {
       t = tmp_marker;
-      (*__gmp_free_func) (t->ptr, t->size);
+      mpfr_default_free (t->ptr, t->size);
       tmp_marker = t->next;
-      (*__gmp_free_func) (t, sizeof (struct tmp_marker));
+      mpfr_default_free (t, sizeof (struct tmp_marker));
     }
 }
 

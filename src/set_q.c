@@ -60,7 +60,6 @@ set_z (mpfr_ptr f, mpz_srcptr z, mp_size_t *zs)
   return -c;
 }
 
-#ifndef MPFR_USE_MINI_GMP
 /* set f to the rational q */
 int
 mpfr_set_q (mpfr_ptr f, mpq_srcptr q, mpfr_rnd_t rnd)
@@ -132,4 +131,5 @@ mpfr_set_q (mpfr_ptr f, mpq_srcptr q, mpfr_rnd_t rnd)
   mpfr_clear (n);
   MPFR_RET (inexact);
 }
-#endif
+
+

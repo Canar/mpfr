@@ -25,31 +25,31 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 /* Define MPFR version number */
 #define MPFR_VERSION_MAJOR 3
-#define MPFR_VERSION_MINOR 2
-#define MPFR_VERSION_PATCHLEVEL 0
-#define MPFR_VERSION_STRING "3.2.0-dev"
-
-/* User macros:
-   MPFR_USE_FILE:        Define it to make MPFR define functions dealing
-                         with FILE* (auto-detect).
-   MPFR_USE_INTMAX_T:    Define it to make MPFR define functions dealing
-                         with intmax_t (auto-detect).
-   MPFR_USE_VA_LIST:     Define it to make MPFR define functions dealing
-                         with va_list (auto-detect).
-   MPFR_USE_C99_FEATURE: Define it to 1 to make MPFR support C99-feature
-                         (auto-detect), to 0 to bypass the detection.
-   MPFR_USE_EXTENSION:   Define it to make MPFR use GCC extension to
-                         reduce warnings.
-   MPFR_USE_NO_MACRO:    Define it to make MPFR remove any overriding
-                         function macro.
-*/
+#define MPFR_VERSION_MINOR 1
+#define MPFR_VERSION_PATCHLEVEL 3
+#define MPFR_VERSION_STRING "3.1.3"
 
 /* Macros dealing with MPFR VERSION */
 #define MPFR_VERSION_NUM(a,b,c) (((a) << 16L) | ((b) << 8) | (c))
 #define MPFR_VERSION \
 MPFR_VERSION_NUM(MPFR_VERSION_MAJOR,MPFR_VERSION_MINOR,MPFR_VERSION_PATCHLEVEL)
 
-#include <gmp.h>
+/* Check if GMP is included, and try to include it (Works with local GMP) */
+#ifndef __GMP_H__
+# include <gmp.h>
+#endif
+
+/* GMP's internal __gmp_const macro has been removed on 2012-03-04:
+     http://gmplib.org:8000/gmp/rev/d287cfaf6732
+   const is standard and now assumed to be available. If the __gmp_const
+   definition is no longer present in GMP, this probably means that GMP
+   assumes that const is available; thus let's define it to const.
+   Note: this is a temporary fix that can be backported to previous MPFR
+   versions. In the future, __gmp_const should be replaced by const like
+   in GMP. */
+#ifndef __gmp_const
+# define __gmp_const const
+#endif
 
 /* Avoid some problems with macro expansion if the user defines macros
    with the same name as keywords. By convention, identifiers and macro
@@ -60,28 +60,6 @@ typedef unsigned int    mpfr_uint;
 typedef long            mpfr_long;
 typedef unsigned long   mpfr_ulong;
 typedef size_t          mpfr_size_t;
-
-/* Global (possibly TLS) flags. Might also be used in an mpfr_t in the
-   future (there would be room as mpfr_sign_t just needs 1 byte).
-   TODO: The tests currently assume that the flags fits in an unsigned int;
-   this should be cleaned up, e.g. by defining a function that outputs the
-   flags as a string or by using the flags_out function (from tests/tests.c
-   directly). */
-typedef unsigned int    mpfr_flags_t;
-
-/* Flags macros (in the public API) */
-#define MPFR_FLAGS_UNDERFLOW 1
-#define MPFR_FLAGS_OVERFLOW 2
-#define MPFR_FLAGS_NAN 4
-#define MPFR_FLAGS_INEXACT 8
-#define MPFR_FLAGS_ERANGE 16
-#define MPFR_FLAGS_DIVBY0 32
-#define MPFR_FLAGS_ALL (MPFR_FLAGS_UNDERFLOW | \
-                        MPFR_FLAGS_OVERFLOW  | \
-                        MPFR_FLAGS_NAN       | \
-                        MPFR_FLAGS_INEXACT   | \
-                        MPFR_FLAGS_ERANGE    | \
-                        MPFR_FLAGS_DIVBY0)
 
 /* Definition of rounding modes (DON'T USE MPFR_RNDNA!).
    Warning! Changing the contents of this enum should be seen as an
@@ -120,7 +98,7 @@ typedef enum {
 
 /* Define precision: 1 (short), 2 (int) or 3 (long) (DON'T USE IT!) */
 #ifndef _MPFR_PREC_FORMAT
-# if __GMP_MP_SIZE_T_INT
+# if __GMP_MP_SIZE_T_INT == 1
 #  define _MPFR_PREC_FORMAT 2
 # else
 #  define _MPFR_PREC_FORMAT 3
@@ -154,13 +132,10 @@ typedef unsigned long  mpfr_uprec_t;
 #endif
 
 /* Definition of precision limits without needing <limits.h> */
-/* Note: The casts allows the expression to yield the wanted behavior
-   for _MPFR_PREC_FORMAT == 1 (due to integer promotion rules). We
-   also make sure that MPFR_PREC_MIN and MPFR_PREC_MAX have a signed
-   integer type. The "- 256" allows more security, avoiding some
-   integer overflows in extreme cases; ideally it should be useless. */
+/* Note: the casts allows the expression to yield the wanted behavior
+   for _MPFR_PREC_FORMAT == 1 (due to integer promotion rules). */
 #define MPFR_PREC_MIN 2
-#define MPFR_PREC_MAX ((mpfr_prec_t) ((((mpfr_uprec_t) -1) >> 1) - 256))
+#define MPFR_PREC_MAX ((mpfr_prec_t)((mpfr_uprec_t)(~(mpfr_uprec_t)0)>>1))
 
 /* Definition of sign */
 typedef int          mpfr_sign_t;
@@ -227,7 +202,7 @@ typedef struct {
 
 typedef __mpfr_struct mpfr_t[1];
 typedef __mpfr_struct *mpfr_ptr;
-typedef const __mpfr_struct *mpfr_srcptr;
+typedef __gmp_const __mpfr_struct *mpfr_srcptr;
 
 /* For those who need a direct and fast access to the sign field.
    However it is not in the API, thus use it at your own risk: it might
@@ -245,8 +220,10 @@ typedef enum {
 
 /* GMP defines:
     + size_t:                Standard size_t
+    + __GMP_ATTRIBUTE_PURE   Attribute for math functions.
     + __GMP_NOTHROW          For C++: can't throw .
     + __GMP_EXTERN_INLINE    Attribute for inline function.
+    * __gmp_const            const (Supports for K&R compiler only for mpfr.h).
     + __GMP_DECLSPEC_EXPORT  compiling to go into a DLL
     + __GMP_DECLSPEC_IMPORT  compiling to go into a application
 */
@@ -256,28 +233,6 @@ typedef enum {
 # if __GNUC__ >= 4
 #  undef __MPFR_SENTINEL_ATTR
 #  define __MPFR_SENTINEL_ATTR __attribute__ ((sentinel))
-# endif
-#endif
-
-/* If the user hasn't requested his/her preference
-   and if the intension of support by the compiler is C99
-   and if the compiler is known to support the C99 feature
-   then we can auto-detect the C99 support as OK.
-   __GNUC__ is used to detect GNU-C, ICC & CLANG compilers.
-   Currently we need only variadic macros, and they are present
-   since GCC >= 3. We don't test library version since we don't
-   use any feature present in the library too (except intmax_t,
-   but they use another detection).*/
-#ifndef MPFR_USE_C99_FEATURE
-# if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
-#  if defined (__GNUC__)
-#   if __GNUC__ >= 3
-#    define MPFR_USE_C99_FEATURE 1
-#   endif
-#  endif
-# endif
-# ifndef MPFR_USE_C99_FEATURE
-#  define MPFR_USE_C99_FEATURE 0
 # endif
 #endif
 
@@ -295,9 +250,6 @@ typedef enum {
 #if defined(__MPFR_WITHIN_MPFR) && __GMP_LIBGMP_DLL
 # define __MPFR_DECLSPEC __GMP_DECLSPEC_EXPORT
 #else
-# ifndef __GMP_DECLSPEC
-#  define __GMP_DECLSPEC
-# endif
 # define __MPFR_DECLSPEC __GMP_DECLSPEC
 #endif
 
@@ -324,12 +276,12 @@ typedef enum {
 extern "C" {
 #endif
 
-__MPFR_DECLSPEC const char * mpfr_get_version _MPFR_PROTO ((void));
-__MPFR_DECLSPEC const char * mpfr_get_patches _MPFR_PROTO ((void));
+__MPFR_DECLSPEC __gmp_const char * mpfr_get_version _MPFR_PROTO ((void));
+__MPFR_DECLSPEC __gmp_const char * mpfr_get_patches _MPFR_PROTO ((void));
 __MPFR_DECLSPEC int mpfr_buildopt_tls_p          _MPFR_PROTO ((void));
 __MPFR_DECLSPEC int mpfr_buildopt_decimal_p      _MPFR_PROTO ((void));
 __MPFR_DECLSPEC int mpfr_buildopt_gmpinternals_p _MPFR_PROTO ((void));
-__MPFR_DECLSPEC const char * mpfr_buildopt_tune_case _MPFR_PROTO ((void));
+__MPFR_DECLSPEC __gmp_const char * mpfr_buildopt_tune_case _MPFR_PROTO ((void));
 
 __MPFR_DECLSPEC mpfr_exp_t mpfr_get_emin     _MPFR_PROTO ((void));
 __MPFR_DECLSPEC int        mpfr_set_emin     _MPFR_PROTO ((mpfr_exp_t));
@@ -342,7 +294,7 @@ __MPFR_DECLSPEC mpfr_exp_t mpfr_get_emax_max _MPFR_PROTO ((void));
 
 __MPFR_DECLSPEC void mpfr_set_default_rounding_mode _MPFR_PROTO((mpfr_rnd_t));
 __MPFR_DECLSPEC mpfr_rnd_t mpfr_get_default_rounding_mode _MPFR_PROTO((void));
-__MPFR_DECLSPEC const char *
+__MPFR_DECLSPEC __gmp_const char *
    mpfr_print_rnd_mode _MPFR_PROTO((mpfr_rnd_t));
 
 __MPFR_DECLSPEC void mpfr_clear_flags _MPFR_PROTO ((void));
@@ -366,13 +318,6 @@ __MPFR_DECLSPEC int mpfr_divby0_p _MPFR_PROTO ((void));
 __MPFR_DECLSPEC int mpfr_nanflag_p _MPFR_PROTO ((void));
 __MPFR_DECLSPEC int mpfr_inexflag_p _MPFR_PROTO ((void));
 __MPFR_DECLSPEC int mpfr_erangeflag_p _MPFR_PROTO ((void));
-
-__MPFR_DECLSPEC void mpfr_flags_clear _MPFR_PROTO ((mpfr_flags_t));
-__MPFR_DECLSPEC void mpfr_flags_set _MPFR_PROTO ((mpfr_flags_t));
-__MPFR_DECLSPEC mpfr_flags_t mpfr_flags_test _MPFR_PROTO ((mpfr_flags_t));
-__MPFR_DECLSPEC mpfr_flags_t mpfr_flags_save _MPFR_PROTO ((void));
-__MPFR_DECLSPEC void mpfr_flags_restore _MPFR_PROTO ((mpfr_flags_t,
-                                                      mpfr_flags_t));
 
 __MPFR_DECLSPEC int
   mpfr_check_range _MPFR_PROTO ((mpfr_ptr, int, mpfr_rnd_t));
@@ -406,19 +351,11 @@ __MPFR_DECLSPEC mpfr_prec_t mpfr_get_default_prec _MPFR_PROTO((void));
 __MPFR_DECLSPEC int mpfr_set_d _MPFR_PROTO ((mpfr_ptr, double, mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_set_flt _MPFR_PROTO ((mpfr_ptr, float, mpfr_rnd_t));
 #ifdef MPFR_WANT_DECIMAL_FLOATS
-/* _Decimal64 is not defined in C++,
-   cf https://gcc.gnu.org/bugzilla/show_bug.cgi?id=51364 */
 __MPFR_DECLSPEC int mpfr_set_decimal64 _MPFR_PROTO ((mpfr_ptr, _Decimal64,
                                                      mpfr_rnd_t));
 #endif
 __MPFR_DECLSPEC int
   mpfr_set_ld _MPFR_PROTO ((mpfr_ptr, long double, mpfr_rnd_t));
-#ifdef MPFR_WANT_FLOAT128
-__MPFR_DECLSPEC int
-  mpfr_set_float128 _MPFR_PROTO ((mpfr_ptr, __float128, mpfr_rnd_t));
-__MPFR_DECLSPEC __float128
-  mpfr_get_float128 _MPFR_PROTO ((mpfr_srcptr, mpfr_rnd_t));
-#endif
 __MPFR_DECLSPEC int
   mpfr_set_z _MPFR_PROTO ((mpfr_ptr, mpz_srcptr, mpfr_rnd_t));
 __MPFR_DECLSPEC int
@@ -426,15 +363,10 @@ __MPFR_DECLSPEC int
 __MPFR_DECLSPEC void mpfr_set_nan _MPFR_PROTO ((mpfr_ptr));
 __MPFR_DECLSPEC void mpfr_set_inf _MPFR_PROTO ((mpfr_ptr, int));
 __MPFR_DECLSPEC void mpfr_set_zero _MPFR_PROTO ((mpfr_ptr, int));
-
-#ifndef MPFR_USE_MINI_GMP
-  /* mini-gmp does not provide mpf_t, we disable the following functions */
 __MPFR_DECLSPEC int
   mpfr_set_f _MPFR_PROTO ((mpfr_ptr, mpf_srcptr, mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_cmp_f _MPFR_PROTO ((mpfr_srcptr, mpf_srcptr));
 __MPFR_DECLSPEC int
   mpfr_get_f _MPFR_PROTO ((mpf_ptr, mpfr_srcptr, mpfr_rnd_t));
-#endif
 __MPFR_DECLSPEC int mpfr_set_si _MPFR_PROTO ((mpfr_ptr, long, mpfr_rnd_t));
 __MPFR_DECLSPEC int
   mpfr_set_ui _MPFR_PROTO ((mpfr_ptr, unsigned long, mpfr_rnd_t));
@@ -442,24 +374,12 @@ __MPFR_DECLSPEC int
   mpfr_set_si_2exp _MPFR_PROTO ((mpfr_ptr, long, mpfr_exp_t, mpfr_rnd_t));
 __MPFR_DECLSPEC int
   mpfr_set_ui_2exp _MPFR_PROTO ((mpfr_ptr,unsigned long,mpfr_exp_t,mpfr_rnd_t));
-#ifndef MPFR_USE_MINI_GMP
-  /* mini-gmp does not provide mpq_t, we disable the following functions */
 __MPFR_DECLSPEC int
   mpfr_set_q _MPFR_PROTO ((mpfr_ptr, mpq_srcptr, mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_mul_q _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
-                                             mpq_srcptr, mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_div_q _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
-                                             mpq_srcptr, mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_add_q _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
-                                             mpq_srcptr, mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_sub_q _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
-                                             mpq_srcptr, mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_cmp_q _MPFR_PROTO ((mpfr_srcptr, mpq_srcptr));
-#endif
 __MPFR_DECLSPEC int
-  mpfr_set_str _MPFR_PROTO ((mpfr_ptr, const char *, int, mpfr_rnd_t));
+  mpfr_set_str _MPFR_PROTO ((mpfr_ptr, __gmp_const char *, int, mpfr_rnd_t));
 __MPFR_DECLSPEC int
-  mpfr_init_set_str _MPFR_PROTO ((mpfr_ptr, const char *, int,
+  mpfr_init_set_str _MPFR_PROTO ((mpfr_ptr, __gmp_const char *, int,
                                   mpfr_rnd_t));
 __MPFR_DECLSPEC int
   mpfr_set4 _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr, mpfr_rnd_t, int));
@@ -504,25 +424,19 @@ __MPFR_DECLSPEC int mpfr_urandom _MPFR_PROTO ((mpfr_ptr, gmp_randstate_t,
                                                mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_grandom _MPFR_PROTO ((mpfr_ptr, mpfr_ptr, gmp_randstate_t,
                                                mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_nrandom _MPFR_PROTO ((mpfr_ptr, gmp_randstate_t,
-                                               mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_erandom _MPFR_PROTO ((mpfr_ptr, gmp_randstate_t,
-                                               mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_urandomb _MPFR_PROTO ((mpfr_ptr, gmp_randstate_t));
 
 __MPFR_DECLSPEC void mpfr_nextabove _MPFR_PROTO ((mpfr_ptr));
 __MPFR_DECLSPEC void mpfr_nextbelow _MPFR_PROTO ((mpfr_ptr));
 __MPFR_DECLSPEC void mpfr_nexttoward _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr));
 
-#ifndef MPFR_USE_MINI_GMP
-__MPFR_DECLSPEC int mpfr_printf _MPFR_PROTO ((const char*, ...));
-__MPFR_DECLSPEC int mpfr_asprintf _MPFR_PROTO ((char**, const char*,
+__MPFR_DECLSPEC int mpfr_printf _MPFR_PROTO ((__gmp_const char*, ...));
+__MPFR_DECLSPEC int mpfr_asprintf _MPFR_PROTO ((char**, __gmp_const char*,
                                                 ...));
-__MPFR_DECLSPEC int mpfr_sprintf _MPFR_PROTO ((char*, const char*,
+__MPFR_DECLSPEC int mpfr_sprintf _MPFR_PROTO ((char*, __gmp_const char*,
                                                ...));
 __MPFR_DECLSPEC int mpfr_snprintf _MPFR_PROTO ((char*, size_t,
-                                                const char*, ...));
-#endif
+                                                __gmp_const char*, ...));
 
 __MPFR_DECLSPEC int mpfr_pow _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
                                            mpfr_srcptr, mpfr_rnd_t));
@@ -670,8 +584,6 @@ __MPFR_DECLSPEC int mpfr_remainder _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
                                                  mpfr_srcptr, mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_fmod _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
                                                  mpfr_srcptr, mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_fmodquo _MPFR_PROTO ((mpfr_ptr, long*, mpfr_srcptr,
-                                                 mpfr_srcptr, mpfr_rnd_t));
 
 __MPFR_DECLSPEC int mpfr_fits_ulong_p _MPFR_PROTO((mpfr_srcptr, mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_fits_slong_p _MPFR_PROTO((mpfr_srcptr, mpfr_rnd_t));
@@ -774,11 +686,23 @@ __MPFR_DECLSPEC int mpfr_z_sub _MPFR_PROTO ((mpfr_ptr, mpz_srcptr,
                                              mpfr_srcptr, mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_cmp_z _MPFR_PROTO ((mpfr_srcptr, mpz_srcptr));
 
+__MPFR_DECLSPEC int mpfr_mul_q _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
+                                             mpq_srcptr, mpfr_rnd_t));
+__MPFR_DECLSPEC int mpfr_div_q _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
+                                             mpq_srcptr, mpfr_rnd_t));
+__MPFR_DECLSPEC int mpfr_add_q _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
+                                             mpq_srcptr, mpfr_rnd_t));
+__MPFR_DECLSPEC int mpfr_sub_q _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
+                                             mpq_srcptr, mpfr_rnd_t));
+__MPFR_DECLSPEC int mpfr_cmp_q _MPFR_PROTO ((mpfr_srcptr, mpq_srcptr));
+
+__MPFR_DECLSPEC int mpfr_cmp_f _MPFR_PROTO ((mpfr_srcptr, mpf_srcptr));
+
 __MPFR_DECLSPEC int mpfr_fma _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr, mpfr_srcptr,
                                            mpfr_srcptr, mpfr_rnd_t));
 __MPFR_DECLSPEC int mpfr_fms _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr, mpfr_srcptr,
                                            mpfr_srcptr, mpfr_rnd_t));
-__MPFR_DECLSPEC int mpfr_sum _MPFR_PROTO ((mpfr_ptr, mpfr_ptr *const,
+__MPFR_DECLSPEC int mpfr_sum _MPFR_PROTO ((mpfr_ptr, mpfr_ptr *__gmp_const,
                                            unsigned long, mpfr_rnd_t));
 
 __MPFR_DECLSPEC void mpfr_free_cache _MPFR_PROTO ((void));
@@ -786,11 +710,8 @@ __MPFR_DECLSPEC void mpfr_free_cache _MPFR_PROTO ((void));
 __MPFR_DECLSPEC int  mpfr_subnormalize _MPFR_PROTO ((mpfr_ptr, int,
                                                      mpfr_rnd_t));
 
-__MPFR_DECLSPEC int  mpfr_strtofr _MPFR_PROTO ((mpfr_ptr, const char *,
+__MPFR_DECLSPEC int  mpfr_strtofr _MPFR_PROTO ((mpfr_ptr, __gmp_const char *,
                                                 char **, int, mpfr_rnd_t));
-
-__MPFR_DECLSPEC void mpfr_round_nearest_away_begin _MPFR_PROTO((mpfr_t));
-__MPFR_DECLSPEC int  mpfr_round_nearest_away_end   _MPFR_PROTO((mpfr_t, int));
 
 __MPFR_DECLSPEC size_t mpfr_custom_get_size   _MPFR_PROTO ((mpfr_prec_t));
 __MPFR_DECLSPEC void   mpfr_custom_init    _MPFR_PROTO ((void *, mpfr_prec_t));
@@ -820,18 +741,6 @@ __MPFR_DECLSPEC int    mpfr_custom_get_kind   _MPFR_PROTO ((mpfr_srcptr));
 #define MPFR_DECL_INIT(_x, _p)                                        \
   MPFR_EXTENSION mp_limb_t __gmpfr_local_tab_##_x[((_p)-1)/GMP_NUMB_BITS+1]; \
   MPFR_EXTENSION mpfr_t _x = {{(_p),1,__MPFR_EXP_NAN,__gmpfr_local_tab_##_x}}
-
-#if MPFR_USE_C99_FEATURE
-/* C99 & C11 version: functions with multiple inputs supported */
-#define mpfr_round_nearest_away(func, rop, ...)                         \
-  (mpfr_round_nearest_away_begin(rop),                                  \
-   mpfr_round_nearest_away_end((rop), func((rop), __VA_ARGS__, MPFR_RNDN)))
-#else
-/* C89 version: function with one input supported */
-#define mpfr_round_nearest_away(func, rop, op)                          \
-  (mpfr_round_nearest_away_begin(rop),                                  \
-   mpfr_round_nearest_away_end((rop), func((rop), (op), MPFR_RNDN)))
-#endif
 
 /* Fast access macros to replace function interface.
    If the USER don't want to use the macro interface, let him make happy
@@ -873,13 +782,12 @@ __MPFR_DECLSPEC int    mpfr_custom_get_kind   _MPFR_PROTO ((mpfr_srcptr));
 
 
 /* When using GCC, optimize certain common comparisons and affectations.
-   + Remove some Intel C/C++ (ICC) versions since they now define __GNUC__
-     but produce a huge number of warnings if you use this code.
+   + Remove ICC since it defines __GNUC__ but produces a
+     huge number of warnings if you use this code.
      VL: I couldn't reproduce a single warning when enabling these macros
-     with icc 10.1 20080212 on Itanium. But with this version, the obsolete
-     __ICC macro isn't defined (__INTEL_COMPILER is, though), so that these
-     macros are enabled anyway. Checking with other ICC versions is needed.
-     For now, !defined(__ICC) seems to be the right test. Possibly detect
+     with icc 10.1 20080212 on Itanium. But with this version, __ICC isn't
+     defined (__INTEL_COMPILER is, though), so that these macros are enabled
+     anyway. Checking with other ICC versions is needed. Possibly detect
      whether warnings are produced or not with a configure test.
    + Remove C++ too, since it complains too much. */
 /* Added casts to improve robustness in case of undefined behavior and
@@ -891,8 +799,8 @@ __MPFR_DECLSPEC int    mpfr_custom_get_kind   _MPFR_PROTO ((mpfr_srcptr));
    are OK since if X is a constant expression, then (unsigned long) X is
    also a constant expression, so that the optimizations still work. The
    warnings are probably related to the following two bugs:
-     https://gcc.gnu.org/bugzilla/show_bug.cgi?id=4210
-     https://gcc.gnu.org/bugzilla/show_bug.cgi?id=38470 (possibly a variant)
+     http://gcc.gnu.org/bugzilla/show_bug.cgi?id=4210
+     http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38470 (possibly a variant)
    and the casts could be removed once these bugs are fixed.
    Casts shouldn't be used on the generic calls (to the ..._2exp functions),
    where implicit conversions are performed. Indeed, having at least one
@@ -904,7 +812,6 @@ __MPFR_DECLSPEC int    mpfr_custom_get_kind   _MPFR_PROTO ((mpfr_srcptr));
    be used. */
 #if defined (__GNUC__) && !defined(__ICC) && !defined(__cplusplus)
 #if (__GNUC__ >= 2)
-
 #undef mpfr_cmp_ui
 /* We use the fact that mpfr_sgn on NaN sets the erange flag and returns 0.
    But warning! mpfr_sgn is specified as a macro in the API, thus the macro
@@ -913,13 +820,11 @@ __MPFR_DECLSPEC int    mpfr_custom_get_kind   _MPFR_PROTO ((mpfr_srcptr));
   (__builtin_constant_p (_u) && (mpfr_ulong) (_u) == 0 ?        \
    (mpfr_sgn) (_f) :                                            \
    mpfr_cmp_ui_2exp ((_f), (_u), 0))
-
 #undef mpfr_cmp_si
 #define mpfr_cmp_si(_f,_s)                                      \
   (__builtin_constant_p (_s) && (mpfr_long) (_s) >= 0 ?         \
    mpfr_cmp_ui ((_f), (mpfr_ulong) (mpfr_long) (_s)) :          \
    mpfr_cmp_si_2exp ((_f), (_s), 0))
-
 #if __GNUC__ > 2 || __GNUC_MINOR__ >= 95
 #undef mpfr_set_ui
 #define mpfr_set_ui(_f,_u,_r)                                   \
@@ -931,43 +836,11 @@ __MPFR_DECLSPEC int    mpfr_custom_get_kind   _MPFR_PROTO ((mpfr_srcptr));
        (mpfr_void) (_r); 0; }) :                                \
    mpfr_set_ui_2exp ((_f), (_u), 0, (_r)))
 #endif
-
 #undef mpfr_set_si
 #define mpfr_set_si(_f,_s,_r)                                   \
   (__builtin_constant_p (_s) && (mpfr_long) (_s) >= 0 ?         \
    mpfr_set_ui ((_f), (mpfr_ulong) (mpfr_long) (_s), (_r)) :    \
    mpfr_set_si_2exp ((_f), (_s), 0, (_r)))
-
-#if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
-/* If the source is a constant number that is a power of 2,
-   optimize the call */
-#undef mpfr_mul_ui
-#define mpfr_mul_ui(_f, _g, _u,_r)                              \
-  (__builtin_constant_p (_u) && (mpfr_ulong) (_u) >= 1 &&       \
-   ((mpfr_ulong) (_u) & ((mpfr_ulong) (_u) - 1)) == 0 ?         \
-   mpfr_mul_2si((_f), (_g), __builtin_ctzl (_u), (_r)) :        \
-   mpfr_mul_ui ((_f), (_g), (_u), (_r)))
-#undef mpfr_div_ui
-#define mpfr_div_ui(_f, _g, _u,_r)                              \
-  (__builtin_constant_p (_u) && (mpfr_ulong) (_u) >= 1 &&       \
-   ((mpfr_ulong) (_u) & ((mpfr_ulong) (_u) - 1)) == 0 ?         \
-   mpfr_mul_2si((_f), (_g), - __builtin_ctzl (_u), (_r)) :      \
-   mpfr_div_ui ((_f), (_g), (_u), (_r)))
-#endif
-
-/* If the source is a constant number that is non-negative,
-   optimize the call */
-#undef mpfr_mul_si
-#define mpfr_mul_si(_f, _g, _s,_r)                                      \
-  (__builtin_constant_p (_s) && (mpfr_long) (_s) >= 0 ?                 \
-   mpfr_mul_ui ((_f), (_g), (mpfr_ulong) (mpfr_long) (_s), (_r)) :      \
-   mpfr_mul_si ((_f), (_g), (_s), (_r)))
-#undef mpfr_div_si
-#define mpfr_div_si(_f, _g, _s,_r)                                      \
-  (__builtin_constant_p (_s) && (mpfr_long) (_s) >= 0 ?                 \
-   mpfr_div_ui ((_f), (_g), (mpfr_ulong) (mpfr_long) (_s), (_r)) :      \
-   mpfr_div_si ((_f), (_g), (_s), (_r)))
-
 #endif
 #endif
 
@@ -1021,14 +894,12 @@ __MPFR_DECLSPEC int    mpfr_custom_get_kind   _MPFR_PROTO ((mpfr_srcptr));
  ( mpfr_init(x), mpfr_set_ld((x), (d), (rnd)) )
 #define mpfr_init_set_z(x, i, rnd) \
  ( mpfr_init(x), mpfr_set_z((x), (i), (rnd)) )
-#ifndef MPFR_USE_MINI_GMP
 #define mpfr_init_set_q(x, i, rnd) \
  ( mpfr_init(x), mpfr_set_q((x), (i), (rnd)) )
-#define mpfr_init_set_f(x, y, rnd) \
- ( mpfr_init(x), mpfr_set_f((x), (y), (rnd)) )
-#endif
 #define mpfr_init_set(x, y, rnd) \
  ( mpfr_init(x), mpfr_set((x), (y), (rnd)) )
+#define mpfr_init_set_f(x, y, rnd) \
+ ( mpfr_init(x), mpfr_set_f((x), (y), (rnd)) )
 
 /* Compatibility layer -- obsolete functions and macros */
 /* Note: it is not possible to output warnings, unless one defines
@@ -1079,8 +950,7 @@ __MPFR_DECLSPEC int    mpfr_custom_get_kind   _MPFR_PROTO ((mpfr_srcptr));
 */
 #if (defined (INTMAX_C) && defined (UINTMAX_C) && !defined(__cplusplus)) || \
   defined (MPFR_USE_INTMAX_T) || \
-  defined (_STDINT_H) || defined (_STDINT_H_) || defined (_STDINT) || \
-  defined (_SYS_STDINT_H_) /* needed for FreeBSD */
+  defined (_STDINT_H) || defined (_STDINT_H_) || defined (_STDINT)
 # ifndef _MPFR_H_HAVE_INTMAX_T
 # define _MPFR_H_HAVE_INTMAX_T 1
 
@@ -1126,15 +996,9 @@ __MPFR_DECLSPEC size_t mpfr_inp_str _MPFR_PROTO ((mpfr_ptr, FILE*, int,
                                                   mpfr_rnd_t));
 __MPFR_DECLSPEC size_t mpfr_out_str _MPFR_PROTO ((FILE*, int, size_t,
                                                   mpfr_srcptr, mpfr_rnd_t));
-#ifndef MPFR_USE_MINI_GMP
 #define mpfr_fprintf __gmpfr_fprintf
-__MPFR_DECLSPEC int mpfr_fprintf _MPFR_PROTO ((FILE*, const char*,
+__MPFR_DECLSPEC int mpfr_fprintf _MPFR_PROTO ((FILE*, __gmp_const char*,
                                                ...));
-#endif
-#define mpfr_fpif_export __gmpfr_fpif_export
-#define mpfr_fpif_import __gmpfr_fpif_import
-__MPFR_DECLSPEC int    mpfr_fpif_export _MPFR_PROTO ((FILE*, mpfr_ptr));
-__MPFR_DECLSPEC int    mpfr_fpif_import _MPFR_PROTO ((mpfr_ptr, FILE*));
 
 #if defined (__cplusplus)
 }
@@ -1157,13 +1021,13 @@ extern "C" {
 #define mpfr_vasprintf __gmpfr_vasprintf
 #define mpfr_vsprintf __gmpfr_vsprintf
 #define mpfr_vsnprintf __gmpfr_vsnprintf
-__MPFR_DECLSPEC int mpfr_vprintf _MPFR_PROTO ((const char*, va_list));
-__MPFR_DECLSPEC int mpfr_vasprintf _MPFR_PROTO ((char**, const char*,
+__MPFR_DECLSPEC int mpfr_vprintf _MPFR_PROTO ((__gmp_const char*, va_list));
+__MPFR_DECLSPEC int mpfr_vasprintf _MPFR_PROTO ((char**, __gmp_const char*,
                                                  va_list));
-__MPFR_DECLSPEC int mpfr_vsprintf _MPFR_PROTO ((char*, const char*,
+__MPFR_DECLSPEC int mpfr_vsprintf _MPFR_PROTO ((char*, __gmp_const char*,
                                                va_list));
 __MPFR_DECLSPEC int mpfr_vsnprintf _MPFR_PROTO ((char*, size_t,
-                                                const char*, va_list));
+                                                __gmp_const char*, va_list));
 
 #if defined (__cplusplus)
 }
@@ -1184,7 +1048,7 @@ extern "C" {
 #endif
 
 #define mpfr_vfprintf __gmpfr_vfprintf
-__MPFR_DECLSPEC int mpfr_vfprintf _MPFR_PROTO ((FILE*, const char*,
+__MPFR_DECLSPEC int mpfr_vfprintf _MPFR_PROTO ((FILE*, __gmp_const char*,
                                                 va_list));
 
 #if defined (__cplusplus)

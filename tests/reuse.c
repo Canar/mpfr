@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 #define DISP(s, t) {printf(s); mpfr_out_str(stdout, 2, 0, t, MPFR_RNDN); }
@@ -146,7 +149,7 @@ test3 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_rnd_t),
         {
           printf ("Error for %s(a, a, a) for ", foo);
           DISP2("a=",ref2);
-          DISP("expected ", ref1); DISP2(", got ", res1);
+          DISP("expected ", ref1); DISP2(", got", res1);
           exit (1);
         }
     }
@@ -199,7 +202,7 @@ test4 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_srcptr,
                 {
                   printf ("Error for %s(a, a, b, c) for ", foo);
                   DISP("a=", op1); DISP(", b=", op2); DISP2(", c=", op3);
-                  DISP("expected ", ref); DISP2(", got ", res);
+                  DISP("expected ", ref); DISP2(", got", res);
                   exit (1);
                 }
 
@@ -211,7 +214,7 @@ test4 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_srcptr,
                 {
                   printf ("Error for %s(a, a, b, c) for ", foo);
                   DISP("a=", op1); DISP(", b=", op2); DISP2(", c=", op3);
-                  DISP("expected ", ref); DISP2(", got ", res);
+                  DISP("expected ", ref); DISP2(", got", res);
                   exit (1);
                 }
 
@@ -223,7 +226,7 @@ test4 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_srcptr,
                 {
                   printf ("Error for %s(a, a, b, c) for ", foo);
                   DISP("a=", op1); DISP(", b=", op2); DISP2(", c=", op3);
-                  DISP("expected ", ref); DISP2(", got ", res);
+                  DISP("expected ", ref); DISP2(", got", res);
                   exit (1);
                 }
 
@@ -235,7 +238,7 @@ test4 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_srcptr,
                 {
                   printf ("Error for %s(a, a, b, c) for ", foo);
                   DISP("a=", op1); DISP(", a=", op2); DISP2(", c=", op3);
-                  DISP("expected ", ref); DISP2(", got ", res);
+                  DISP("expected ", ref); DISP2(", got", res);
                   exit (1);
                 }
 
@@ -247,7 +250,7 @@ test4 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_srcptr,
                 {
                   printf ("Error for %s(a, a, b, c) for ", foo);
                   DISP("a=", op1); DISP(", a=", op2); DISP2(", c=", op3);
-                  DISP("expected ", ref); DISP2(", got ", res);
+                  DISP("expected ", ref); DISP2(", got", res);
                   exit (1);
                 }
 
@@ -259,7 +262,7 @@ test4 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_srcptr,
                 {
                   printf ("Error for %s(a, a, b, c) for ", foo);
                   DISP("a=", op1); DISP(", a=", op2); DISP2(", c=", op3);
-                  DISP("expected ", ref); DISP2(", got ", res);
+                  DISP("expected ", ref); DISP2(", got", res);
                   exit (1);
                 }
 
@@ -271,7 +274,7 @@ test4 (int (*testfunc)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_srcptr,
                 {
                   printf ("Error for %s(a, a, a, a) for ", foo);
                   DISP2("a=", op1);
-                  DISP("expected ", ref); DISP2(", got ", res);
+                  DISP("expected ", ref); DISP2(", got", res);
                   exit (1);
                 }
             }
@@ -674,11 +677,6 @@ main (void)
     test3 (mpfr_fmod, "mpfr_fmod", p, (mpfr_rnd_t) rnd);
     test3a (mpfr_modf, "mpfr_modf", p, (mpfr_rnd_t) rnd);
     test3a (mpfr_sinh_cosh, "mpfr_sinh_cosh", p, (mpfr_rnd_t) rnd);
-#endif
-
-#if MPFR_VERSION >= MPFR_VERSION_NUM(3,0,0)
-    test2 (mpfr_ai, "mpfr_ai", p, (mpfr_rnd_t) rnd);
-    test2 (mpfr_digamma, "mpfr_digamma", p, (mpfr_rnd_t) rnd);
 #endif
   }
 

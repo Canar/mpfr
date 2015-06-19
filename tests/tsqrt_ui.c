@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 static void
@@ -34,8 +37,7 @@ check (unsigned long a, mpfr_rnd_t rnd_mode, const char *qs)
       printf ("mpfr_sqrt_ui failed for a=%lu, rnd_mode=%s\n",
               a, mpfr_print_rnd_mode (rnd_mode));
       printf ("sqrt gives %s, mpfr_sqrt_ui gives ", qs);
-      mpfr_out_str (stdout, 10, 0, q, MPFR_RNDN);
-      putchar ('\n');
+      mpfr_out_str(stdout, 10, 0, q, MPFR_RNDN);
       exit (1);
     }
   mpfr_clear (q);

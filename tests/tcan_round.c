@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 #define MAX_LIMB_SIZE 100
@@ -48,9 +51,7 @@ check_round_p (void)
           printf ("mpfr_round_p(%d) != mpfr_can_round(%d)!\n"
                   "bn = %ld, err0 = %ld, prec = %lu\nbp = ",
                   r1, r2, n, (long) err, (unsigned long) p);
-#ifndef MPFR_USE_MINI_GMP
           gmp_printf ("%NX\n", buf, n);
-#endif
           exit (1);
         }
     }

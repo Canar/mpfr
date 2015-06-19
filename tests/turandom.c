@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 static void
@@ -150,9 +153,7 @@ test_urandom (long nbtests, mpfr_prec_t prec, mpfr_rnd_t rnd, long bit_index,
   return;
 }
 
-/* Problem reported by Carl Witty. This test assumes the random generator
-   used by GMP is deterministic (for a given seed). We need to distinguish
-   two cases since the random generator changed after GMP 4.2.0. */
+/* problem reported by Carl Witty */
 static void
 bug20100914 (void)
 {
@@ -241,11 +242,7 @@ main (int argc, char *argv[])
         }
     }
 
-#ifndef MPFR_USE_MINI_GMP
-  /* since this test assumes a deterministic random generator, and this is not
-     implemented in mini-gmp, we omit it with mini-gmp */
   bug20100914 ();
-#endif
 
   tests_end_mpfr ();
   return 0;

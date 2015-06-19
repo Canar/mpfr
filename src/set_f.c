@@ -23,13 +23,11 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
 
-#ifndef MPFR_USE_MINI_GMP
 int
 mpfr_set_f (mpfr_ptr y, mpf_srcptr x, mpfr_rnd_t rnd_mode)
 {
   mp_limb_t *my, *mx, *tmp;
-  int cnt;
-  mp_size_t sx, sy;
+  unsigned long cnt, sx, sy;
   int inexact, carry = 0;
   MPFR_TMP_DECL(marker);
 
@@ -53,7 +51,7 @@ mpfr_set_f (mpfr_ptr y, mpf_srcptr x, mpfr_rnd_t rnd_mode)
 
   if (sy <= sx) /* we may have to round even when sy = sx */
     {
-      mpfr_prec_t xprec = (mpfr_prec_t) sx * GMP_NUMB_BITS;
+      unsigned long xprec = sx * GMP_NUMB_BITS;
 
       MPFR_TMP_MARK(marker);
       tmp = MPFR_TMP_LIMBS_ALLOC (sx);
@@ -94,9 +92,8 @@ mpfr_set_f (mpfr_ptr y, mpf_srcptr x, mpfr_rnd_t rnd_mode)
   else
     {
       /* Do not use MPFR_SET_EXP as the exponent may be out of range. */
-      MPFR_EXP (y) = EXP (x) * GMP_NUMB_BITS - cnt + carry;
+      MPFR_EXP (y) = EXP (x) * GMP_NUMB_BITS - (mpfr_exp_t) cnt + carry;
     }
 
   return mpfr_check_range (y, inexact, rnd_mode);
 }
-#endif

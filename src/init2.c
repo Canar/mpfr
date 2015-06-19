@@ -22,7 +22,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 #include "mpfr-impl.h"
 
-MPFR_HOT_FUNCTION_ATTR void
+void
 mpfr_init2 (mpfr_ptr x, mpfr_prec_t p)
 {
   mp_size_t xsize;
@@ -30,26 +30,26 @@ mpfr_init2 (mpfr_ptr x, mpfr_prec_t p)
 
   /* Check if we can represent the number of limbs
    * associated to the maximum of mpfr_prec_t*/
-  MPFR_STAT_STATIC_ASSERT( MP_SIZE_T_MAX >= (MPFR_PREC_MAX/MPFR_BYTES_PER_MP_LIMB) );
+  MPFR_ASSERTN( MP_SIZE_T_MAX >= (MPFR_PREC_MAX/MPFR_BYTES_PER_MP_LIMB) );
 
   /* Check for correct GMP_NUMB_BITS and MPFR_BYTES_PER_MP_LIMB */
-  MPFR_STAT_STATIC_ASSERT( GMP_NUMB_BITS == MPFR_BYTES_PER_MP_LIMB * CHAR_BIT
-                      && sizeof(mp_limb_t) == MPFR_BYTES_PER_MP_LIMB );
-  /* Check for mp_bits_per_limb (a global variable inside GMP library) */
+  MPFR_ASSERTN( GMP_NUMB_BITS == MPFR_BYTES_PER_MP_LIMB * CHAR_BIT
+                && sizeof(mp_limb_t) == MPFR_BYTES_PER_MP_LIMB );
+
   MPFR_ASSERTN (mp_bits_per_limb == GMP_NUMB_BITS);
 
   /* Check for correct EXP NAN, ZERO & INF in both mpfr.h and mpfr-impl.h */
-  MPFR_STAT_STATIC_ASSERT( __MPFR_EXP_NAN  == MPFR_EXP_NAN  );
-  MPFR_STAT_STATIC_ASSERT( __MPFR_EXP_ZERO == MPFR_EXP_ZERO );
-  MPFR_STAT_STATIC_ASSERT( __MPFR_EXP_INF  == MPFR_EXP_INF  );
+  MPFR_ASSERTN( __MPFR_EXP_NAN  == MPFR_EXP_NAN  );
+  MPFR_ASSERTN( __MPFR_EXP_ZERO == MPFR_EXP_ZERO );
+  MPFR_ASSERTN( __MPFR_EXP_INF  == MPFR_EXP_INF  );
 
-  MPFR_STAT_STATIC_ASSERT( MPFR_EMAX_MAX <= (MPFR_EXP_MAX >> 1)  );
-  MPFR_STAT_STATIC_ASSERT( MPFR_EMIN_MIN >= -(MPFR_EXP_MAX >> 1) );
+  MPFR_ASSERTN( MPFR_EMAX_MAX <= (MPFR_EXP_MAX >> 1)  );
+  MPFR_ASSERTN( MPFR_EMIN_MIN >= -(MPFR_EXP_MAX >> 1) );
 
   /* p=1 is not allowed since the rounding to nearest even rule requires at
-     least two bits of mantissa: the neighbors of 3/2 are 1*2^0 and 1*2^1,
+     least two bits of mantissa: the neighbours of 3/2 are 1*2^0 and 1*2^1,
      which both have an odd mantissa */
-  MPFR_ASSERTN (MPFR_PREC_COND (p));
+  MPFR_ASSERTN(p >= MPFR_PREC_MIN && p <= MPFR_PREC_MAX);
 
   xsize = MPFR_PREC2LIMBS (p);
   tmp   = (mpfr_limb_ptr) (*__gmp_allocate_func)(MPFR_MALLOC_SIZE(xsize));
@@ -62,3 +62,8 @@ mpfr_init2 (mpfr_ptr x, mpfr_prec_t p)
   MPFR_SET_ALLOC_SIZE(x, xsize);   /* Fix alloc size of Mantissa */
   MPFR_SET_NAN(x);                 /* initializes to NaN */
 }
+
+#ifdef MPFR_USE_OWN_MPFR_TMP_ALLOC
+static unsigned char mpfr_stack_tab[8000000];
+unsigned char *mpfr_stack = mpfr_stack_tab;
+#endif

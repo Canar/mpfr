@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 static void
@@ -37,7 +40,7 @@ teq (mpfr_t x)
     {
       mpfr_set (y, x, MPFR_RNDN);
 
-      MPFR_MANT(y) [mx] ^= MPFR_LIMB_ONE << px;
+      MPFR_MANT(y) [mx] ^= (mp_limb_t) 1 << px;
 
       if (mpfr_eq(y, x, k) || !mpfr_eq(y, x, k - 1))
         {

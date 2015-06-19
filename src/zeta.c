@@ -217,7 +217,7 @@ mpfr_zeta_pos (mpfr_t z, mpfr_srcptr s, mpfr_rnd_t rnd_mode)
           dnep = (double) d * LOG2;
           sd = mpfr_get_d (s, MPFR_RNDN);
           /* beta = dnep + 0.61 + sd * log (6.2832 / sd);
-             but a larger value is OK */
+             but a larger value is ok */
 #define LOG6dot2832 1.83787940484160805532
           beta = dnep + 0.61 + sd * (LOG6dot2832 - LOG2 *
                                      __gmpfr_floor_log2 (sd));
@@ -256,7 +256,7 @@ mpfr_zeta_pos (mpfr_t z, mpfr_srcptr s, mpfr_rnd_t rnd_mode)
 
           /* Computation of the coefficients c_k */
           mpfr_zeta_c (p, tc1);
-          /* Computation of the 3 parts of the function Zeta. */
+          /* Computation of the 3 parts of the fonction Zeta. */
           mpfr_zeta_part_a (z_pre, s, n);
           mpfr_zeta_part_b (b, s, n, p, tc1);
           /* s1 = s-1 is already computed above */
@@ -382,7 +382,7 @@ mpfr_zeta (mpfr_t z, mpfr_srcptr s, mpfr_rnd_t rnd_mode)
     {
       MPFR_SET_INF (z);
       MPFR_SET_POS (z);
-      MPFR_SET_DIVBY0 ();
+      mpfr_set_divby0 ();
       MPFR_RET (0);
     }
 

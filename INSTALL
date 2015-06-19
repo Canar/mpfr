@@ -37,17 +37,17 @@ MPFR).
    not been done yet and if patches are available. You can check
    on the release page:
 
-     http://www.mpfr.org/mpfr-3.2.0/
+     http://www.mpfr.org/mpfr-3.1.3/
 
    which may have additional information. The patches can be applied
    with commands like:
 
-     wget http://www.mpfr.org/mpfr-3.2.0/allpatches
+     wget http://www.mpfr.org/mpfr-3.1.3/allpatches
      patch -N -Z -p1 < allpatches
 
    or
 
-     curl http://www.mpfr.org/mpfr-3.2.0/allpatches | patch -N -Z -p1
+     curl http://www.mpfr.org/mpfr-3.1.3/allpatches | patch -N -Z -p1
 
    (Those instructions are for the GNU patch command, for example
    /usr/bin/gpatch on Solaris.)
@@ -218,14 +218,6 @@ specific architecture.
                         this option is used. Thus it must not be used in
                         binary distributions.
 
---with-sysroot=DIR      Search for dependent libraries within DIR (which
-                        may be useful in cross-compilation). If you use
-                        this option, you need to have Libtool 2.4+ on
-                        the target system. See Libtool 2.4+'s NEWS file.
-                        Technical information can be found at [1].
-
-[1] http://permalink.gmane.org/gmane.comp.gnu.libtool.patches/10111
-
 Note: By default, the configure script tries to set CC/CFLAGS to GMP's
 ones (this feature needs GMP 4.3.0 or later, or the --with-gmp-build
 option). However this is not guaranteed to work as the configure script
@@ -234,8 +226,7 @@ the values obtained from GMP may be incorrect if GMP has been built
 on a different machine. In such a case, the user may need to specify
 CC/CFLAGS as explained below.
 
-Run "./configure --help" to see the other options (default options
-from Autoconf and Automake).
+Run "./configure --help" to see the other options (autoconf default options).
 
 
 If 'gmp.h' and 'libgmp' do not match
@@ -347,7 +338,7 @@ Several documents may help you to solve the problem:
   * the FAQ (either the FAQ.html file distributed with MPFR, or the
     on-line version <http://www.mpfr.org/faq.html>, which may be more
     up-to-date);
-  * the MPFR web page for this version <http://www.mpfr.org/mpfr-3.2.0/>,
+  * the MPFR web page for this version <http://www.mpfr.org/mpfr-3.1.3/>,
     which lists bugs found in this version and provides some patches.
 
 If the "configure" fails, please check that the C compiler and its
@@ -458,6 +449,10 @@ CFLAGS), the version of GMP and MPFR used, and a description of the
 problem encountered, in particular the tests/test-suite.log file if
 "make check" failed. Please send us also the log of the "configure"
 (config.log).
+
+Note that even if you can build MPFR with a C++ compiler, you can't run
+the test suite: C and C++ are not the same language! You should use a C
+compiler instead.
 
 
 Notes about ABI

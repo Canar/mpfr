@@ -40,7 +40,6 @@ AC_DEFUN([MPFR_CONFIGS],
 [
 AC_REQUIRE([AC_OBJEXT])
 AC_REQUIRE([MPFR_CHECK_LIBM])
-AC_REQUIRE([MPFR_CHECK_LIBQUADMATH])
 AC_REQUIRE([AC_HEADER_TIME])
 AC_REQUIRE([AC_CANONICAL_HOST])
 
@@ -94,35 +93,8 @@ dnl FIXME: The functions memmove, memset and strtol are really needed by
 dnl MPFR, but if they are implemented as macros, this is also OK (in our
 dnl case).  So, we do not return an error, but their tests are currently
 dnl useless.
-dnl Moreover, for memmove and memset, when gcc -Werror is used, these
-dnl functions are considered to be missing because of a "conflicting
-dnl types for built-in function" error. Possible workarounds if the
-dnl results of this test are used (thus one doesn't want an error):
-dnl   * If "$GCC" is set, disable built-ins by adding -fno-builtin
-dnl     to $CFLAGS for this test (this would yield a failure if such
-dnl     functions are defined only as built-ins, but does this occur
-dnl     in practice?).
-dnl   * Enable -Werror only for the main compilation (and possibly
-dnl     some particular tests) via a new configure option.
 dnl gettimeofday is not defined for MinGW
-AC_CHECK_FUNCS([memmove memset setlocale strtol gettimeofday signal])
-
-dnl We cannot use AC_CHECK_FUNCS on sigaction, because while this
-dnl function may be provided by the C library, its prototype and
-dnl associated structure may not be available, e.g. when compiling
-dnl with "gcc -std=c99".
-AC_MSG_CHECKING(for sigaction and its associated structure)
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#include <signal.h>
-static int f (int (*func)(int, const struct sigaction *, struct sigaction *))
-{ return 0; }
-]], [[
- return f(sigaction);
-]])], [
-   AC_MSG_RESULT(yes)
-   AC_DEFINE(HAVE_SIGACTION, 1,
-    [Define if you have a working sigaction function.])
-],[AC_MSG_RESULT(no)])
+AC_CHECK_FUNCS([memmove memset setlocale strtol gettimeofday])
 
 dnl Check for IEEE-754 switches on Alpha
 case $host in
@@ -173,30 +145,6 @@ AC_CHECK_TYPE( [union fpc_csr],
 #  include <sys/fpu.h>
 #endif
 ])
-
-dnl Check for _Noreturn function specifier (ISO C11)
-AC_CACHE_CHECK([for _Noreturn], mpfr_cv_have_noreturn, [
-  AC_COMPILE_IFELSE([AC_LANG_SOURCE([[_Noreturn void foo(int);]])],
-    mpfr_cv_have_noreturn=yes, mpfr_cv_have_noreturn=no)
-])
-if test "$mpfr_cv_have_noreturn" = "yes"; then
-  AC_DEFINE(MPFR_HAVE_NORETURN,1,[Define if the _Noreturn function specifier is supported.])
-fi
-
-dnl Check for __builtin_unreachable
-AC_CACHE_CHECK([for __builtin_unreachable], mpfr_cv_have_builtin_unreachable,
-[
-  AC_LINK_IFELSE([AC_LANG_PROGRAM(
-      [[int x;]],
-      [[if (x) __builtin_unreachable(); ]]
-    )],
-    mpfr_cv_have_builtin_unreachable=yes,
-    mpfr_cv_have_builtin_unreachable=no)
-])
-if test "$mpfr_cv_have_builtin_unreachable" = "yes"; then
-  AC_DEFINE(MPFR_HAVE_BUILTIN_UNREACHABLE, 1,
-   [Define if the __builtin_unreachable GCC built-in is supported.])
-fi
 
 dnl Check for fesetround
 AC_CACHE_CHECK([for fesetround], mpfr_cv_have_fesetround, [
@@ -293,7 +241,7 @@ dnl Check the FP division by 0 fails (e.g. on a non-IEEE-754 platform).
 dnl In such a case, MPFR_ERRDIVZERO is defined to disable the tests
 dnl involving a FP division by 0.
 dnl For the developers: to check whether all these tests are disabled,
-dnl configure MPFR with "-DMPFR_TESTS_DIVBYZERO -DMPFR_ERRDIVZERO".
+dnl configure MPFR with "-DMPFR_TEST_DIVBYZERO=1 -DMPFR_ERRDIVZERO=1".
 AC_CACHE_CHECK([if the FP division by 0 fails], mpfr_cv_errdivzero, [
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
 int main (void) {
@@ -453,12 +401,11 @@ dnl    there is some ld configuration problem. One of the effects can
 dnl    be that thread-local variables always evaluate to 0. So, it is
 dnl    important to run the test below.
 if test "$enable_thread_safe" != no; then
-AC_MSG_CHECKING(for TLS support using C11)
+AC_MSG_CHECKING(for TLS support)
 saved_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS -I$srcdir/src"
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #define MPFR_USE_THREAD_SAFE 1
-#define MPFR_USE_C11_THREAD_SAFE 1
 #include "mpfr-thread.h"
 MPFR_THREAD_ATTR int x = 17;
 int main (void) {
@@ -467,77 +414,21 @@ int main (void) {
   ]])],
      [AC_MSG_RESULT(yes)
       AC_DEFINE([MPFR_USE_THREAD_SAFE],1,[Build MPFR as thread safe])
-      AC_DEFINE([MPFR_USE_C11_THREAD_SAFE],1,[Build MPFR as thread safe using C11])
-      tls_c11_support=yes
      ],
      [AC_MSG_RESULT(no)
+      if test "$enable_thread_safe" = yes; then
+        AC_MSG_ERROR([please configure with --disable-thread-safe])
+      fi
      ],
-     [AC_MSG_RESULT([cannot test, assume no])
+     [if test "$enable_thread_safe" = yes; then
+        AC_MSG_RESULT([cannot test, assume yes])
+        AC_DEFINE([MPFR_USE_THREAD_SAFE],1,[Build MPFR as thread safe])
+      else
+        AC_MSG_RESULT([cannot test, assume no])
+      fi
      ])
 CPPFLAGS="$saved_CPPFLAGS"
-
-if test "$tls_c11_support" != "yes"
-then
-
- AC_MSG_CHECKING(for TLS support)
- saved_CPPFLAGS="$CPPFLAGS"
- CPPFLAGS="$CPPFLAGS -I$srcdir/src"
- AC_RUN_IFELSE([AC_LANG_SOURCE([[
- #define MPFR_USE_THREAD_SAFE 1
- #include "mpfr-thread.h"
- MPFR_THREAD_ATTR int x = 17;
- int main (void) {
-   return x != 17;
- }
-   ]])],
-      [AC_MSG_RESULT(yes)
-       AC_DEFINE([MPFR_USE_THREAD_SAFE],1,[Build MPFR as thread safe])
-      ],
-      [AC_MSG_RESULT(no)
-       if test "$enable_thread_safe" = yes; then
-         AC_MSG_ERROR([please configure with --disable-thread-safe])
-       fi
-      ],
-      [if test "$enable_thread_safe" = yes; then
-         AC_MSG_RESULT([cannot test, assume yes])
-         AC_DEFINE([MPFR_USE_THREAD_SAFE],1,[Build MPFR as thread safe])
-       else
-         AC_MSG_RESULT([cannot test, assume no])
-       fi
-      ])
- CPPFLAGS="$saved_CPPFLAGS"
- fi
 fi
-
-dnl Check if Static Assertions are supported.
-AC_MSG_CHECKING(for Static Assertion support)
-saved_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS -I$srcdir/src"
-AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
-#define MPFR_USE_STATIC_ASSERT 1
-#include "mpfr-sassert.h"
-
-/* Test if Static Assertions work */
-MPFR_DECL_STATIC_ASSERT(sizeof(char) <= sizeof(int));
-
-int main (void) {
-  MPFR_DECL_STATIC_ASSERT(sizeof(int) <= sizeof(long));
-  int x;
-  (void) (x = 1);  /* cast to void: avoid a warning, at least with GCC */
-  /* Test of the macro after a declaraction and a statement. */
-  MPFR_STAT_STATIC_ASSERT(sizeof(short) <= sizeof(int));
-  return 0;
-}
-  ]])],
-     [AC_MSG_RESULT(yes)
-      AC_DEFINE([MPFR_USE_STATIC_ASSERT],1,[Build MPFR with Static Assertions])
-     ],
-     [AC_MSG_RESULT(no)
-     ],
-     [AC_MSG_RESULT([cannot test, assume no])
-     ])
-CPPFLAGS="$saved_CPPFLAGS"
-
 ])
 dnl end of MPFR_CONFIGS
 
@@ -649,32 +540,6 @@ yes*)
   AC_MSG_ERROR([double-to-integer conversion is incorrect.
 You need to use another compiler (or lower the optimization level).])
 esac
-])
-
-dnl MPFR_CHECK_MP_LIMB_T_VS_LONG
-dnl ----------------------------
-dnl Check that a long can fit in a mp_limb_t.
-dnl If so, it set the define MPFR_LONG_WITHIN_LIMB
-AC_DEFUN([MPFR_CHECK_MP_LIMB_T_VS_LONG], [
-AC_REQUIRE([MPFR_CONFIGS])
-AC_CACHE_CHECK([for long to fit in mp_limb_t], mpfr_cv_long_within_limb, [
-saved_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS -I$srcdir/src"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <gmp.h>
-#include "mpfr-sassert.h"
-]], [[
-  MPFR_STAT_STATIC_ASSERT ((mp_limb_t) -1 >= (unsigned long) -1);
-  return 0;
-]])], [mpfr_cv_long_within_limb="yes"],
-      [mpfr_cv_long_within_limb="no"],
-      [mpfr_cv_long_within_limb="cannot test, assume not present"])
-])
-case $mpfr_cv_long_within_limb in
-yes*)
-      AC_DEFINE([MPFR_LONG_WITHIN_LIMB],1,[long can be stored in mp_limb_t])
-esac
-CPPFLAGS="$saved_CPPFLAGS"
 ])
 
 dnl MPFR_PARSE_DIRECTORY
@@ -1012,29 +877,6 @@ BEGIN {
               found = 1
               exit
             }
-
-          if (got[23] == "000" && \
-              got[22] == "000" && \
-              got[21] == "000" && \
-              got[20] == "124" && \
-              got[19] == "064" && \
-              got[18] == "157" && \
-              got[17] == "235" && \
-              got[16] == "301" && \
-              got[15] == "000" && \
-              got[14] == "000" && \
-              got[13] == "000" && \
-              got[12] == "000" && \
-              got[11] == "000" && \
-              got[10] == "000" && \
-              got[9]  == "000" && \
-              got[8]  == "000")
-            {
-              # format used on ppc64le
-              print "possibly double-double, little endian"
-              found = 1
-              exit
-            }
         }
     }
 }
@@ -1070,17 +912,8 @@ AH_VERBATIM([HAVE_LDOUBLE],
 #undef HAVE_LDOUBLE_IEEE_QUAD_BIG])
 
 case $mpfr_cv_c_long_double_format in
-  "IEEE double, big endian")
-    AC_DEFINE(HAVE_LDOUBLE_IS_DOUBLE, 1)
-    ;;
-  "IEEE double, little endian")
-    AC_DEFINE(HAVE_LDOUBLE_IS_DOUBLE, 1)
-    ;;
   "IEEE extended, little endian")
     AC_DEFINE(HAVE_LDOUBLE_IEEE_EXT_LITTLE, 1)
-    ;;
-  "IEEE extended, big endian")
-    AC_DEFINE(HAVE_LDOUBLE_IEEE_EXT_BIG, 1)
     ;;
   "IEEE quad, big endian")
     AC_DEFINE(HAVE_LDOUBLE_IEEE_QUAD_BIG, 1)
@@ -1092,13 +925,7 @@ case $mpfr_cv_c_long_double_format in
     AC_MSG_WARN([This format is known on GCC/PowerPC platforms,])
     AC_MSG_WARN([but due to GCC PR26374, we can't test further.])
     AC_MSG_WARN([You can safely ignore this warning, though.])
-    AC_DEFINE(HAVE_LDOUBLE_MAYBE_DOUBLE_DOUBLE, 1)
-    ;;
-  "possibly double-double, little endian")
-    AC_MSG_WARN([This format is known on GCC/PowerPC platforms,])
-    AC_MSG_WARN([but due to GCC PR26374, we can't test further.])
-    AC_MSG_WARN([You can safely ignore this warning, though.])
-    AC_DEFINE(HAVE_LDOUBLE_MAYBE_DOUBLE_DOUBLE, 1)
+    # Since we are not sure, we do not want to define a macro.
     ;;
   unknown* | "not available")
     ;;
@@ -1107,6 +934,7 @@ case $mpfr_cv_c_long_double_format in
     ;;
 esac
 ])
+
 
 dnl  MPFR_CHECK_LIBM
 dnl  ---------------
@@ -1136,19 +964,6 @@ case $host in
 esac
 ])
 
-dnl  MPFR_CHECK_LIBQUADMATH
-dnl  ---------------
-dnl  Determine a math library -lquadmath to use.
-
-AC_DEFUN([MPFR_CHECK_LIBQUADMATH],
-[AC_REQUIRE([AC_CANONICAL_HOST])
-AC_SUBST(MPFR_LIBQUADMATH,'')
-case $host in
-  *)
-    AC_CHECK_LIB(quadmath, main, MPFR_LIBQUADMATH="-lquadmath")
-    ;;
-esac
-])
 
 dnl  MPFR_LD_SEARCH_PATHS_FIRST
 dnl  --------------------------
@@ -1175,7 +990,7 @@ dnl  Needed for mpfr-longlong.h; this is currently necessary for s390.
 dnl
 dnl  TODO: Replace this with a cleaner type size detection, as this
 dnl  solution only works with gcc and assumes CHAR_BIT == 8. Probably use
-dnl  <stdint.h>, and <https://gcc.gnu.org/viewcvs/gcc/trunk/config/stdint.m4>
+dnl  <stdint.h>, and <http://gcc.gnu.org/viewcvs/trunk/config/stdint.m4>
 dnl  as a fallback.
 
 AC_DEFUN([GMP_C_ATTRIBUTE_MODE],
@@ -1252,8 +1067,7 @@ MPFR_FUNC_GMP_PRINTF_SPEC([lld], [long long int], [
 
 MPFR_FUNC_GMP_PRINTF_SPEC([Lf], [long double], [
 #include <gmp.h>
-         ],
-         [AC_DEFINE([PRINTF_L], 1, [gmp_printf can read long double])],
+         ],,
          [AC_DEFINE([NPRINTF_L], 1, [gmp_printf cannot read long double])])
 
 MPFR_FUNC_GMP_PRINTF_SPEC([td], [ptrdiff_t], [
@@ -1263,7 +1077,6 @@ MPFR_FUNC_GMP_PRINTF_SPEC([td], [ptrdiff_t], [
 #include <stddef.h>
 #endif
 #include <gmp.h>
-    ],
-    [AC_DEFINE([PRINTF_T], 1, [gmp_printf can read ptrdiff_t])],
+    ],,
     [AC_DEFINE([NPRINTF_T], 1, [gmp_printf cannot read ptrdiff_t])])
 ])

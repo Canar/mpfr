@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 static void
@@ -77,7 +80,7 @@ test_grandom (long nbtests, mpfr_prec_t prec, mpfr_rnd_t rnd,
         }
     }
 
-#if defined(HAVE_STDARG) && !defined(MPFR_USE_MINI_GMP)
+#ifdef HAVE_STDARG
   if (verbose)
     {
       mpfr_init2 (av, prec);

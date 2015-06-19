@@ -23,7 +23,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 ])
 
 dnl Add check-news when it checks for more than 15 lines
-AC_INIT([MPFR],[3.2.0-dev])
+AC_INIT([MPFR],[3.1.3])
 
 dnl Older Automake versions than 1.13 may still be supported, but no longer
 dnl tested, and many things have changed in 1.13. Moreover the INSTALL file
@@ -59,21 +59,17 @@ dnl There is still some problem with GMP's HAVE_CONFIG
 dnl AC_CONFIG_HEADERS([mpfrconf.h:mpfrconf.in])
 
 dnl Extra arguments to configure
-
 unset gmp_lib_path GMP_CFLAGS GMP_CC
-
 AC_ARG_WITH(gmp_include,
    [  --with-gmp-include=DIR  GMP include directory ],
    MPFR_PARSE_DIRECTORY(["$withval"],[withval])
    CPPFLAGS="$CPPFLAGS -I$withval")
-
 AC_ARG_WITH(gmp_lib,
    [  --with-gmp-lib=DIR      GMP lib directory ], [
    MPFR_PARSE_DIRECTORY(["$withval"],[withval])
    LDFLAGS="$LDFLAGS -L$withval"
    gmp_lib_path="$withval"
   ])
-
 AC_ARG_WITH(gmp,
    [  --with-gmp=DIR          GMP install directory ], [
    MPFR_PARSE_DIRECTORY(["$withval"],[withval])
@@ -129,12 +125,10 @@ AC_ARG_ENABLE(assert,
    [  --enable-assert         enable ASSERT checking [[default=no]]],
    [ case $enableval in
       yes) AC_DEFINE([MPFR_WANT_ASSERT],1,[Want assertion]) ;;
-      none) AC_DEFINE([MPFR_WANT_ASSERT],-1,[Do no want any assertion]) ;;
       no)  ;;
       full) AC_DEFINE([MPFR_WANT_ASSERT],2,[Want assertion]) ;;
-      *) AC_MSG_ERROR([bad value for --enable-assert: yes, no, none or full]) ;;
+      *) AC_MSG_ERROR([bad value for --enable-assert: yes, no or full]) ;;
      esac])
-
 AC_ARG_ENABLE(logging,
    [  --enable-logging        enable MPFR logging (the system must support it)
                           [[default=no]]],
@@ -143,7 +137,6 @@ AC_ARG_ENABLE(logging,
       no)  ;;
       *)   AC_MSG_ERROR([bad value for --enable-logging: yes or no]) ;;
      esac])
-
 AC_ARG_ENABLE(thread-safe,
    [  --disable-thread-safe   explicitly disable TLS support
   --enable-thread-safe    build MPFR as thread safe, i.e. with TLS support
@@ -153,7 +146,6 @@ AC_ARG_ENABLE(thread-safe,
       no)  ;;
       *)   AC_MSG_ERROR([bad value for --enable-thread-safe: yes or no]) ;;
      esac])
-
 AC_ARG_ENABLE(warnings,
    [  --enable-warnings       allow MPFR to output warnings to stderr [[default=no]]],
    [ case $enableval in
@@ -163,26 +155,15 @@ AC_ARG_ENABLE(warnings,
      esac])
 
 AC_ARG_ENABLE(tests-timeout,
-   [  --enable-tests-timeout=NUM
-                          [[for developers]] enable timeout for test programs
-                          (NUM seconds, <= 9999) [[default=no]]; if this is
-                          enabled, the environment variable $MPFR_TESTS_TIMEOUT
-                          overrides NUM (0: no timeout)],
+   [  --enable-tests-timeout=NUM    enable timeout (NUM seconds) for test programs
+                          (NUM <= 9999) [[default=no]]; if enabled, env variable
+                          $MPFR_TESTS_TIMEOUT overrides NUM (0: no timeout).],
    [ case $enableval in
       no)   ;;
       yes)  AC_DEFINE([MPFR_TESTS_TIMEOUT], 0, [timeout limit]) ;;
       [[0-9]]|[[0-9]][[0-9]]|[[0-9]][[0-9]][[0-9]]|[[0-9]][[0-9]][[0-9]][[0-9]])
        AC_DEFINE_UNQUOTED([MPFR_TESTS_TIMEOUT], $enableval, [timeout limit]) ;;
       *)    AC_MSG_ERROR([bad value for --enable-tests-timeout]) ;;
-     esac])
-
-AC_ARG_ENABLE(tune-for-coverage,
-   [  --enable-tune-for-coverage
-                          [[for developers]] tune MPFR for coverage tests],
-   [ case $enableval in
-      no)   ;;
-      yes)  AC_DEFINE([MPFR_TUNE_COVERAGE], 1, [tune for coverage]) ;;
-      *)    AC_MSG_ERROR([bad value for --enable-tune-for-coverage]) ;;
      esac])
 
 
@@ -205,7 +186,7 @@ dnl (before we have the chance to get it from gmp.h) and does some
 dnl checking related to this compiler (such as dependency tracking
 dnl options); if the compiler changes due to __GMP_CC in gmp.h, one
 dnl would have incorrect settings.
-dnl FIXME: Move this in acinclude.m4 ?
+dnl FIXME: Move this in aclocal ?
 if test -z "$GMP_CC$GMP_CFLAGS" ; then
    AC_MSG_CHECKING(for CC and CFLAGS in gmp.h)
    GMP_CC=__GMP_CC
@@ -288,7 +269,19 @@ AC_ARG_ENABLE(decimal-float,
               [Build decimal float functions])
            AC_MSG_CHECKING(if compiler knows _Decimal64)
            AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[_Decimal64 x;]])],
-              [AC_MSG_RESULT(yes)],
+              [AC_MSG_RESULT(yes)
+               if test "$use_gmp_build" != yes ; then
+                  AC_MSG_ERROR([decimal float support requires --with-gmp-build])
+               fi
+               AC_MSG_CHECKING(if _GMP_IEEE_FLOATS is defined)
+               AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+#include "gmp.h"
+#include "gmp-impl.h"
+#ifndef _GMP_IEEE_FLOATS
+#error "_GMP_IEEE_FLOATS is not defined"
+#endif]])],[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)
+                  AC_MSG_ERROR([decimal float support requires _GMP_IEEE_FLOATS])])
+              ],
               [AC_MSG_RESULT(no)
 AC_MSG_ERROR([Compiler doesn't know _Decimal64 (ISO/IEC TR 24732).
 Please use another compiler or build MPFR without --enable-decimal-float.])]
@@ -319,47 +312,6 @@ Please use another compiler or build MPFR without --enable-decimal-float.]) ;;
       *)   AC_MSG_ERROR([bad value for --enable-decimal-float: yes or no]) ;;
      esac])
 
-AC_ARG_ENABLE(float128,
-   [  --enable-float128       build conversion functions from/to __float128
-                          [[default=no]]],
-   [ case $enableval in
-      yes) AC_DEFINE([MPFR_WANT_FLOAT128],1,
-              [Build float128 conversion functions])
-           AC_MSG_CHECKING(if compiler knows __float128)
-           AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[__float128 x;]])],
-              [AC_MSG_RESULT(yes)],
-              [AC_MSG_ERROR([Compiler doesn't know __float128; try GCC >= 4.3]
-           )]);;
-      no)  ;;
-      *)   AC_MSG_ERROR([bad value for --enable-float128: yes or no]) ;;
-     esac])
-
-test_libgmp=__gmpz_init
-
-AC_ARG_ENABLE(mini-gmp,
-   [  --enable-mini-gmp       build MPFR with mini-gmp (experimental) [[default=no]]],
-   [ case $enableval in
-      yes) AC_DEFINE([MPFR_USE_MINI_GMP],1,[Use mini-gmp])
-           test_libgmp=mpz_init;;
-      no)  ;;
-      *) AC_MSG_ERROR([bad value for --enable-mini-gmp: yes or no]) ;;
-     esac])
-
-AC_ARG_ENABLE(debug-prediction,
-   [  --enable-debug-prediction
-                          [[for developers]] enable debug of branch prediction
-                          (for x86 and x86-64 with GCC, static libs)],
-   [ case $enableval in
-      yes)  if test "$enable_shared" != no; then
-              AC_MSG_ERROR([--enable-debug-prediction can only work in static mode (--disable-shared)])
-            fi
-            AC_DEFINE([MPFR_DEBUG_PREDICTION],1,
-	       [Enable debug of branch prediction]) ;;
-      no)   ;;
-      *)    AC_MSG_ERROR([bad value for --enable-debug-prediction: yes or no]) ;;
-     esac])
-
-
 dnl Check if compiler is ICC, and if such a case, disable GCC
 dnl And add some specific flags.
 dnl Don't add Warnings Flags (Otherwise you'll get more than 20000 warnings).
@@ -373,13 +325,6 @@ dnl     the GCC variable confuses libtool. See:
 dnl       https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=485421
 dnl   * If need be, the gcc predefined macros __GNUC_* can be disabled
 dnl     thanks to the -no-gcc option.
-dnl   * Now use -mieee-fp instead of -mp (ICC 13 says: option '-mp' is
-dnl     deprecated and will be removed in a future release.). According
-dnl     to "icc -help", both options are equivalent; it also suggests
-dnl     to use -fp-model <arg> instead of -mp, but what is <arg>? Anyway
-dnl     -mieee-fp solves the tset_d failure due to a negative zero. This
-dnl     option has been introduced in ICC 9.0 for Linux (2005-06):
-dnl     http://www.ncsa.illinois.edu/UserInfo/Resources/Software/Intel/Compilers/9.0/C_ReleaseNotes.htm
 AC_MSG_CHECKING(for ICC)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #if !defined(__ICC)
@@ -388,7 +333,7 @@ error
 #endif
 ]], [[]])],[
  AC_MSG_RESULT(yes)
- CFLAGS="-fp_port -mieee-fp -wd1572 -wd265 -wd186 -wd239 $CFLAGS"
+ CFLAGS="-fp_port -mp -wd1572 -wd265 -wd186 -wd239 $CFLAGS"
 ],[AC_MSG_RESULT(no)])
 
 dnl If compiler is gcc, then use some specific flags.
@@ -428,13 +373,6 @@ esac
 
 AC_C_CONST
 AC_C_VOLATILE
-dnl Determine the endianness of integer. But since MPFR doesn't use
-dnl AC_CONFIG_HEADERS, configure cannot provide such information for
-dnl universal binaries containing variants with different endianness
-dnl (i.e. generic code must be used).
-AC_C_BIGENDIAN([AC_DEFINE(HAVE_BIG_ENDIAN)],[AC_DEFINE(HAVE_LITTLE_ENDIAN)],
-[true],[true])
-
 MPFR_CONFIGS
 
 # (Based on GMP 5.1)
@@ -464,6 +402,7 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 
 dnl Configs for Windows DLLs.
 dnl libtool requires "-no-undefined" for win32 dll
+dnl It also disables the tests involving the linking with LIBGMP if DLL
 dnl
 dnl "-Wl,output-def" is used to get a .def file for use by MS lib to make
 dnl a .lib import library, described in the manual.
@@ -480,6 +419,7 @@ case $host in
    if test "$enable_shared" = yes; then
      MPFR_LDFLAGS="$MPFR_LDFLAGS -no-undefined"
      LIBMPFR_LDFLAGS="$LIBMPFR_LDFLAGS -Wl,--output-def,.libs/libmpfr-4.dll.def"
+     dont_link_with_gmp="yes"
      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include "gmp.h"
 #if !__GMP_LIBGMP_DLL
@@ -488,7 +428,7 @@ error
 #endif
      ]], [[]])],[AC_MSG_RESULT(DLL)],[
   AC_MSG_RESULT(static)
-  AC_MSG_ERROR([libgmp isn't provided as a DLL: use --enable-static --disable-shared]) ])
+  AC_MSG_ERROR([gmp.h isn't a DLL: use --enable-static --disable-shared]) ])
    else
      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include "gmp.h"
@@ -498,7 +438,7 @@ error
 #endif
      ]], [[]])],[AC_MSG_RESULT(static)],[
   AC_MSG_RESULT(DLL)
-  AC_MSG_ERROR([libgmp is provided as a DLL: use --disable-static --enable-shared]) ])
+  AC_MSG_ERROR([gmp.h is a DLL: use --disable-static --enable-shared]) ])
   fi
   ;;
 esac
@@ -524,13 +464,13 @@ dnl see http://gmplib.org/list-archives/gmp-bugs/2011-August/002345.html.
 AC_MSG_CHECKING(for recent GMP)
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #include "gmp.h"
-#if (__GNU_MP_VERSION*100+__GNU_MP_VERSION_MINOR*10 < 420)
-# error "min GMP version is 4.2.0"
+#if (__GNU_MP_VERSION*100+__GNU_MP_VERSION_MINOR*10 < 410)
+# error "min GMP version is 4.1.0"
 error
 #endif
 ]])],[AC_MSG_RESULT(yes)],[
  AC_MSG_RESULT(no)
- AC_MSG_ERROR([GMP 4.2.0 or newer is required])
+ AC_MSG_ERROR([GMP 4.1.0 min required])
 ])
 
 dnl Check if we can use internal header files of GMP (only --with-gmp-build)
@@ -572,12 +512,22 @@ You probably need to change some of the GMP or MPFR compile options.
 See 'config.log' for details (search for GMP_NUMB_BITS).])],
        [AC_MSG_RESULT([can't test])])
 
+
+dnl We really need to link using libtool. But it is impossible with the current
+dnl libtool.
+dnl The practical problems appear only under MS Windows since the library name
+dnl is libgmp-3 (due to libtool versionning). The best solution
+dnl is to believe it works under MS-Windows.
+if test "$dont_link_with_gmp" = yes ; then
+LIBS="-lgmp $LIBS"
+else
+
 dnl Check if we can link with GMP
-AC_CHECK_LIB(gmp, $test_libgmp, [LIBS="-lgmp $LIBS"],
+AC_CHECK_LIB(gmp, __gmpz_init, [LIBS="-lgmp $LIBS"],
  [AC_MSG_ERROR(libgmp not found or uses a different ABI (including static vs shared).
 Please read the INSTALL file -- see "In case of problem".)])
 
-dnl Check for corresponding 'gmp.h' and libgmp
+dnl Check for corresponding 'gmp.h' and libgmp.a
 AC_MSG_CHECKING(if gmp.h version and libgmp version are the same)
 dnl We do not set LD_LIBRARY_PATH, as it is not possible to set it just
 dnl before the test program is run, and we do not want to affect other
@@ -598,9 +548,6 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([[
   sprintf (buffer, "%d.%d.%d", __GNU_MP_VERSION, __GNU_MP_VERSION_MINOR,
            __GNU_MP_VERSION_PATCHLEVEL);
   printf ("(%s/%s) ", buffer, gmp_version);
-  fflush (stdout);
-  /* Also put information in config.log (stderr) */
-  fprintf (stderr, "gmp.h: %s / libgmp: %s\n", buffer, gmp_version);
   if (strcmp (buffer, gmp_version) == 0)
     return 0;
   if (__GNU_MP_VERSION_PATCHLEVEL != 0)
@@ -645,10 +592,8 @@ dnl (see above).
 dnl Same for __gmpn_sbpi1_divappr_q.
 AC_CHECK_FUNCS([__gmpn_rootrem __gmpn_sbpi1_divappr_q])
 
-MPFR_CHECK_MP_LIMB_T_VS_LONG
-
-dnl The getrusage function is needed for MPFR bench (cf tools/bench)
-AC_CHECK_FUNCS([getrusage])
+dnl End of tests which need to link with GMP.
+fi
 
 dnl Remove also many MACROS (AC_DEFINE) which are unused by MPFR
 dnl and polluate (and slow down because libtool has to parse them) the build.
@@ -680,7 +625,7 @@ if $EGREP -q -e '-dev$' $srcdir/VERSION; then
 fi
 
 dnl Output
-AC_CONFIG_FILES([Makefile doc/Makefile src/Makefile tests/Makefile tune/Makefile src/mparam.h:src/mparam_h.in tools/bench/Makefile])
+AC_CONFIG_FILES([Makefile doc/Makefile src/Makefile tests/Makefile tune/Makefile src/mparam.h:src/mparam_h.in])
 AC_OUTPUT
 
 dnl NEWS README AUTHORS Changelog

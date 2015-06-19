@@ -22,7 +22,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 #include "mpfr-impl.h"
 
-MPFR_HOT_FUNCTION_ATTR int
+int
 mpfr_add (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
 {
   MPFR_LOG_FUNC
@@ -69,10 +69,8 @@ mpfr_add (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
                  except (-0) + (-0) = -0. */
               MPFR_SET_SIGN(a,
                             (rnd_mode != MPFR_RNDD ?
-                             (MPFR_IS_NEG(b) && MPFR_IS_NEG(c) ?
-                              MPFR_SIGN_NEG : MPFR_SIGN_POS) :
-                             (MPFR_IS_POS(b) && MPFR_IS_POS(c) ?
-                              MPFR_SIGN_POS : MPFR_SIGN_NEG)));
+                             ((MPFR_IS_NEG(b) && MPFR_IS_NEG(c)) ? -1 : 1) :
+                             ((MPFR_IS_POS(b) && MPFR_IS_POS(c)) ? 1 : -1)));
               MPFR_SET_ZERO(a);
               MPFR_RET(0); /* 0 + 0 is exact */
             }

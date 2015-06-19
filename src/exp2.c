@@ -87,7 +87,7 @@ mpfr_exp2 (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
      |2^x - 1| <= x < 2^EXP(x). If x > 0 we must round away from 0 (dir=1);
      if x < 0 we must round toward 0 (dir=0). */
   MPFR_SMALL_INPUT_AFTER_SAVE_EXPO (y, __gmpfr_one, - MPFR_GET_EXP (x), 0,
-                                    MPFR_IS_POS (x), rnd_mode, expo, {});
+                                    MPFR_SIGN(x) > 0, rnd_mode, expo, {});
 
   xint = mpfr_get_si (x, MPFR_RNDZ);
   mpfr_init2 (xfrac, MPFR_PREC (x));
@@ -113,7 +113,7 @@ mpfr_exp2 (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
       /* the optimal number of bits : see algorithms.tex */
       Nt = Ny + 5 + MPFR_INT_CEIL_LOG2 (Ny);
 
-      /* initialize of intermediary variable */
+      /* initialise of intermediary variable */
       mpfr_init2 (t, Nt);
 
       /* First computation */
@@ -141,7 +141,7 @@ mpfr_exp2 (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
     }
 
   mpfr_clear (xfrac);
-  MPFR_CLEAR_FLAGS ();
+  mpfr_clear_flags ();
   mpfr_mul_2si (y, y, xint, MPFR_RNDN); /* exact or overflow */
   /* Note: We can have an overflow only when t was rounded up to 2. */
   MPFR_ASSERTD (MPFR_IS_PURE_FP (y) || inexact > 0);

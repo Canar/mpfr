@@ -21,6 +21,8 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 #if __MPFR_STDC (199901L)
@@ -535,9 +537,9 @@ main (int argc, char *argv[])
                 if (inexact == 0)
                   continue; /* end of the test for exact results */
 
-                if (((r == MPFR_RNDD || (r == MPFR_RNDZ && MPFR_IS_POS (x)))
+                if (((r == MPFR_RNDD || (r == MPFR_RNDZ && MPFR_SIGN (x) > 0))
                      && inexact > 0) ||
-                    ((r == MPFR_RNDU || (r == MPFR_RNDZ && MPFR_IS_NEG (x)))
+                    ((r == MPFR_RNDU || (r == MPFR_RNDZ && MPFR_SIGN (x) < 0))
                      && inexact < 0))
                   err ("wrong rounding direction",
                        s, x, y, p, (mpfr_rnd_t) r, trint, inexact);
@@ -593,8 +595,8 @@ main (int argc, char *argv[])
                     else
                       { /* halfway case for mpfr_round: x must have been
                            rounded away from zero. */
-                        if ((MPFR_IS_POS (x) && inexact < 0) ||
-                            (MPFR_IS_NEG (x) && inexact > 0))
+                        if ((MPFR_SIGN (x) > 0 && inexact < 0) ||
+                            (MPFR_SIGN (x) < 0 && inexact > 0))
                           err ("halfway case for mpfr_round, bad rounding"
                                " direction", s, x, y, p, (mpfr_rnd_t) r, trint, inexact);
                       }

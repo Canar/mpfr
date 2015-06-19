@@ -20,6 +20,8 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <float.h>
 
 #include "mpfr-test.h"
@@ -265,7 +267,7 @@ check_overflow (void)
   mpfr_exp_t emin, emax;
   mpfr_t x, y1, y2;
   int inex1, inex2, rnd_mode;
-  mpfr_flags_t flags1, flags2;
+  unsigned int flags1, flags2;
 
   emin = mpfr_get_emin ();
   emax = mpfr_get_emax ();

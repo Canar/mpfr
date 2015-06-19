@@ -85,8 +85,7 @@ mpfr_urandomb (mpfr_ptr rop, gmp_randstate_t rstate)
     {
       count_leading_zeros (cnt, rp[nlimbs - 1]);
       /* Normalization */
-      exp -= cnt;
-      if (MPFR_UNLIKELY (exp < __gmpfr_emin || exp > __gmpfr_emax))
+      if (mpfr_set_exp (rop, exp - cnt))
         {
           /* If the exponent is not in the current exponent range, we
              choose to return a NaN as this is probably a user error.
@@ -97,11 +96,10 @@ mpfr_urandomb (mpfr_ptr rop, gmp_randstate_t rstate)
           __gmpfr_flags |= MPFR_FLAGS_NAN; /* Can't use MPFR_RET_NAN */
           return 1;
         }
-      MPFR_SET_EXP (rop, exp);
       if (cnt != 0)
         mpn_lshift (rp + k, rp, nlimbs, cnt);
       else if (k != 0)
-        mpn_copyd (rp + k, rp, nlimbs);
+        MPN_COPY (rp + k, rp, nlimbs);
       if (k != 0)
         MPN_ZERO (rp, k);
     }

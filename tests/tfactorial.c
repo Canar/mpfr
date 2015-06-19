@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 #define TEST_FUNCTION mpfr_fac_ui
@@ -167,7 +170,7 @@ overflowed_fac0 (void)
                       mpfr_print_rnd_mode ((mpfr_rnd_t) rnd));
               err = 1;
             }
-          if (! (mpfr_inf_p (x) && MPFR_IS_POS (x)))
+          if (! (mpfr_inf_p (x) && MPFR_SIGN (x) > 0))
             {
               printf ("Error in overflowed_fac0 (rnd = %s):\n"
                       "  Got ", mpfr_print_rnd_mode ((mpfr_rnd_t) rnd));

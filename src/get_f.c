@@ -22,7 +22,6 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 #include "mpfr-impl.h"
 
-#ifndef MPFR_USE_MINI_GMP
 /* Since MPFR-3.0, return the usual inexact value.
    The erange flag is set if an error occurred in the conversion
    (y is NaN, +Inf, or -Inf that have no equivalent in mpf)
@@ -45,7 +44,7 @@ mpfr_get_f (mpf_ptr x, mpfr_srcptr y, mpfr_rnd_t rnd_mode)
         }
       else if (MPFR_IS_NAN (y))
         {
-          MPFR_SET_ERANGEFLAG ();
+          MPFR_SET_ERANGE ();
           return 0;
         }
       else /* y is plus infinity (resp. minus infinity), set x to the maximum
@@ -54,7 +53,7 @@ mpfr_get_f (mpf_ptr x, mpfr_srcptr y, mpfr_rnd_t rnd_mode)
           int i;
           mp_limb_t *xp;
 
-          MPFR_SET_ERANGEFLAG ();
+          MPFR_SET_ERANGE ();
 
           /* To this day, [mp_exp_t] and mp_size_t are #defined as the same
              type */
@@ -64,7 +63,7 @@ mpfr_get_f (mpf_ptr x, mpfr_srcptr y, mpfr_rnd_t rnd_mode)
           SIZ (x) = sx;
           xp = PTR (x);
           for (i = 0; i < sx; i++)
-            xp[i] = MPFR_LIMB_MAX;
+            xp[i] = MP_LIMB_T_MAX;
 
           if (MPFR_IS_POS (y))
             return -1;
@@ -147,4 +146,3 @@ mpfr_get_f (mpf_ptr x, mpfr_srcptr y, mpfr_rnd_t rnd_mode)
 
   return inex;
 }
-#endif

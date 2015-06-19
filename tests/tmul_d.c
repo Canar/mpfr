@@ -20,6 +20,8 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <float.h>
 
 #include "mpfr-test.h"
@@ -40,7 +42,7 @@ check_nans (void)
   mpfr_clear_flags();
   inexact = mpfr_mul_d (y, x, 1.0, MPFR_RNDN);
   MPFR_ASSERTN (inexact == 0);
-  MPFR_ASSERTN (__gmpfr_flags == MPFR_FLAGS_NAN);
+  MPFR_ASSERTN ((__gmpfr_flags ^ MPFR_FLAGS_NAN) == 0);
   MPFR_ASSERTN (mpfr_nan_p (y));
 
   /* +inf * 1.0 == +inf */
@@ -56,7 +58,7 @@ check_nans (void)
   mpfr_clear_flags();
   inexact = mpfr_mul_d (y, x, 0.0, MPFR_RNDN);
   MPFR_ASSERTN (inexact == 0);
-  MPFR_ASSERTN (__gmpfr_flags == MPFR_FLAGS_NAN);
+  MPFR_ASSERTN ((__gmpfr_flags ^ MPFR_FLAGS_NAN) == 0);
   MPFR_ASSERTN (mpfr_nan_p (y));
 
   /* -inf * 1.0 == -inf */

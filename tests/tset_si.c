@@ -1,4 +1,4 @@
-/* Test file for mpfr_set_si, mpfr_set_ui, mpfr_get_si and mpfr_get_ui.
+/* Test file for mpfr_set_si and mpfr_set_ui.
 
 Copyright 1999, 2001-2015 Free Software Foundation, Inc.
 Contributed by the AriC and Caramel projects, INRIA.
@@ -19,6 +19,10 @@ You should have received a copy of the GNU Lesser General Public License
 along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
 
 #include "mpfr-test.h"
 
@@ -139,60 +143,6 @@ test_macros_keyword (void)
   mpfr_clear (x);
 }
 
-static void
-test_get_ui_smallneg (void)
-{
-  mpfr_t x;
-  int i;
-
-  mpfr_init2 (x, 64);
-
-  for (i = 1; i <= 4; i++)
-    {
-      int r;
-
-      mpfr_set_si_2exp (x, -i, -2, MPFR_RNDN);
-      RND_LOOP (r)
-        {
-          long s;
-          unsigned long u;
-
-          mpfr_clear_erangeflag ();
-          s = mpfr_get_si (x, (mpfr_rnd_t) r);
-          if (mpfr_erangeflag_p ())
-            {
-              printf ("ERROR for get_si + ERANGE + small negative op"
-                      " for rnd = %s and x = -%d/4\n",
-                      mpfr_print_rnd_mode ((mpfr_rnd_t) r), i);
-              exit (1);
-            }
-          u = mpfr_get_ui (x, (mpfr_rnd_t) r);
-          if (u != 0)
-            {
-              printf ("ERROR for get_ui + ERANGE + small negative op"
-                      " for rnd = %s and x = -%d/4\n",
-                      mpfr_print_rnd_mode ((mpfr_rnd_t) r), i);
-              printf ("Expected 0, got %lu\n", u);
-              exit (1);
-            }
-          if ((s == 0) ^ !mpfr_erangeflag_p ())
-            {
-              const char *Not = s == 0 ? "" : " not";
-
-              printf ("ERROR for get_ui + ERANGE + small negative op"
-                      " for rnd = %s and x = -%d/4\n",
-                      mpfr_print_rnd_mode ((mpfr_rnd_t) r), i);
-              printf ("The rounding integer (%ld) is%s representable in "
-                      "unsigned long,\nbut the erange flag is%s set.\n",
-                      s, Not, Not);
-              exit (1);
-            }
-        }
-    }
-
-  mpfr_clear (x);
-}
-
 /* FIXME: Comparing against mpfr_get_si/ui is not ideal, it'd be better to
    have all tests examine the bits in mpfr_t for what should come out.  */
 
@@ -265,7 +215,8 @@ main (int argc, char *argv[])
 
   mpfr_set_prec (x, 3);
   inex = mpfr_set_si (x, 77617, MPFR_RNDD); /* should be 65536 */
-  if (MPFR_MANT(x)[0] != MPFR_LIMB_HIGHBIT || inex >= 0)
+  if (MPFR_MANT(x)[0] != ((mp_limb_t)1 << (mp_bits_per_limb-1))
+      || inex >= 0)
     {
       printf ("Error in mpfr_set_si(x:3, 77617, MPFR_RNDD)\n");
       mpfr_print_binary (x);
@@ -273,7 +224,8 @@ main (int argc, char *argv[])
       exit (1);
     }
   inex = mpfr_set_ui (x, 77617, MPFR_RNDD); /* should be 65536 */
-  if (MPFR_MANT(x)[0] != MPFR_LIMB_HIGHBIT || inex >= 0)
+  if (MPFR_MANT(x)[0] != ((mp_limb_t)1 << (mp_bits_per_limb-1))
+      || inex >= 0)
     {
       printf ("Error in mpfr_set_ui(x:3, 77617, MPFR_RNDD)\n");
       mpfr_print_binary (x);
@@ -393,7 +345,7 @@ main (int argc, char *argv[])
   MPFR_ASSERTN (mpfr_get_ui (x, MPFR_RNDD) == 0);
   MPFR_ASSERTN (mpfr_get_si (x, MPFR_RNDD) == 0);
 
-  /* Test for ERANGE flag + correct behavior if overflow */
+  /* Test for ERANGE flag + correct behaviour if overflow */
   mpfr_set_prec (x, 256);
   mpfr_set_ui (x, ULONG_MAX, MPFR_RNDN);
   mpfr_clear_erangeflag ();
@@ -507,7 +459,6 @@ main (int argc, char *argv[])
   test_2exp ();
   test_macros ();
   test_macros_keyword ();
-  test_get_ui_smallneg ();
   tests_end_mpfr ();
   return 0;
 }

@@ -20,6 +20,8 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 static void
@@ -1012,16 +1014,10 @@ check_large (void)
   mpfr_free_str (s);
 
   mpfr_set_nan (x);
-  mpfr_clear_flags ();
   s = mpfr_get_str (NULL, &e, 10, 1000, x, MPFR_RNDN);
   if (strcmp (s, "@NaN@"))
     {
-      printf ("Error for NaN (incorrect string)\n");
-      exit (1);
-    }
-  if (__gmpfr_flags != MPFR_FLAGS_NAN)
-    {
-      printf ("Error for NaN (incorrect flags)\n");
+      printf ("Error for NaN\n");
       exit (1);
     }
   mpfr_free_str (s);
@@ -1085,8 +1081,6 @@ check_special (int b, mpfr_prec_t p)
   int r;
   size_t m;
 
-  mpfr_init2 (x, p);
-
   /* check for invalid base */
   if (mpfr_get_str (s, &e, 1, 10, x, MPFR_RNDN) != NULL)
     {
@@ -1100,15 +1094,16 @@ check_special (int b, mpfr_prec_t p)
     }
 
   s2[0] = '1';
-  for (i = 1; i < MAX_DIGITS + 2; i++)
+  for (i=1; i<MAX_DIGITS+2; i++)
     s2[i] = '0';
 
+  mpfr_init2 (x, p);
   mpfr_set_ui (x, 1, MPFR_RNDN);
-  for (i = 1; i < MAX_DIGITS && mpfr_mul_ui (x, x, b, MPFR_RNDN) == 0; i++)
+  for (i=1; i<MAX_DIGITS && mpfr_mul_ui (x, x, b, MPFR_RNDN) == 0; i++)
     {
       /* x = b^i (exact) */
       for (r = 0; r < MPFR_RND_MAX; r++)
-        for (m = i < 3 ? 2 : i-1 ; (int) m <= i+1 ; m++)
+        for (m= (i<3)? 2 : i-1 ; (int) m <= i+1 ; m++)
           {
             mpfr_get_str (s, &e, b, m, x, (mpfr_rnd_t) r);
             /* s should be 1 followed by (m-1) zeros, and e should be i+1 */
@@ -1236,9 +1231,8 @@ main (int argc, char *argv[])
       m = 2 + (randlimb () % (MAX_DIGITS - 1));
       mpfr_urandomb (x, RANDS);
       e = (mpfr_exp_t) (randlimb () % 21) - 10;
-      if (!MPFR_IS_ZERO(x))
-        mpfr_set_exp (x, (e == -10) ? mpfr_get_emin () :
-                      ((e == 10) ? mpfr_get_emax () : e));
+      mpfr_set_exp (x, (e == -10) ? mpfr_get_emin () :
+                    ((e == 10) ? mpfr_get_emax () : e));
       b = 2 + (randlimb () % 35);
       r = RND_RAND ();
       mpfr_get_str (s, &f, b, m, x, r);

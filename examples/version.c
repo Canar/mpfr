@@ -29,9 +29,6 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #include <gmp.h>
 #include <mpfr.h>
 
-#define SIGNED_STR(V) ((V) < 0 ? "signed" : "unsigned")
-#define SIGNED(I) SIGNED_STR((I) - (I) - 1)
-
 /* The following failure can occur if GMP has been rebuilt with
  * a different ABI, e.g.
  *   1. GMP built with ABI=mode32.
@@ -102,26 +99,11 @@ int main (void)
     printf ("Warning! This is different from GMP_LIMB_BITS!\n"
             "Different ABI caused by a GMP library upgrade?\n");
 
-  printf ("\n");
-  printf ("sizeof(mpfr_prec_t) = %d (%s type)\n", (int) sizeof(mpfr_prec_t),
-          SIGNED_STR((mpfr_prec_t) -1));
 #if MPFR_VERSION_MAJOR >= 3
-  printf ("sizeof(mpfr_exp_t)  = %d (%s type)\n", (int) sizeof(mpfr_exp_t),
-          SIGNED_STR((mpfr_exp_t) -1));
+  printf ("\n");
+  printf ("sizeof(mpfr_prec_t) = %d\n", (int) sizeof(mpfr_prec_t));
+  printf ("sizeof(mpfr_exp_t)  = %d\n", (int) sizeof(mpfr_exp_t));
 #endif
-#ifdef _MPFR_PREC_FORMAT
-  printf ("_MPFR_PREC_FORMAT = %d\n", (int) _MPFR_PREC_FORMAT);
-#endif
-  /* Note: "long" is sufficient for all current _MPFR_PREC_FORMAT values
-     (1, 2, 3). Thus we do not need to depend on ISO C99 or later. */
-  printf ("MPFR_PREC_MIN = %ld (%s)\n", (long) MPFR_PREC_MIN,
-          SIGNED (MPFR_PREC_MIN));
-  printf ("MPFR_PREC_MAX = %ld (%s)\n", (long) MPFR_PREC_MAX,
-          SIGNED (MPFR_PREC_MAX));
-#ifdef _MPFR_EXP_FORMAT
-  printf ("_MPFR_EXP_FORMAT = %d\n", (int) _MPFR_EXP_FORMAT);
-#endif
-  printf ("sizeof(mpfr_t) = %d\n", (int) sizeof(mpfr_t));
 
   failure_test ();
 

@@ -23,11 +23,6 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
 
-/* TODO: for functions with mpz_srcptr, check whether mpz_fits_slong_p
-   is really useful in all cases. For instance, concerning the addition,
-   one now has mpz_t -> long -> unsigned long -> mpfr_t then mpfr_add
-   instead of mpz_t -> mpfr_t then mpfr_add. */
-
 /* Init and set a mpfr_t with enough precision to store a mpz.
    This function should be called in the extended exponent range. */
 static void
@@ -88,26 +83,21 @@ foo2 (mpfr_ptr x, mpz_srcptr y, mpfr_srcptr z, mpfr_rnd_t r,
 int
 mpfr_mul_z (mpfr_ptr y, mpfr_srcptr x, mpz_srcptr z, mpfr_rnd_t r)
 {
-  if (mpz_fits_slong_p (z))
-    return mpfr_mul_si (y, x, mpz_get_si (z), r);
-  else
-    return foo (y, x, z, r, mpfr_mul);
+  return foo (y, x, z, r, mpfr_mul);
 }
 
 int
 mpfr_div_z (mpfr_ptr y, mpfr_srcptr x, mpz_srcptr z, mpfr_rnd_t r)
 {
-  if (mpz_fits_slong_p (z))
-    return mpfr_div_si (y, x, mpz_get_si (z), r);
-  else
-    return foo (y, x, z, r, mpfr_div);
+  return foo (y, x, z, r, mpfr_div);
 }
 
 int
 mpfr_add_z (mpfr_ptr y, mpfr_srcptr x, mpz_srcptr z, mpfr_rnd_t r)
 {
-  if (mpz_fits_slong_p (z))
-    return mpfr_add_si (y, x, mpz_get_si (z), r);
+  /* Mpz 0 is unsigned */
+  if (MPFR_UNLIKELY (mpz_sgn (z) == 0))
+    return mpfr_set (y, x, r);
   else
     return foo (y, x, z, r, mpfr_add);
 }
@@ -115,8 +105,9 @@ mpfr_add_z (mpfr_ptr y, mpfr_srcptr x, mpz_srcptr z, mpfr_rnd_t r)
 int
 mpfr_sub_z (mpfr_ptr y, mpfr_srcptr x, mpz_srcptr z, mpfr_rnd_t r)
 {
-  if (mpz_fits_slong_p (z))
-    return mpfr_sub_si (y, x, mpz_get_si (z), r);
+  /* Mpz 0 is unsigned */
+  if (MPFR_UNLIKELY (mpz_sgn (z) == 0))
+    return mpfr_set (y, x, r);
   else
     return foo (y, x, z, r, mpfr_sub);
 }
@@ -124,8 +115,9 @@ mpfr_sub_z (mpfr_ptr y, mpfr_srcptr x, mpz_srcptr z, mpfr_rnd_t r)
 int
 mpfr_z_sub (mpfr_ptr y, mpz_srcptr x, mpfr_srcptr z, mpfr_rnd_t r)
 {
-  if (mpz_fits_slong_p (x))
-    return mpfr_si_sub (y, mpz_get_si (x), z, r);
+  /* Mpz 0 is unsigned */
+  if (MPFR_UNLIKELY (mpz_sgn (x) == 0))
+    return mpfr_neg (y, z, r);
   else
     return foo2 (y, x, z, r, mpfr_sub);
 }
@@ -136,13 +128,10 @@ mpfr_cmp_z (mpfr_srcptr x, mpz_srcptr z)
   mpfr_t t;
   int res;
   mpfr_prec_t p;
-  mpfr_flags_t flags;
+  unsigned int flags;
 
   if (MPFR_UNLIKELY (MPFR_IS_SINGULAR (x)))
     return mpfr_cmp_si (x, mpz_sgn (z));
-
-  if (mpz_fits_slong_p (z))
-    return mpfr_cmp_si (x, mpz_get_si (z));
 
   if (mpz_size (z) <= 1)
     p = GMP_NUMB_BITS;
@@ -244,7 +233,6 @@ mpfr_muldiv_z (mpfr_ptr y, mpfr_srcptr x, mpz_srcptr n, mpz_srcptr d,
     }
 }
 
-#ifndef MPFR_USE_MINI_GMP
 int
 mpfr_mul_q (mpfr_ptr y, mpfr_srcptr x, mpq_srcptr z, mpfr_rnd_t rnd_mode)
 {
@@ -477,9 +465,7 @@ mpfr_cmp_q (mpfr_srcptr x, mpq_srcptr q)
   MPFR_SAVE_EXPO_FREE (expo);
   return res;
 }
-#endif
 
-#ifndef MPFR_USE_MINI_GMP
 int
 mpfr_cmp_f (mpfr_srcptr x, mpf_srcptr z)
 {
@@ -501,4 +487,3 @@ mpfr_cmp_f (mpfr_srcptr x, mpf_srcptr z)
   MPFR_SAVE_EXPO_FREE (expo);
   return res;
 }
-#endif

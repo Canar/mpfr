@@ -67,7 +67,7 @@ mpfr_atanh (mpfr_ptr y, mpfr_srcptr xt , mpfr_rnd_t rnd_mode)
         {
           MPFR_SET_INF (y);
           MPFR_SET_SAME_SIGN (y, xt);
-          MPFR_SET_DIVBY0 ();
+          mpfr_set_divby0 ();
           MPFR_RET (0);
         }
       MPFR_SET_NAN (y);
@@ -88,7 +88,7 @@ mpfr_atanh (mpfr_ptr y, mpfr_srcptr xt , mpfr_rnd_t rnd_mode)
   /* the optimal number of bits : see algorithms.ps */
   Nt = Nt + MPFR_INT_CEIL_LOG2 (Nt) + 4;
 
-  /* initialize of intermediary variable */
+  /* initialise of intermediary variable */
   mpfr_init2 (t, Nt);
   mpfr_init2 (te, Nt);
 

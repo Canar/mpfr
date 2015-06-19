@@ -20,6 +20,10 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
 #include "mpfr-test.h"
 
 #define TEST_FUNCTION mpfr_exp10
@@ -169,7 +173,7 @@ overfl_exp10_0 (void)
                             i, mpfr_print_rnd_mode ((mpfr_rnd_t) rnd));
                     err = 1;
                   }
-                if (! (mpfr_inf_p (x) && MPFR_IS_POS (x)))
+                if (! (mpfr_inf_p (x) && MPFR_SIGN (x) > 0))
                   {
                     printf ("Error in overfl_exp10_0 (i = %d, rnd = %s):\n"
                             "  Got ", i, mpfr_print_rnd_mode ((mpfr_rnd_t) rnd));

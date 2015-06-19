@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 #define TEST_FUNCTION mpfr_coth
@@ -60,14 +63,14 @@ check_specials (void)
   /* coth(+/-0) = +/-Inf */
   mpfr_set_ui (x, 0, MPFR_RNDN);
   mpfr_coth (y, x, MPFR_RNDN);
-  if (! (mpfr_inf_p (y) && MPFR_IS_POS (y)))
+  if (! (mpfr_inf_p (y) && MPFR_SIGN (y) > 0))
     {
       printf ("Error: coth(+0) != +Inf\n");
       exit (1);
     }
   mpfr_neg (x, x, MPFR_RNDN);
   mpfr_coth (y, x, MPFR_RNDN);
-  if (! (mpfr_inf_p (y) && MPFR_IS_NEG (y)))
+  if (! (mpfr_inf_p (y) && MPFR_SIGN (y) < 0))
     {
       printf ("Error: coth(-0) != -Inf\n");
       exit (1);

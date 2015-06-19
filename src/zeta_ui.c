@@ -40,7 +40,7 @@ mpfr_zeta_ui (mpfr_ptr z, unsigned long m, mpfr_rnd_t r)
     {
       MPFR_SET_INF (z);
       MPFR_SET_POS (z);
-      MPFR_SET_DIVBY0 ();
+      mpfr_set_divby0 ();
       return 0;
     }
   else /* m >= 2 */

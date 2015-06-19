@@ -28,7 +28,8 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 /* Check if we have to check the result of mpfr_mul.
    TODO: Find a better (and faster?) check than using old implementation */
-#if MPFR_WANT_ASSERT >= 2
+#ifdef MPFR_WANT_ASSERT
+# if MPFR_WANT_ASSERT >= 3
 
 int mpfr_mul2 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode);
 static int
@@ -56,7 +57,7 @@ mpfr_mul3 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
         {
           if (MPFR_IS_INF(c) || MPFR_NOTZERO(c))
             {
-              MPFR_SET_SIGN(a, sign_product);
+              MPFR_SET_SIGN(a,sign_product);
               MPFR_SET_INF(a);
               MPFR_RET(0); /* exact */
             }
@@ -170,12 +171,9 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   MPFR_ASSERTN (mpfr_set (tc, c, MPFR_RNDN) == 0);
 
   inexact2 = mpfr_mul3 (ta, tb, tc, rnd_mode);
-  inexact1 = mpfr_mul2 (a, b, c, rnd_mode);
-  if (MPFR_IS_NAN (ta) && MPFR_IS_NAN (a))
-    {
-      /* Getting both NaN is OK. */
-    }
-  else if (! mpfr_equal_p (ta, a) || ! SAME_SIGN (inexact1, inexact2))
+  inexact1  = mpfr_mul2 (a, b, c, rnd_mode);
+  if (mpfr_cmp (ta, a) || inexact1*inexact2 < 0
+      || (inexact1*inexact2 == 0 && (inexact1|inexact2) != 0))
     {
       fprintf (stderr, "mpfr_mul return different values for %s\n"
                "Prec_a = %lu, Prec_b = %lu, Prec_c = %lu\nB = ",
@@ -198,8 +196,8 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
 }
 
 # define mpfr_mul mpfr_mul2
-
-#endif  /* MPFR_WANT_ASSERT >= 2 */
+# endif
+#endif
 
 /****** END OF CHECK *******/
 
@@ -211,7 +209,7 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
    to the additional tests, but slowdown should not be noticeable
    as this code is not executed in very small precisions. */
 
-MPFR_HOT_FUNCTION_ATTR int
+int
 mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
 {
   int sign, inexact;
@@ -291,8 +289,8 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
                            sign);
 #endif
 
-  bq = MPFR_GET_PREC (b);
-  cq = MPFR_GET_PREC (c);
+  bq = MPFR_PREC (b);
+  cq = MPFR_PREC (c);
 
   MPFR_ASSERTN ((mpfr_uprec_t) bq + cq <= MPFR_PREC_MAX);
 
@@ -302,7 +300,7 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   tn = MPFR_PREC2LIMBS (bq + cq);
   MPFR_ASSERTD (tn <= k); /* tn <= k, thus no int overflow */
 
-  /* Check for no size_t overflow. */
+  /* Check for no size_t overflow*/
   MPFR_ASSERTD ((size_t) k <= ((size_t) -1) / MPFR_BYTES_PER_MP_LIMB);
   MPFR_TMP_MARK (marker);
   tmp = MPFR_TMP_LIMBS_ALLOC (k);
@@ -320,17 +318,17 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   MPFR_ASSERTD (bn >= cn);
   if (MPFR_LIKELY (bn <= 2))
     {
-      /* The 3 cases perform the same first operation. */
-      umul_ppmm (tmp[1], tmp[0], MPFR_MANT (b)[0], MPFR_MANT (c)[0]);
       if (bn == 1)
         {
           /* 1 limb * 1 limb */
+          umul_ppmm (tmp[1], tmp[0], MPFR_MANT (b)[0], MPFR_MANT (c)[0]);
           b1 = tmp[1];
         }
       else if (MPFR_UNLIKELY (cn == 1))
         {
           /* 2 limbs * 1 limb */
           mp_limb_t t;
+          umul_ppmm (tmp[1], tmp[0], MPFR_MANT (b)[0], MPFR_MANT (c)[0]);
           umul_ppmm (tmp[2], t, MPFR_MANT (b)[1], MPFR_MANT (c)[0]);
           add_ssaaaa (tmp[2], tmp[1], tmp[2], tmp[1], 0, t);
           b1 = tmp[2];
@@ -340,6 +338,7 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
           /* 2 limbs * 2 limbs */
           mp_limb_t t1, t2, t3;
           /* First 2 limbs * 1 limb */
+          umul_ppmm (tmp[1], tmp[0], MPFR_MANT (b)[0], MPFR_MANT (c)[0]);
           umul_ppmm (tmp[2], t1, MPFR_MANT (b)[1], MPFR_MANT (c)[0]);
           add_ssaaaa (tmp[2], tmp[1], tmp[2], tmp[1], 0, t1);
           /* Second, the other 2 limbs * 1 limb product */
@@ -370,8 +369,7 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
            exact values are a nightmare for the short product trick */
         bp = MPFR_MANT (b);
         cp = MPFR_MANT (c);
-        MPFR_STAT_STATIC_ASSERT (MPFR_MUL_THRESHOLD >= 1 &&
-                                 MPFR_SQR_THRESHOLD >= 1);
+        MPFR_ASSERTN (threshold >= 1);
         if (MPFR_UNLIKELY ((bp[0] == 0 && bp[1] == 0) ||
                            (cp[0] == 0 && cp[1] == 0)))
           {
@@ -386,7 +384,7 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
                 MPFR_ASSERTD (bn > 0);
               } /* This must end since the most significant limb is != 0 */
 
-            /* Check for c too: if b == c, this will do nothing */
+            /* Check for c too: if b ==c, will do nothing */
             while (*cp == 0)
               {
                 cp++;
@@ -394,7 +392,7 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
                 MPFR_ASSERTD (cn > 0);
               } /* This must end since the most significant limb is != 0 */
 
-            /* It is not the fastest way, but it is safer. */
+            /* It is not the faster way, but it is safer */
             MPFR_SET_SAME_SIGN (b_tmp, b);
             MPFR_SET_EXP (b_tmp, MPFR_GET_EXP (b));
             MPFR_PREC (b_tmp) = bn * GMP_NUMB_BITS;
@@ -529,7 +527,7 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   ax2 = ax + (mpfr_exp_t) (b1 - 1);
   MPFR_RNDRAW (inexact, a, tmp, bq+cq, rnd_mode, sign, ax2++);
   MPFR_TMP_FREE (marker);
-  MPFR_EXP (a) = ax2; /* Can't use MPFR_SET_EXP: Expo may be out of range */
+  MPFR_EXP  (a) = ax2; /* Can't use MPFR_SET_EXP: Expo may be out of range */
   MPFR_SET_SIGN (a, sign);
   if (MPFR_UNLIKELY (ax2 > __gmpfr_emax))
     return mpfr_overflow (a, rnd_mode, sign);

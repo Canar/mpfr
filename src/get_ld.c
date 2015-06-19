@@ -25,91 +25,8 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 #include "mpfr-impl.h"
 
-#if defined(HAVE_LDOUBLE_IS_DOUBLE)
+#ifndef HAVE_LDOUBLE_IEEE_EXT_LITTLE
 
-/* special code when "long double" is the same format as "double" */
-long double
-mpfr_get_ld (mpfr_srcptr x, mpfr_rnd_t rnd_mode)
-{
-  return (long double) mpfr_get_d (x, rnd_mode);
-}
-
-#elif defined(HAVE_LDOUBLE_IEEE_EXT_LITTLE)
-
-/* special code for IEEE 754 little-endian extended format */
-long double
-mpfr_get_ld (mpfr_srcptr x, mpfr_rnd_t rnd_mode)
-{
-  mpfr_long_double_t ld;
-  mpfr_t tmp;
-  int inex;
-  MPFR_SAVE_EXPO_DECL (expo);
-
-  MPFR_SAVE_EXPO_MARK (expo);
-
-  mpfr_init2 (tmp, MPFR_LDBL_MANT_DIG);
-  inex = mpfr_set (tmp, x, rnd_mode);
-
-  mpfr_set_emin (-16382-63);
-  mpfr_set_emax (16384);
-  mpfr_subnormalize (tmp, mpfr_check_range (tmp, inex, rnd_mode), rnd_mode);
-  mpfr_prec_round (tmp, 64, MPFR_RNDZ); /* exact */
-  if (MPFR_UNLIKELY (MPFR_IS_SINGULAR (tmp)))
-    ld.ld = (long double) mpfr_get_d (tmp, rnd_mode);
-  else
-    {
-      mp_limb_t *tmpmant;
-      mpfr_exp_t e, denorm;
-
-      tmpmant = MPFR_MANT (tmp);
-      e = MPFR_GET_EXP (tmp);
-      /* The smallest positive normal number is 2^(-16382), which is
-         0.5*2^(-16381) in MPFR, thus any exponent <= -16382 corresponds to a
-         subnormal number. The smallest positive subnormal number is 2^(-16445)
-         which is 0.5*2^(-16444) in MPFR thus 0 <= denorm <= 63. */
-      denorm = MPFR_UNLIKELY (e <= -16382) ? - e - 16382 + 1 : 0;
-      MPFR_ASSERTD (0 <= denorm && denorm < 64);
-#if GMP_NUMB_BITS >= 64
-      ld.s.manl = (tmpmant[0] >> denorm);
-      ld.s.manh = (tmpmant[0] >> denorm) >> 32;
-#elif GMP_NUMB_BITS == 32
-      if (MPFR_LIKELY (denorm == 0))
-        {
-          ld.s.manl = tmpmant[0];
-          ld.s.manh = tmpmant[1];
-        }
-      else if (denorm < 32)
-        {
-          ld.s.manl = (tmpmant[0] >> denorm) | (tmpmant[1] << (32 - denorm));
-          ld.s.manh = tmpmant[1] >> denorm;
-        }
-      else /* 32 <= denorm < 64 */
-        {
-          ld.s.manl = tmpmant[1] >> (denorm - 32);
-          ld.s.manh = 0;
-        }
-#else
-# error "GMP_NUMB_BITS must be 32 or >= 64"
-      /* Other values have never been supported anyway. */
-#endif
-      if (MPFR_LIKELY (denorm == 0))
-        {
-          ld.s.exph = (e + 0x3FFE) >> 8;
-          ld.s.expl = (e + 0x3FFE);
-        }
-      else
-        ld.s.exph = ld.s.expl = 0;
-      ld.s.sign = MPFR_IS_NEG (x);
-    }
-
-  mpfr_clear (tmp);
-  MPFR_SAVE_EXPO_FREE (expo);
-  return ld.ld;
-}
-
-#else
-
-/* generic code */
 long double
 mpfr_get_ld (mpfr_srcptr x, mpfr_rnd_t rnd_mode)
 {
@@ -125,57 +42,32 @@ mpfr_get_ld (mpfr_srcptr x, mpfr_rnd_t rnd_mode)
       mpfr_t y, z;
       int sign;
 
-#if defined(HAVE_LDOUBLE_MAYBE_DOUBLE_DOUBLE)
-      if (MPFR_LDBL_MANT_DIG == 106)
-        {
-          /* Assume double-double format (as found with the PowerPC ABI).
-             The generic code below isn't used because numbers with
-             precision > 106 would not be supported. */
-          sh = 0; /* force sh to 0 otherwise if say x = 2^1023 + 2^(-1074)
-                     then after shifting mpfr_get_d (y, rnd_mode) will
-                     underflow to 0 */
-          mpfr_init2 (y, mpfr_get_prec (x));
-          mpfr_init2 (z, IEEE_DBL_MANT_DIG); /* keep the precision small */
-          mpfr_set (y, x, rnd_mode); /* exact */
-          s = mpfr_get_d (x, MPFR_RNDN); /* high part of x */
-          mpfr_set_d (z, s, MPFR_RNDN);  /* exact */
-          mpfr_sub (y, x, z, MPFR_RNDN); /* exact */
-          /* Add the second part of y (in the correct rounding mode). */
-          r = (long double) s + (long double) mpfr_get_d (y, rnd_mode);
-        }
-      else
-#endif
-        {
-          /* First round x to the target long double precision, so that
-             all subsequent operations are exact (this avoids double rounding
-             problems). However if the format contains numbers that have more
-             precision, MPFR won't be able to generate such numbers. */
-          mpfr_init2 (y, MPFR_LDBL_MANT_DIG);
-          mpfr_init2 (z, MPFR_LDBL_MANT_DIG);
-          /* Note about the precision of z: even though IEEE_DBL_MANT_DIG is
-             sufficient, z has been set to the same precision as y so that
-             the mpfr_sub below calls mpfr_sub1sp, which is faster than the
-             generic subtraction, even in this particular case (from tests
-             done by Patrick Pelissier on a 64-bit Core2 Duo against r7285).
-             But here there is an important cancellation in the subtraction.
-             TODO: get more information about what has been tested. */
+      /* first round x to the target long double precision, so that
+         all subsequent operations are exact (this avoids double rounding
+         problems) */
+      mpfr_init2 (y, MPFR_LDBL_MANT_DIG);
+      mpfr_init2 (z, MPFR_LDBL_MANT_DIG);
+      /* Note about the precision of z: even though IEEE_DBL_MANT_DIG is
+         sufficient, z has been set to the same precision as y so that
+         the mpfr_sub below calls mpfr_sub1sp, which is faster than the
+         generic subtraction, even in this particular case (from tests
+         done by Patrick Pelissier on a 64-bit Core2 Duo against r7285).
+         But here there is an important cancellation in the subtraction.
+         TODO: get more information about what has been tested. */
 
-          mpfr_set (y, x, rnd_mode);
-          sh = MPFR_GET_EXP (y);
-          sign = MPFR_SIGN (y);
-          MPFR_SET_EXP (y, 0);
-          MPFR_SET_POS (y);
+      mpfr_set (y, x, rnd_mode);
+      sh = MPFR_GET_EXP (y);
+      sign = MPFR_SIGN (y);
+      MPFR_SET_EXP (y, 0);
+      MPFR_SET_POS (y);
 
-          r = 0.0;
-          do
-            {
-              s = mpfr_get_d (y, MPFR_RNDN); /* high part of y */
-              r += (long double) s;
-              mpfr_set_d (z, s, MPFR_RNDN);  /* exact */
-              mpfr_sub (y, y, z, MPFR_RNDN); /* exact */
-            }
-          while (!MPFR_IS_ZERO (y));
-        }
+      r = 0.0;
+      do {
+        s = mpfr_get_d (y, MPFR_RNDN); /* high part of y */
+        r += (long double) s;
+        mpfr_set_d (z, s, MPFR_RNDN);  /* exact */
+        mpfr_sub (y, y, z, MPFR_RNDN); /* exact */
+      } while (!MPFR_IS_ZERO (y));
 
       mpfr_clear (z);
       mpfr_clear (y);
@@ -184,7 +76,7 @@ mpfr_get_ld (mpfr_srcptr x, mpfr_rnd_t rnd_mode)
       MPFR_ASSERTD (r > 0);
       if (sh != 0)
         {
-          /* An overflow may occur (example: 0.5*2^1024) */
+          /* An overflow may occurs (example: 0.5*2^1024) */
           while (r < 1.0)
             {
               r += r;
@@ -213,6 +105,76 @@ mpfr_get_ld (mpfr_srcptr x, mpfr_rnd_t rnd_mode)
         r = -r;
       return r;
     }
+}
+
+#else
+
+long double
+mpfr_get_ld (mpfr_srcptr x, mpfr_rnd_t rnd_mode)
+{
+  mpfr_long_double_t ld;
+  mpfr_t tmp;
+  int inex;
+  MPFR_SAVE_EXPO_DECL (expo);
+
+  MPFR_SAVE_EXPO_MARK (expo);
+
+  mpfr_init2 (tmp, MPFR_LDBL_MANT_DIG);
+  inex = mpfr_set (tmp, x, rnd_mode);
+
+  mpfr_set_emin (-16382-63);
+  mpfr_set_emax (16384);
+  mpfr_subnormalize (tmp, mpfr_check_range (tmp, inex, rnd_mode), rnd_mode);
+  mpfr_prec_round (tmp, 64, MPFR_RNDZ); /* exact */
+  if (MPFR_UNLIKELY (MPFR_IS_SINGULAR (tmp)))
+    ld.ld = (long double) mpfr_get_d (tmp, rnd_mode);
+  else
+    {
+      mp_limb_t *tmpmant;
+      mpfr_exp_t e, denorm;
+
+      tmpmant = MPFR_MANT (tmp);
+      e = MPFR_GET_EXP (tmp);
+      /* the smallest normal number is 2^(-16382), which is 0.5*2^(-16381)
+         in MPFR, thus any exponent <= -16382 corresponds to a subnormal
+         number */
+      denorm = MPFR_UNLIKELY (e <= -16382) ? - e - 16382 + 1 : 0;
+#if GMP_NUMB_BITS >= 64
+      ld.s.manl = (tmpmant[0] >> denorm);
+      ld.s.manh = (tmpmant[0] >> denorm) >> 32;
+#elif GMP_NUMB_BITS == 32
+      if (MPFR_LIKELY (denorm == 0))
+        {
+          ld.s.manl = tmpmant[0];
+          ld.s.manh = tmpmant[1];
+        }
+      else if (denorm < 32)
+        {
+          ld.s.manl = (tmpmant[0] >> denorm) | (tmpmant[1] << (32 - denorm));
+          ld.s.manh = tmpmant[1] >> denorm;
+        }
+      else /* 32 <= denorm <= 64 */
+        {
+          ld.s.manl = tmpmant[1] >> (denorm - 32);
+          ld.s.manh = 0;
+        }
+#else
+# error "GMP_NUMB_BITS must be 32 or >= 64"
+      /* Other values have never been supported anyway. */
+#endif
+      if (MPFR_LIKELY (denorm == 0))
+        {
+          ld.s.exph = (e + 0x3FFE) >> 8;
+          ld.s.expl = (e + 0x3FFE);
+        }
+      else
+        ld.s.exph = ld.s.expl = 0;
+      ld.s.sign = MPFR_IS_NEG (x);
+    }
+
+  mpfr_clear (tmp);
+  MPFR_SAVE_EXPO_FREE (expo);
+  return ld.ld;
 }
 
 #endif

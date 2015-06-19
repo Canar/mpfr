@@ -20,6 +20,8 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 #define N 30000
@@ -29,9 +31,9 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
   mpfr_set_str_binary (x, t); \
   if (mpfr_cmp (x, y)) \
     { \
-      printf ("Error in mpfr_set_str (%d):\nexpected ", n); \
+      printf ("Error in mpfr_set_str (%d):\n", n); \
       mpfr_print_binary (x); \
-      printf ("\ngot      "); \
+      puts (""); \
       mpfr_print_binary (y); \
       puts (""); \
       mpfr_clear (x); \
@@ -98,8 +100,9 @@ int
 main (int argc, char *argv[])
 {
   mpfr_t x, y;
-  long nc, i;
-  char *str;
+  unsigned long k, bd, nc, i;
+  char *str, *str2;
+  mpfr_exp_t e;
   int base, logbase, prec, baseprec, ret, obase;
 
   tests_start_mpfr ();
@@ -117,59 +120,34 @@ main (int argc, char *argv[])
       return 0;
     }
 
+  mpfr_init2 (x, 2);
+
   nc = (argc > 1) ? atoi(argv[1]) : 53;
   if (nc < 100)
     nc = 100;
 
-  str = (char *) (*__gmp_allocate_func) (nc);
+  bd = randlimb () & 8;
 
-  mpfr_init2 (x, nc + 10);
+  str2 = str = (char*) (*__gmp_allocate_func) (nc);
 
-#define NR 50
-
-  for (i = 0; i < NR; i++)
+  if (bd)
     {
-      char *str2 = str;
-      long bd, k, lz;
-
-      bd = randlimb () & 8;  /* 0 or 8 */
-      lz = -bd;
-
-      if (bd)
-        {
-          for (k = 1; k <= bd; k++, str2++)
-            {
-              *str2 = '0' + (randlimb () & 1);
-              if (lz == -bd && *str2 != '0')
-                lz = k - bd; /* position of the first 1 */
-            }
-        }
-      else
-        *(str2++) = '0';
-
-      *(str2++) = '.';
-
-      for (k = 1; k < nc - 17 - bd; k++, str2++)
-        {
-          *str2 = '0' + (randlimb () & 1);
-          if (lz == -bd && *str2 != '0')
-            lz = k; /* position of the first 1 */
-        }
-
-      *(str2++) = 'e';
-
-      /* Half cases have an exponent around zero, the other half cases
-         have the minimum exponent for which the value is representable
-         (not a subnormal). */
-      sprintf (str2, "%" MPFR_EXP_FSPEC "d", i < NR/2 ?
-               ((mpfr_eexp_t) (randlimb () & 0xff) - 0x80) :
-               ((mpfr_eexp_t) mpfr_get_emin () + lz - 1));
-
-      /* if (i >= NR/2) printf ("lz = %ld, str: %s\n", lz, str); */
-      mpfr_set_str_binary (x, str);
+      for(k = 1; k <= bd; k++)
+        *(str2++) = (randlimb () & 1) + '0';
     }
+  else
+    *(str2++) = '0';
 
-  (*__gmp_free_func) (str, nc);
+  *(str2++) = '.';
+
+  for (k = 1; k < nc - 17 - bd; k++)
+    *(str2++) = '0' + (char) (randlimb () & 1);
+
+  *(str2++) = 'e';
+  sprintf (str2, "%d", (int) (randlimb () & INT_MAX) + INT_MIN/2);
+
+  mpfr_set_prec (x, nc + 10);
+  mpfr_set_str_binary (x, str);
 
   mpfr_set_prec (x, 54);
   mpfr_set_str_binary (x, "0.100100100110110101001010010101111000001011100100101010E-529");
@@ -200,6 +178,8 @@ main (int argc, char *argv[])
       mpfr_clear (y);
       exit (1);
     }
+
+  (*__gmp_free_func) (str, nc);
 
   mpfr_set_prec (x, 53);
   mpfr_set_str_binary (x, "+110101100.01010000101101000000100111001000101011101110E00");
@@ -234,10 +214,9 @@ main (int argc, char *argv[])
   prec = 53;
   mpfr_set_prec (x, prec);
   mpfr_set_prec (y, prec);
-  for (i = 0; i < N; i++)
+  for (i=0;i<N;i++)
     {
       mpfr_rnd_t rnd;
-      mpfr_exp_t e;
 
       mpfr_urandomb (x, RANDS);
       rnd = RND_RAND ();
@@ -253,8 +232,7 @@ main (int argc, char *argv[])
         baseprec = 1 + (prec - 2 + logbase) / logbase;
       str = mpfr_get_str (NULL, &e, base, baseprec, x, rnd);
       mpfr_set_str (y, str, base, rnd);
-      if (!MPFR_IS_ZERO(y))
-        MPFR_EXP(y) += logbase * (e - strlen (str));
+      MPFR_EXP(y) += logbase * (e - strlen (str));
       if (mpfr_cmp (x, y))
         {
           printf ("mpfr_set_str o mpfr_get_str <> id for rnd_mode=%s\n",
@@ -284,21 +262,21 @@ main (int argc, char *argv[])
 
       /*
       if (mpfr_set_str (x, "@Inf@garbage", i, MPFR_RNDN) != 0 ||
-          !mpfr_inf_p(x) || MPFR_IS_NEG (x))
+          !mpfr_inf_p(x) || MPFR_SIGN(x) < 0)
         {
           printf ("mpfr_set_str failed on @Inf@garbage\n");
           exit (1);
         }
 
       if (mpfr_set_str (x, "-@Inf@garbage", i, MPFR_RNDN) != 0 ||
-          !mpfr_inf_p(x) || MPFR_IS_POS (x))
+          !mpfr_inf_p(x) || MPFR_SIGN(x) > 0)
         {
           printf ("mpfr_set_str failed on -@Inf@garbage\n");
           exit (1);
         }
 
       if (mpfr_set_str (x, "+@Inf@garbage", i, MPFR_RNDN) != 0 ||
-          !mpfr_inf_p(x) || MPFR_IS_NEG (x))
+          !mpfr_inf_p(x) || MPFR_SIGN(x) < 0)
         {
           printf ("mpfr_set_str failed on +@Inf@garbage\n");
           exit (1);
@@ -316,21 +294,21 @@ main (int argc, char *argv[])
         }
 
       if (mpfr_set_str (x, "Inf", i, MPFR_RNDN) != 0 ||
-          !mpfr_inf_p(x) || MPFR_IS_NEG (x))
+          !mpfr_inf_p(x) || MPFR_SIGN(x) < 0)
         {
           printf ("mpfr_set_str failed on Inf\n");
           exit (1);
         }
 
       if (mpfr_set_str (x, "-Inf", i, MPFR_RNDN) != 0 ||
-          !mpfr_inf_p(x) || MPFR_IS_POS (x))
+          !mpfr_inf_p(x) || MPFR_SIGN(x) > 0)
         {
           printf ("mpfr_set_str failed on -Inf\n");
           exit (1);
         }
 
       if (mpfr_set_str (x, "+Inf", i, MPFR_RNDN) != 0 ||
-          !mpfr_inf_p(x) || MPFR_IS_NEG (x))
+          !mpfr_inf_p(x) || MPFR_SIGN(x) < 0)
         {
           printf ("mpfr_set_str failed on +Inf\n");
           exit (1);

@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 static void
@@ -538,7 +541,7 @@ atan2_pow_of_2 (void)
   mpfr_t x, y, r, g;
   int i;
   int d[] = { 0, -1, 1 };
-  int ntests = numberof (d);
+  int ntests = sizeof (d) / sizeof (int);
 
   mpfr_init2 (x, 53);
   mpfr_init2 (y, 53);
@@ -585,13 +588,13 @@ reduced_expo_range (void)
   mpfr_inits2 (12, x, y, ex_y, (mpfr_ptr) 0);
   mpfr_set_str (x, "0.1e-5", 2, MPFR_RNDN);
 
-  set_emin (-5);
-  set_emax (-5);
+  mpfr_set_emin (-5);
+  mpfr_set_emax (-5);
   mpfr_clear_flags ();
   inex = mpfr_atan (y, x, MPFR_RNDN);
   flags = __gmpfr_flags;
-  set_emin (emin);
-  set_emax (emax);
+  mpfr_set_emin (emin);
+  mpfr_set_emax (emax);
 
   mpfr_set_str (ex_y, "0.1e-5", 2, MPFR_RNDN);
   ex_inex = 1;

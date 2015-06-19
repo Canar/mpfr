@@ -25,7 +25,8 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #include "mpfr-impl.h"
 
 /* Check if we have to check the result of mpfr_add1sp with mpfr_add1 */
-#if MPFR_WANT_ASSERT >= 2
+#ifdef MPFR_WANT_ASSERT
+# if MPFR_WANT_ASSERT >= 2
 
 int mpfr_add1sp2 (mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_rnd_t);
 int mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
@@ -68,8 +69,9 @@ int mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   mpfr_clears (tmpa, tmpb, tmpc, (mpfr_ptr) 0);
   return inexact;
 }
-# define mpfr_add1sp mpfr_add1sp2
-#endif  /* MPFR_WANT_ASSERT >= 2 */
+#  define mpfr_add1sp mpfr_add1sp2
+# endif
+#endif
 
 /* Debugging support */
 #ifdef DEBUG
@@ -83,7 +85,7 @@ int mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
    Returns 0 iff result is exact,
    a negative value when the result is less than the exact value,
    a positive value otherwise. */
-MPFR_HOT_FUNCTION_ATTR int
+int
 mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
 {
   mpfr_uexp_t d;
@@ -104,7 +106,7 @@ mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   MPFR_ASSERTD(MPFR_GET_EXP(b) >= MPFR_GET_EXP(c));
 
   /* Read prec and num of limbs */
-  p = MPFR_GET_PREC (b);
+  p = MPFR_PREC(b);
   n = MPFR_PREC2LIMBS (p);
   MPFR_UNSIGNED_MINUS_MODULO(sh, p);
   bx = MPFR_GET_EXP(b);
@@ -126,20 +128,20 @@ mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
       mpn_rshift(ap, ap, n, 1);            /* Shift mantissa A */
       ap[n-1] |= MPFR_LIMB_HIGHBIT;        /* Set MSB */
       ap[0]   &= ~MPFR_LIMB_MASK(sh);      /* Clear LSB bit */
-      if ((limb & (MPFR_LIMB_ONE << sh)) == 0) /* Check exact case */
+      if (MPFR_LIKELY((limb&(MPFR_LIMB_ONE<<sh)) == 0)) /* Check exact case */
         { inexact = 0; goto set_exponent; }
       /* Zero: Truncate
          Nearest: Even Rule => truncate or add 1
          Away: Add 1 */
-      if (MPFR_LIKELY (rnd_mode == MPFR_RNDN))
+      if (MPFR_LIKELY(rnd_mode==MPFR_RNDN))
         {
-          if ((ap[0] & (MPFR_LIMB_ONE << sh)) == 0)
+          if (MPFR_LIKELY((ap[0]&(MPFR_LIMB_ONE<<sh))==0))
             { inexact = -1; goto set_exponent; }
           else
             goto add_one_ulp;
         }
       MPFR_UPDATE_RND_MODE(rnd_mode, MPFR_IS_NEG(b));
-      if (rnd_mode == MPFR_RNDZ)
+      if (rnd_mode==MPFR_RNDZ)
         { inexact = -1; goto set_exponent; }
       else
         goto add_one_ulp;
@@ -152,8 +154,8 @@ mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
           /* Away:    Add 1
              Nearest: Trunc
              Zero:    Trunc */
-          if (rnd_mode == MPFR_RNDN
-              || MPFR_IS_LIKE_RNDZ (rnd_mode, MPFR_IS_NEG (b)))
+          if (MPFR_LIKELY (rnd_mode==MPFR_RNDN
+                           || MPFR_IS_LIKE_RNDZ (rnd_mode, MPFR_IS_NEG (b))))
             {
             copy_set_exponent:
               ap = MPFR_MANT (a);
@@ -175,19 +177,19 @@ mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
           /* Away:    Add 1
              Nearest: Even Rule if C is a power of 2, else Add 1
              Zero:    Trunc */
-          if (MPFR_LIKELY (rnd_mode == MPFR_RNDN))
+          if (MPFR_LIKELY(rnd_mode==MPFR_RNDN))
             {
               /* Check if C was a power of 2 */
               cp = MPFR_MANT(c);
-              if (MPFR_UNLIKELY (cp[n-1] == MPFR_LIMB_HIGHBIT))
+              if (MPFR_UNLIKELY(cp[n-1] == MPFR_LIMB_HIGHBIT))
                 {
                   mp_size_t k = n-1;
-                  do
+                  do {
                     k--;
-                  while (k >= 0 && cp[k] == 0);
-                  if (MPFR_UNLIKELY (k < 0))
+                  } while (k>=0 && cp[k]==0);
+                  if (MPFR_UNLIKELY(k<0))
                     /* Power of 2: Even rule */
-                    if (((MPFR_MANT (b))[0] & (MPFR_LIMB_ONE << sh)) == 0)
+                    if ((MPFR_MANT (b)[0]&(MPFR_LIMB_ONE<<sh))==0)
                       goto copy_set_exponent;
                 }
               /* Not a Power of 2 */
@@ -214,10 +216,10 @@ mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
 
         dm = d % GMP_NUMB_BITS;
         m = d / GMP_NUMB_BITS;
-        if (MPFR_UNLIKELY (dm == 0))
+        if (MPFR_UNLIKELY(dm == 0))
           {
             /* dm = 0 and m > 0: Just copy */
-            MPFR_ASSERTD (m != 0);
+            MPFR_ASSERTD(m!=0);
             MPN_COPY(cp, MPFR_MANT(c)+m, n-m);
             MPN_ZERO(cp+n-m, m);
           }
@@ -244,22 +246,22 @@ mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
         {
           /* Try to compute them from C' rather than C */
           bcp = (cp[0] & (MPFR_LIMB_ONE<<(sh-1))) ;
-          if (MPFR_LIKELY (cp[0] & MPFR_LIMB_MASK (sh - 1)))
+          if (MPFR_LIKELY(cp[0]&MPFR_LIMB_MASK(sh-1)))
             bcp1 = 1;
           else
             {
               /* We can't compute C'p+1 from C'. Compute it from C */
               /* Start from bit x=p-d+sh in mantissa C
                  (+sh since we have already looked sh bits in C'!) */
-              mpfr_prec_t x = p - d + sh - 1;
-              if (MPFR_LIKELY (x > p))
+              mpfr_prec_t x = p-d+sh-1;
+              if (MPFR_LIKELY(x>p))
                 /* We are already looked at all the bits of c, so C'p+1 = 0*/
                 bcp1 = 0;
               else
                 {
                   mp_limb_t *tp = MPFR_MANT(c);
-                  mp_size_t kx = n - 1 - (x / GMP_NUMB_BITS);
-                  mpfr_prec_t sx = GMP_NUMB_BITS - 1 - (x % GMP_NUMB_BITS);
+                  mp_size_t kx = n-1 - (x / GMP_NUMB_BITS);
+                  mpfr_prec_t sx = GMP_NUMB_BITS-1-(x%GMP_NUMB_BITS);
                   DEBUG (printf ("(First) x=%lu Kx=%ld Sx=%lu\n",
                                  (unsigned long) x, (long) kx,
                                  (unsigned long) sx));
@@ -270,9 +272,9 @@ mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
                     {
                       /*kx += (sx==0);*/
                       /*If sx==0, tp[kx] hasn't been checked*/
-                      do
+                      do {
                         kx--;
-                      while (kx >= 0 && tp[kx] == 0);
+                      } while (kx>=0 && tp[kx]==0);
                       bcp1 = (kx >= 0);
                     }
                 }
@@ -283,20 +285,20 @@ mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
           /* Compute Cp and C'p+1 from C with sh=0 */
           mp_limb_t *tp = MPFR_MANT(c);
           /* Start from bit x=p-d in mantissa C */
-          mpfr_prec_t  x = p - d;
-          mp_size_t   kx = n - 1 - (x / GMP_NUMB_BITS);
-          mpfr_prec_t sx = GMP_NUMB_BITS - 1 - (x % GMP_NUMB_BITS);
-          MPFR_ASSERTD (p >= d);
-          bcp = tp[kx] & (MPFR_LIMB_ONE << sx);
+          mpfr_prec_t  x = p-d;
+          mp_size_t   kx = n-1 - (x / GMP_NUMB_BITS);
+          mpfr_prec_t sx = GMP_NUMB_BITS-1-(x%GMP_NUMB_BITS);
+          MPFR_ASSERTD(p >= d);
+          bcp = tp[kx] & (MPFR_LIMB_ONE<<sx);
           /* Looks at the last bits of limb kx (If sx=0, does nothing)*/
-          if (tp[kx] & MPFR_LIMB_MASK(sx))
+          if (tp[kx]&MPFR_LIMB_MASK(sx))
             bcp1 = 1;
           else
             {
-              do
+              do {
                 kx--;
-              while (kx >= 0 && tp[kx] == 0);
-              bcp1 = (kx >= 0);
+              } while (kx>=0 && tp[kx]==0);
+              bcp1 = (kx>=0);
             }
         }
       DEBUG (printf("sh=%u Cp=%lu C'p+1=%lu\n", sh,
@@ -334,22 +336,28 @@ mpfr_add1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
                    Even rule else */
       if (MPFR_LIKELY(rnd_mode == MPFR_RNDN))
         {
-          inexact = - (bcp1 != 0);
           if (MPFR_LIKELY(bcp == 0))
-            { goto set_exponent; }
+            { inexact = MPFR_LIKELY(bcp1) ? -1 : 0; goto set_exponent; }
           else if (MPFR_UNLIKELY(bcp1==0) && (ap[0]&(MPFR_LIMB_ONE<<sh))==0)
             { inexact = -1; goto set_exponent; }
           else
             goto add_one_ulp;
         }
       MPFR_UPDATE_RND_MODE(rnd_mode, MPFR_IS_NEG(b));
-      inexact = -(bcp != 0 || bcp1 != 0);
-      if (rnd_mode == MPFR_RNDZ || inexact == 0)
-        goto set_exponent;
+      if (rnd_mode == MPFR_RNDZ)
+        {
+          inexact = MPFR_LIKELY(bcp || bcp1) ? -1 : 0;
+          goto set_exponent;
+        }
       else
-        goto add_one_ulp;
+        {
+          if (MPFR_UNLIKELY(bcp==0 && bcp1==0))
+            { inexact = 0; goto set_exponent; }
+          else
+            goto add_one_ulp;
+        }
     }
-  MPFR_RET_NEVER_GO_HERE();
+  MPFR_ASSERTN(0);
 
  add_one_ulp:
   /* add one unit in last place to a */

@@ -30,8 +30,6 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 #ifdef _MPFR_H_HAVE_INTMAX_T
 
-#define uintmaxpml (sizeof(uintmax_t) / sizeof(mp_limb_t))
-
 int
 mpfr_set_uj (mpfr_t x, uintmax_t j, mpfr_rnd_t rnd)
 {
@@ -41,10 +39,10 @@ mpfr_set_uj (mpfr_t x, uintmax_t j, mpfr_rnd_t rnd)
 int
 mpfr_set_uj_2exp (mpfr_t x, uintmax_t j, intmax_t e, mpfr_rnd_t rnd)
 {
-  int cnt;
-  mp_size_t i, k;
+  unsigned int cnt, i;
+  mp_size_t k, len;
   mp_limb_t limb;
-  mp_limb_t yp[uintmaxpml];
+  mp_limb_t yp[sizeof(uintmax_t) / sizeof(mp_limb_t)];
   mpfr_t y;
   unsigned long uintmax_bit_size = sizeof(uintmax_t) * CHAR_BIT;
   unsigned long bpml = GMP_NUMB_BITS % uintmax_bit_size;
@@ -59,20 +57,13 @@ mpfr_set_uj_2exp (mpfr_t x, uintmax_t j, intmax_t e, mpfr_rnd_t rnd)
 
   MPFR_ASSERTN (sizeof(uintmax_t) % sizeof(mp_limb_t) == 0);
 
-  /* Create an auxiliary var */
+  /* Create an auxillary var */
   MPFR_TMP_INIT1 (yp, y, uintmax_bit_size);
-  /* The compiler will optimize the code by removing the useless branch. */
-  k = uintmaxpml;
-  if (uintmaxpml == 1)
-    {
-      limb = j;
-      count_leading_zeros(cnt, limb);
-      /* Normalize the most significant limb */
-      yp[0] = limb << cnt;
-    }
+  k = numberof (yp);
+  if (k == 1)
+    limb = yp[0] = j;
   else
     {
-      mp_size_t len;
       /* Note: either GMP_NUMB_BITS = uintmax_bit_size, then k = 1 the
          shift j >>= bpml is never done, or GMP_NUMB_BITS < uintmax_bit_size
          and bpml = GMP_NUMB_BITS. */
@@ -87,22 +78,23 @@ mpfr_set_uj_2exp (mpfr_t x, uintmax_t j, intmax_t e, mpfr_rnd_t rnd)
         }
       while (limb == 0);
       k++;
-      len = numberof (yp) - k;
-      count_leading_zeros(cnt, limb);
+    }
+  count_leading_zeros(cnt, limb);
+  len = numberof (yp) - k;
 
-      /* Normalize it: len = number of last zero limbs,
-         k = number of previous limbs */
-      if (MPFR_LIKELY (cnt != 0))
-        mpn_lshift (yp+len, yp, k, cnt);  /* Normalize the high limb */
-      else if (len != 0)
-        MPN_COPY_DECR (yp+len, yp, k);    /* Must use DECR */
-      if (len != 0)
-        {
-          if (len == 1)
-            yp[0] = MPFR_LIMB_ZERO;
-          else
-            MPN_ZERO (yp, len);   /* Zero the last limbs */
-        }
+  /* Normalize it: len = number of last 0 limb, k number of non-zero limbs */
+  if (MPFR_LIKELY(cnt))
+    mpn_lshift (yp+len, yp, k, cnt);  /* Normalize the High Limb*/
+  else if (len != 0)
+    MPN_COPY_DECR (yp+len, yp, k);    /* Must use DECR */
+  if (len != 0)
+    /* Note: when numberof(yp)==1, len is constant and null, so the compiler
+       can optimize out this code. */
+    {
+      if (len == 1)
+        yp[0] = (mp_limb_t) 0;
+      else
+        MPN_ZERO (yp, len);   /* Zeroing the last limbs */
     }
   e += k * GMP_NUMB_BITS - cnt;    /* Update Expo */
   MPFR_ASSERTD (MPFR_LIMB_MSB(yp[numberof (yp) - 1]) != 0);

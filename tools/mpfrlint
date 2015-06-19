@@ -6,49 +6,22 @@
 dir=`pwd`
 [ -d src ] || [ "`basename "$dir"`" != tools ] || cd ..
 
-# Detect the possible use of forbidden macros in mpfr.h, such as those
-# starting with "HAVE_" or "WANT_". Public macros defined by MPFR must
-# start with "MPFR_".
-perl -ne '/^#/ && ! /^# *error / or next; while (/\b([_A-Z]+)\b/g)
-  { my $m = $1;
-    $m =~ /^(_*MPFR_|_*GMP_|__(GNUC|ICC|STDC)(_|$)|_MSC_|U?INTMAX_C$)/
-      and next;
-    print "Forbidden macro in mpfr.h line $.: $m\n" }' src/mpfr.h
-
 grep '^# *include *<math\.h>' src/*.c
 
-flaglist="underflow|overflow|divby0|nanflag|inexflag|erangeflag"
-grep -E "mpfr_($flaglist)_p" src/*.{c,h} | \
-  grep -v -i 'mpfr_clear_' | \
+grep -E 'mpfr_(underflow|overflow|nanflag|inexflag|erangeflag)_p' src/*.{c,h} | \
+  grep -v 'mpfr_clear_' | \
   grep -v '^src/exceptions.c:' | \
   grep -v '^src/mpfr-impl.h:#define mpfr_.*_p()' | \
   grep -v '^src/mpfr.h:__MPFR_DECLSPEC '
-grep -E "mpfr_(clear|set)_($flaglist) *\(" src/*.{c,h} | \
-  grep -v '^src/exceptions.c:' | \
-  grep -v '^src/mpfr.h:'
 
-grconf()
-{
-  grep -v '^dnl ' acinclude.m4 configure.ac | grep -E "$1" && \
-    echo "in grconf '$1'"
-}
+grep -E 'if +(test|\[).* == ' acinclude.m4 configure.ac
+grep -E '="`' acinclude.m4 configure.ac
 
-grconf '^(.*if +|[[:space:]]*)(test|\[).* == '
-grconf '="`'
-grconf '[^a-z][ef]?grep[^a-z]'
-grconf '[^a-z]sed[^a-z]'
-
-srctests=`find src tests -name '*.[ch]' ! -name 'mini-gmp.*'`
+srctests=`find src tests -name '*.[ch]'`
 
 grep GMP_LIMB_BITS $srctests
 
 grep GMP_RND $srctests | grep -v '#define GMP_RND'
-
-# Note: exceptions __gmpn_rootrem and __gmpn_sbpi1_divappr_q
-# are normally used only if WANT_GMP_INTERNALS is defined.
-grep '__gmp[nz]_' $srctests | \
-  grep -v __gmpn_rootrem | \
-  grep -v __gmpn_sbpi1_divappr_q
 
 grep -E 'mp_(src)?ptr' $srctests
 
@@ -57,19 +30,13 @@ grep -E '[^0-9a-z_]_mpfr_(prec|sign|exp|d)' {src,tests}/*.c
 
 for i in exp prec rnd
 do
-  grep mp_${i}_t $srctests | \
+  grep mp_${i}_t {src,tests}/*.{c,h} | \
     grep -v "\(# *define\|# *ifndef\|typedef\) *mp_${i}_t" | \
     grep -v "\[mp_${i}_t\]"
 done
 
-for file in $srctests
-do
-  perl -e 'my $f = do { local $/; <> };
-           while ($f =~ /MPFR_LOG_MSG\s*\(\s*\(.*?\)\s*\)/gs) {
-             my $s = $&; print "$ARGV: $s\n" if
-               index($s,"\\n\"") < 0 || $s !~ /"\s*,/
-           }' $file
-done
+sp="[[:space:]]*"
+grep "MPFR_LOG_MSG$sp($sp($sp\".*\"$sp)$sp)$sp;" $srctests
 
 # Do not use snprintf as it is not available in ISO C90.
 # Even on platforms where it is available, the prototype
@@ -77,28 +44,12 @@ done
 # code may be compiled incorrectly.
 grep '[^a-z_]snprintf *([^)]' $srctests
 
-# Constant checking should use either MPFR_STAT_STATIC_ASSERT
-# or MPFR_ASSERTN(0) for not yet implemented corner cases.
+# Constant checking should use MPFR_ASSERTN, not MPFR_ASSERTD.
 # This test is a heuristic.
-# Note: as long as the support of _MPFR_EXP_FORMAT = 4 is not complete,
-# run-time assertions involving MPFR_EMAX_MAX, LONG_MAX, etc. should be
-# used instead of static assertions to allow testing and correction of
-# the code (then the removal of the assertions).
-grep 'MPFR_ASSERT[DN][^a-z]*;' src/*.c | grep -v 'MPFR_ASSERTN *(0)' | \
-  grep -v '\(MPFR_EMAX_MAX\|MPFR_EXP_MAX\).*LONG_MAX' | \
-  grep -v '\(MPFR_EMIN_MIN\|MPFR_EXP_MIN\).*LONG_MIN' | \
-  grep -v MPFR_BLOCK_EXCEP
-
-# MPFR_ASSERTD or MPFR_ASSERTN must be used for assertions, not ASSERT.
-grep -E '[^_]ASSERT *(\(|$)' {src,tests}/*.c
+grep 'MPFR_ASSERTD[^a-z]*;' src/*.c
 
 # Use MPFR_TMP_LIMBS_ALLOC.
 grep 'MPFR_TMP_ALLOC.*\(BYTES_PER_MP_LIMB\|sizeof.*mp_limb_t\)' src/*.c
-
-# Use simple mp_limb_t constants: MPFR_LIMB_ZERO, MPFR_LIMB_ONE, etc.
-# possibly except in MPFR_STAT_STATIC_ASSERT
-grep '(mp_limb_t) *-\?[01]' $srctests | grep -v '#define MPFR_LIMB_' | \
-  grep -v MPFR_STAT_STATIC_ASSERT
 
 for file in $srctests */Makefile.am acinclude.m4 configure.ac
 do
@@ -108,19 +59,13 @@ do
     \"Line \$. of file '$file' has more than 2046 bytes.\n\"" "$file"
 done
 
-# Code style: a sign decimal constant for mpfr_set_inf and mpfr_set_zero
-# should be either 1 or -1 (except for the tests in tset.c).
-grep -E 'mpfr_set_(inf|zero) *\([^,]*, *[-+]?([02-9]|1[^)])' $srctests | \
-  grep -v tests/tset\\.c:
-
 # In general, one needs to include mpfr-impl.h (note that some platforms
 # such as MS Windows use a config.h, which is included by mpfr-impl.h).
 for file in src/*.c
 do
   [ "$file" = src/jyn_asympt.c ] || \
-    [ "$file" = src/mini-gmp.c ] || \
     [ "$file" = src/round_raw_generic.c ] || \
-    grep -q '^# *include *"\(mpfr-impl\|fits.*\|gen_inverse\|random_deviate\)\.h"' $file || \
+    grep -q '^# *include *"\(mpfr-impl\|fits.*\|gen_inverse\)\.h"' $file || \
     echo "Missing '#include \"mpfr-impl.h\"' in $file?"
 done
 
@@ -128,7 +73,7 @@ done
 # as they need <stdarg.h> (HAVE_STDARG defined).
 for file in tests/*.c
 do
-  sed '/#if\(def\| *defined *(\)\? *HAVE_STDARG/,/#\(endif\|else\) .*HAVE_STDARG/d
+  sed '/#if\(def\)\? *HAVE_STDARG/,/#\(endif\|else\) .*HAVE_STDARG/d
        /\/\*.*\*\//d
        /\/\*/,/\*\//d' $file | grep -q "mpfr_[a-z]*printf" && \
     echo "$file contains unprotected mpfr_printf-like function calls"
@@ -172,11 +117,6 @@ autoconf minimal versions differ:
   README.dev:   $acv1
   acinclude.m4: $acv2
 EOF
-
-# In case of problems, one can also skip files or use "grep -v"...
-which codespell > /dev/null 2> /dev/null &&
-  codespell -q3 -S algorithm2e.sty,algorithms.tex,texinfo.tex \
-    AUTHORS BUGS INSTALL NEWS README TODO doc examples $srctests
 
 cd "$dir"
 "`dirname -- "$0"`"/check_inits_clears

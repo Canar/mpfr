@@ -281,7 +281,7 @@ mpfr_rint (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
         }
 
       if (sh != 0)
-        rp[0] &= MPFR_LIMB_MAX << sh;
+        rp[0] &= MP_LIMB_T_MAX << sh;
 
       /* If u is a representable integer, there is no rounding. */
       if (uflags == 0)
@@ -352,7 +352,7 @@ mpfr_rint_round (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
     {
       mpfr_t tmp;
       int inex;
-      mpfr_flags_t saved_flags = __gmpfr_flags;
+      unsigned int saved_flags = __gmpfr_flags;
       MPFR_BLOCK_DECL (flags);
 
       mpfr_init2 (tmp, MPFR_PREC (u));
@@ -378,7 +378,7 @@ mpfr_rint_trunc (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
     {
       mpfr_t tmp;
       int inex;
-      mpfr_flags_t saved_flags = __gmpfr_flags;
+      unsigned int saved_flags = __gmpfr_flags;
 
       mpfr_init2 (tmp, MPFR_PREC (u));
       /* trunc(u) is always representable in tmp */
@@ -401,7 +401,7 @@ mpfr_rint_ceil (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
     {
       mpfr_t tmp;
       int inex;
-      mpfr_flags_t saved_flags = __gmpfr_flags;
+      unsigned int saved_flags = __gmpfr_flags;
       MPFR_BLOCK_DECL (flags);
 
       mpfr_init2 (tmp, MPFR_PREC (u));
@@ -427,7 +427,7 @@ mpfr_rint_floor (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
     {
       mpfr_t tmp;
       int inex;
-      mpfr_flags_t saved_flags = __gmpfr_flags;
+      unsigned int saved_flags = __gmpfr_flags;
       MPFR_BLOCK_DECL (flags);
 
       mpfr_init2 (tmp, MPFR_PREC (u));

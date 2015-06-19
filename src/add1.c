@@ -24,7 +24,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 /* compute sign(b) * (|b| + |c|), assuming b and c have same sign,
    and are not NaN, Inf, nor zero. */
-MPFR_HOT_FUNCTION_ATTR int
+int
 mpfr_add1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
 {
   mp_limb_t *ap, *bp, *cp;
@@ -40,9 +40,9 @@ mpfr_add1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
 
   MPFR_TMP_MARK(marker);
 
-  aq = MPFR_GET_PREC (a);
-  bq = MPFR_GET_PREC (b);
-  cq = MPFR_GET_PREC (c);
+  aq = MPFR_PREC(a);
+  bq = MPFR_PREC(b);
+  cq = MPFR_PREC(c);
 
   an = MPFR_PREC2LIMBS (aq); /* number of limbs of a */
   aq2 = (mpfr_prec_t) an * GMP_NUMB_BITS;
@@ -153,7 +153,7 @@ mpfr_add1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
         MPN_COPY(a2p - difn, cp + (cn - difn), difn);
 
       /* add b to a */
-      cc = an > bn
+      cc = MPFR_UNLIKELY(an > bn)
         ? mpn_add_n(ap + (an - bn), ap + (an - bn), bp, bn)
         : mpn_add_n(ap, ap, bp + (bn - an), an);
 
@@ -234,7 +234,7 @@ mpfr_add1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
           MPFR_ASSERTD(fb != 0);
           if (fb > 0)
             {
-              if (bb != MPFR_LIMB_MAX)
+              if (bb != MP_LIMB_T_MAX)
                 {
                   fb = 1; /* c hasn't been taken into account
                              ==> sticky bit != 0 */
@@ -249,7 +249,7 @@ mpfr_add1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
                   bb |= MPFR_LIMB_HIGHBIT;
                 }
               fb = 1;
-              if (bb != MPFR_LIMB_MAX)
+              if (bb != MP_LIMB_T_MAX)
                 goto rounding;
             }
 
@@ -318,7 +318,7 @@ mpfr_add1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
                 }
 
               fb = bb != 0;
-              if (fb && bb != MPFR_LIMB_MAX)
+              if (fb && bb != MP_LIMB_T_MAX)
                 goto rounding;
             } /* fb < 0 */
 
@@ -368,7 +368,7 @@ mpfr_add1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
                   fb = 1;
                   goto rounding;
                 }
-              if (fb && bb != MPFR_LIMB_MAX)
+              if (fb && bb != MP_LIMB_T_MAX)
                 goto rounding;
             } /* while */
 

@@ -23,22 +23,13 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #ifndef __MPFR_TEST_H__
 #define __MPFR_TEST_H__
 
-/* The no assertion request doesn't apply to the tests */
-#if defined(MPFR_WANT_ASSERT)
-# if MPFR_WANT_ASSERT < 0
-#  undef MPFR_WANT_ASSERT
-# endif
-#endif
+#include <stdio.h>
 
 #include "mpfr-impl.h"
 
-#if defined (__cplusplus)
-extern "C" {
-#endif
-
 /* generates a random long int, a random double,
    and corresponding seed initializing */
-#define DBL_RAND() ((double) randlimb() / (double) MPFR_LIMB_MAX)
+#define DBL_RAND() ((double) randlimb() / (double) MP_LIMB_T_MAX)
 
 #define MINNORM 2.2250738585072013831e-308 /* 2^(-1022), smallest normalized */
 #define MAXNORM 1.7976931348623157081e308 /* 2^(1023)*(2-2^(-52)) */
@@ -72,6 +63,10 @@ extern "C" {
 
 #define FLIST mpfr_ptr, mpfr_srcptr, mpfr_rnd_t
 
+#if defined (__cplusplus)
+extern "C" {
+#endif
+
 int test_version _MPFR_PROTO ((void));
 
 void tests_memory_start _MPFR_PROTO ((void));
@@ -79,8 +74,6 @@ void tests_memory_end _MPFR_PROTO ((void));
 
 void tests_start_mpfr _MPFR_PROTO ((void));
 void tests_end_mpfr _MPFR_PROTO ((void));
-
-void tests_expect_abort _MPFR_PROTO ((void));
 
 int mpfr_set_machine_rnd_mode _MPFR_PROTO ((mpfr_rnd_t));
 void mpfr_test_init _MPFR_PROTO ((void));
@@ -112,6 +105,10 @@ int mpfr_cmp_str _MPFR_PROTO ((mpfr_srcptr x, const char *, int, mpfr_rnd_t));
 #define mpfr_cmp0(x,y) (MPFR_ASSERTN (!MPFR_IS_NAN (x) && !MPFR_IS_NAN (y)), mpfr_cmp (x,y))
 #define mpfr_cmp_ui0(x,i) (MPFR_ASSERTN (!MPFR_IS_NAN (x)), mpfr_cmp_ui (x,i))
 
+#if defined (__cplusplus)
+}
+#endif
+
 /* define CHECK_EXTERNAL if you want to check mpfr against another library
    with correct rounding. You'll probably have to modify mpfr_print_raw()
    and/or test_add() below:
@@ -134,7 +131,7 @@ mpfr_print_raw (mpfr_srcptr x)
       return;
     }
 
-  if (MPFR_IS_NEG (x))
+  if (MPFR_SIGN (x) < 0)
     printf ("-");
 
   if (MPFR_IS_INF (x))
@@ -171,40 +168,6 @@ mpfr_print_raw (mpfr_srcptr x)
             }
         }
     }
-}
-#endif
-
-/* Random */
-__MPFR_DECLSPEC extern char             mpfr_rands_initialized;
-__MPFR_DECLSPEC extern gmp_randstate_t  mpfr_rands;
-
-#undef RANDS
-#define RANDS                                   \
-  ((mpfr_rands_initialized ? 0                 \
-    : (mpfr_rands_initialized = 1,             \
-       gmp_randinit_default (mpfr_rands), 0)), \
-   mpfr_rands)
-
-#undef RANDS_CLEAR
-#define RANDS_CLEAR()                   \
-  do {                                  \
-    if (mpfr_rands_initialized)        \
-      {                                 \
-        mpfr_rands_initialized = 0;    \
-        gmp_randclear (mpfr_rands);    \
-      }                                 \
-  } while (0)
-
-typedef __gmp_randstate_struct *mpfr_gmp_randstate_ptr;
-
-/* Allocation */
-__MPFR_DECLSPEC void *mpfr_default_allocate _MPFR_PROTO ((size_t));
-__MPFR_DECLSPEC void *mpfr_default_reallocate _MPFR_PROTO ((void *, size_t,
-                                                             size_t));
-__MPFR_DECLSPEC void mpfr_default_free _MPFR_PROTO ((void *, size_t));
-
-
-#if defined (__cplusplus)
 }
 #endif
 

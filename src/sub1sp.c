@@ -1,4 +1,4 @@
-/* mpfr_sub1sp -- internal function to perform a "real" subtraction
+/* mpfr_sub1sp -- internal function to perform a "real" substraction
    All the op must have the same precision
 
 Copyright 2003-2015 Free Software Foundation, Inc.
@@ -25,7 +25,8 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #include "mpfr-impl.h"
 
 /* Check if we have to check the result of mpfr_sub1sp with mpfr_sub1 */
-#if MPFR_WANT_ASSERT >= 2
+#ifdef MPFR_WANT_ASSERT
+# if MPFR_WANT_ASSERT >= 2
 
 int mpfr_sub1sp2 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode);
 int mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
@@ -66,8 +67,9 @@ int mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   mpfr_clears (tmpa, tmpb, tmpc, (mpfr_ptr) 0);
   return inexact;
 }
-# define mpfr_sub1sp mpfr_sub1sp2
-#endif  /* MPFR_WANT_ASSERT >= 2 */
+#  define mpfr_sub1sp mpfr_sub1sp2
+# endif
+#endif
 
 /* Debugging support */
 #ifdef DEBUG
@@ -129,7 +131,7 @@ int mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
  *
  */
 
-MPFR_HOT_FUNCTION_ATTR int
+int
 mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
 {
   mpfr_exp_t bx,cx;
@@ -140,7 +142,7 @@ mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   mp_limb_t limb;
   int inexact;
   mp_limb_t bcp,bcp1; /* Cp and C'p+1 */
-  mp_limb_t bbcp = MPFR_LIMB_MAX, bbcp1 = MPFR_LIMB_MAX; /* Cp+1 and C'p+2,
+  mp_limb_t bbcp = (mp_limb_t) -1, bbcp1 = (mp_limb_t) -1; /* Cp+1 and C'p+2,
     gcc claims that they might be used uninitialized. We fill them with invalid
     values, which should produce a failure if so. See README.dev file. */
 
@@ -153,7 +155,7 @@ mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   MPFR_ASSERTD(MPFR_IS_PURE_FP(c));
 
   /* Read prec and num of limbs */
-  p = MPFR_GET_PREC (b);
+  p = MPFR_PREC (b);
   n = MPFR_PREC2LIMBS (p);
 
   /* Fast cmp of |b| and |c|*/
@@ -229,7 +231,7 @@ mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
                   mpn_lshift(ap, ap, n, cnt); /* Normalize number */
                   bx -= cnt; /* Update final expo */
                 }
-              /* Last limb should be OK */
+              /* Last limb should be ok */
               MPFR_ASSERTD(!(ap[0] & MPFR_LIMB_MASK((unsigned int) (-p)
                                                     % GMP_NUMB_BITS)));
             }
@@ -259,7 +261,7 @@ mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
                 }
               MPN_ZERO(ap, len); /* Zeroing the last limbs */
               bx -= cnt + len*GMP_NUMB_BITS; /* Update Expo */
-              /* Last limb should be OK */
+              /* Last limb should be ok */
               MPFR_ASSERTD(!(ap[len]&MPFR_LIMB_MASK((unsigned int) (-p)
                                                     % GMP_NUMB_BITS)));
             }
@@ -428,7 +430,7 @@ mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
           DEBUG( printf("(D=P) Cp=-1 Cp+1=%d C'p+1=%d \n", bbcp!=0, bcp1!=0) );
           bp = MPFR_MANT (b);
 
-          /* Even if src and dest overlap, it is OK using MPN_COPY */
+          /* Even if src and dest overlap, it is ok using MPN_COPY */
           if (MPFR_LIKELY(rnd_mode == MPFR_RNDN))
             {
               if (MPFR_UNLIKELY( bcp && bcp1==0 ))
@@ -647,7 +649,7 @@ mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
           mpn_lshift(ap, ap, n, 1);
           /* Ap >= 100000xxx010 */
           if (MPFR_UNLIKELY(bcp!=0)) /* Check if Cp = -1 */
-            /* Since Cp == -1, we have to subtract one more */
+            /* Since Cp == -1, we have to substract one more */
             {
               mpn_sub_1(ap, ap, n, MPFR_LIMB_ONE<<sh);
               MPFR_ASSERTD(MPFR_LIMB_MSB(ap[n-1]) != 0);
@@ -656,11 +658,11 @@ mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
           /* Final exponent -1 since we have shifted the mantissa */
           bx--;
           /* Update bcp and bcp1 */
-          MPFR_ASSERTD(bbcp != MPFR_LIMB_MAX);
-          MPFR_ASSERTD(bbcp1 != MPFR_LIMB_MAX);
+          MPFR_ASSERTN(bbcp != (mp_limb_t) -1);
+          MPFR_ASSERTN(bbcp1 != (mp_limb_t) -1);
           bcp  = bbcp;
           bcp1 = bbcp1;
-          /* We don't have anymore a valid Cp+1!
+          /* We dont't have anymore a valid Cp+1!
              But since Ap >= 100000xxx001, the final sub can't unnormalize!*/
         }
       MPFR_ASSERTD( !(ap[0] & ~mask) );
@@ -689,14 +691,12 @@ mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   mpn_sub_1 (ap, ap, n, MPFR_LIMB_ONE << sh);
   /* Result should be smaller than exact value: inexact=-1 */
   inexact = -1;
-  /* Check normalization */
+  /* Check normalisation */
   if (MPFR_UNLIKELY(MPFR_LIMB_MSB(ap[n-1]) == 0))
     {
       /* ap was a power of 2, and we lose a bit */
       /* Now it is 0111111111111111111[00000 */
-      /* The following 2 lines are equivalent to: mpn_lshift(ap, ap, n, 1); */
-      ap[0] <<= 1;
-      ap[n-1] |= MPFR_LIMB_HIGHBIT;
+      mpn_lshift(ap, ap, n, 1);
       bx--;
       /* And the lost bit x depends on Cp+1, and Cp */
       /* Compute Cp+1 if it isn't already compute (ie d==1) */
@@ -706,7 +706,7 @@ mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
       DEBUG( printf("(SubOneUlp)Cp=%d, Cp+1=%d C'p+1=%d\n", bcp!=0,bbcp!=0,bcp1!=0));
       /* Compute the last bit (Since we have shifted the mantissa)
          we need one more bit!*/
-      MPFR_ASSERTD(bbcp != MPFR_LIMB_MAX);
+      MPFR_ASSERTN(bbcp != (mp_limb_t) -1);
       if ( (rnd_mode == MPFR_RNDZ && bcp==0)
            || (rnd_mode==MPFR_RNDN && bbcp==0)
            || (bcp && bcp1==0) ) /*Exact result*/
@@ -744,10 +744,10 @@ mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   if (MPFR_UNLIKELY(ap[n-1] == MPFR_LIMB_HIGHBIT))
     {
       mp_size_t k = n-1;
-      do
+      do {
         k--;
-      while (k >= 0 && ap[k] == 0);
-      if (MPFR_UNLIKELY (k < 0))
+      } while (k>=0 && ap[k]==0);
+      if (MPFR_UNLIKELY(k<0))
         {
           /* It is a power of 2! */
           /* Compute Cp+1 if it isn't already compute (ie d==1) */
@@ -756,34 +756,34 @@ mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
             bbcp=0;
           DEBUG( printf("(Truncate) Cp=%d, Cp+1=%d C'p+1=%d C'p+2=%d\n", \
                  bcp!=0, bbcp!=0, bcp1!=0, bbcp1!=0) );
-          MPFR_ASSERTD(bbcp != MPFR_LIMB_MAX);
-          MPFR_ASSERTD(rnd_mode != MPFR_RNDN || bcp != 0 ||
-                       bbcp == 0 || bbcp1 != MPFR_LIMB_MAX);
+          MPFR_ASSERTN(bbcp != (mp_limb_t) -1);
+          MPFR_ASSERTN((rnd_mode != MPFR_RNDN) || (bcp != 0) || (bbcp == 0) || (bbcp1 != (mp_limb_t) -1));
           if (((rnd_mode != MPFR_RNDZ) && bcp)
               ||
               ((rnd_mode == MPFR_RNDN) && (bcp == 0) && (bbcp) && (bbcp1)))
             {
               DEBUG( printf("(Truncate) Do sub\n") );
               mpn_sub_1 (ap, ap, n, MPFR_LIMB_ONE << sh);
-              ap[n-1] |= MPFR_LIMB_HIGHBIT;
+              mpn_lshift(ap, ap, n, 1);
+              ap[0] |= MPFR_LIMB_ONE<<sh;
               bx--;
               /* FIXME: Explain why it works (or why not)... */
-              inexact = (bcp1 == 0) ? 0 : (rnd_mode == MPFR_RNDN) ? -1 : 1;
+              inexact = (bcp1 == 0) ? 0 : (rnd_mode==MPFR_RNDN) ? -1 : 1;
               goto end_of_sub;
             }
         }
     }
 
   /* Calcul of Inexact flag.*/
-  inexact = (bcp != 0 || bcp1 != 0);
+  inexact = MPFR_LIKELY(bcp || bcp1) ? 1 : 0;
 
  end_of_sub:
-  /* Update Exponent */
-  /* bx >= emin. Proof:
+  /* Update Expo */
+  /* FIXME: Is this test really useful?
       If d==0      : Exact case. This is never called.
       if 1 < d < p : bx=MPFR_EXP(b) or MPFR_EXP(b)-1 > MPFR_EXP(c) > emin
       if d == 1    : bx=MPFR_EXP(b). If we could lose any bits, the exact
-                     normalization is called.
+                     normalisation is called.
       if d >=  p   : bx=MPFR_EXP(b) >= MPFR_EXP(c) + p > emin
      After SubOneUlp, we could have one bit less.
       if 1 < d < p : bx >= MPFR_EXP(b)-2 >= MPFR_EXP(c) > emin
@@ -791,6 +791,18 @@ mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
       if d >=  p   : bx >= MPFR_EXP(b)-1 > emin since p>=2.
   */
   MPFR_ASSERTD( bx >= __gmpfr_emin);
+  /*
+    if (MPFR_UNLIKELY(bx < __gmpfr_emin))
+    {
+      DEBUG( printf("(Final Underflow)\n") );
+      if (rnd_mode == MPFR_RNDN &&
+          (bx < __gmpfr_emin - 1 ||
+           (inexact >= 0 && mpfr_powerof2_raw (a))))
+        rnd_mode = MPFR_RNDZ;
+      MPFR_TMP_FREE(marker);
+      return mpfr_underflow (a, rnd_mode, MPFR_SIGN(a));
+    }
+  */
   MPFR_SET_EXP (a, bx);
 
   MPFR_TMP_FREE(marker);

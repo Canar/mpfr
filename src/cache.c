@@ -37,11 +37,9 @@ mpfr_init_cache (mpfr_cache_t cache, int (*func)(mpfr_ptr, mpfr_rnd_t))
 void
 mpfr_clear_cache (mpfr_cache_t cache)
 {
-  if (MPFR_UNLIKELY (MPFR_PREC (cache->x) != 0))
-    {
-      mpfr_clear (cache->x);
-      MPFR_PREC (cache->x) = 0;
-    }
+  if (MPFR_PREC (cache->x) != 0)
+    mpfr_clear (cache->x);
+  MPFR_PREC (cache->x) = 0;
 }
 
 int
@@ -56,26 +54,20 @@ mpfr_cache (mpfr_ptr dest, mpfr_cache_t cache, mpfr_rnd_t rnd)
 
   if (MPFR_UNLIKELY (prec > pold))
     {
-      /* No previous result in the cache or the precision of the previous
-         result is not sufficient. We increase the cache size by at least
-         10% to avoid invalidating the cache many times if one performs
-         several computations with small increase of precision. */
+      /* No previous result in the cache or the precision of the
+         previous result is not sufficient. */
 
       if (MPFR_UNLIKELY (pold == 0))  /* No previous result. */
-        mpfr_init2 (cache->x, prec);  /* as pold = prec below */
-      else
-        pold += pold / 10;
+        mpfr_init2 (cache->x, prec);
 
-      if (pold < prec)
-        pold = prec;
-
+      /* Update the cache. */
+      pold = prec;
       /* no need to keep the previous value */
       mpfr_set_prec (cache->x, pold);
       cache->inexact = (*cache->func) (cache->x, MPFR_RNDN);
     }
 
-  MPFR_ASSERTD (pold >= prec);
-  MPFR_ASSERTD (MPFR_PREC (cache->x) == pold);
+  /* now pold >= prec is the precision of cache->x */
 
   /* First, check if the cache has the exact value (unlikely).
      Else the exact value is between (assuming x=cache->x > 0):
@@ -86,7 +78,7 @@ mpfr_cache (mpfr_ptr dest, mpfr_cache_t cache, mpfr_rnd_t rnd)
   /* we assume all cached constants are positive */
   MPFR_ASSERTN (MPFR_IS_POS (cache->x)); /* TODO... */
   sign = MPFR_SIGN (cache->x);
-  MPFR_EXP (dest) = MPFR_GET_EXP (cache->x);
+  MPFR_SET_EXP (dest, MPFR_GET_EXP (cache->x));
   MPFR_SET_SIGN (dest, sign);
 
   /* round cache->x from precision pold down to precision prec */
@@ -113,8 +105,6 @@ mpfr_cache (mpfr_ptr dest, mpfr_cache_t cache, mpfr_rnd_t rnd)
                      mpfr_overflow (dest, rnd, sign);
                   );
 
-  /* Rather a likely, this is a 100% succes rate for
-     all constants of MPFR */
   if (MPFR_LIKELY (cache->inexact != 0))
     {
       switch (rnd)

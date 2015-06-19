@@ -38,15 +38,16 @@ static void
 mpfr_atan_aux (mpfr_ptr y, mpz_ptr p, long r, int m, mpz_t *tab)
 {
   mpz_t *S, *Q, *ptoj;
-  mp_bitcnt_t n, i, k, j, l;  /* unsigned type, which is >= unsigned long */
+  unsigned long n, i, k, j, l;
   mpfr_exp_t diff, expo;
   int im, done;
-  mpfr_prec_t mult;
-  mpfr_prec_t accu[MPFR_PREC_BITS], log2_nb_terms[MPFR_PREC_BITS];
+  mpfr_prec_t mult, *accu, *log2_nb_terms;
   mpfr_prec_t precy = MPFR_PREC(y);
 
   MPFR_ASSERTD(mpz_cmp_ui (p, 0) != 0);
-  MPFR_ASSERTD (m+1 <= MPFR_PREC_BITS);
+
+  accu = (mpfr_prec_t*) (*__gmp_allocate_func) ((2 * m + 2) * sizeof (mpfr_prec_t));
+  log2_nb_terms = accu + m + 1;
 
   /* Set Tables */
   S    = tab;           /* S */
@@ -60,12 +61,9 @@ mpfr_atan_aux (mpfr_ptr y, mpz_ptr p, long r, int m, mpz_t *tab)
 
   /* Normalize p */
   n = mpz_scan1 (p, 0);
-  if (n > 0)
-    {
-      mpz_tdiv_q_2exp (p, p, n); /* exact */
-      MPFR_ASSERTD (r > n);
-      r -= n;
-    }
+  mpz_tdiv_q_2exp (p, p, n); /* exact */
+  MPFR_ASSERTD (r > n);
+  r -= n;
   /* since |p/2^r| < 1, and p is a non-zero integer, necessarily r > 0 */
 
   MPFR_ASSERTD (mpz_sgn (p) > 0);
@@ -92,7 +90,6 @@ mpfr_atan_aux (mpfr_ptr y, mpz_ptr p, long r, int m, mpz_t *tab)
         mpz_mul (ptoj[im], ptoj[im - 1], ptoj[im - 1]);
       /* main loop */
       n = 1UL << m;
-      MPFR_ASSERTN (n != 0);  /* no overflow */
       /* the ith term being X^i/(2i+1) with X=p/2^r, we can stop when
          p^i/2^(r*i) < 2^(-precy), i.e. r*i > precy + log2(p^i) */
       for (i = k = done = 0; (i < n) && (done == 0); i += 2, k ++)
@@ -118,6 +115,7 @@ mpfr_atan_aux (mpfr_ptr y, mpz_ptr p, long r, int m, mpz_t *tab)
               log2_nb_terms[k-1] = l + 1;
               /* now S[k-1]/Q[k-1] corresponds to 2^(l+1) terms */
               MPFR_MPZ_SIZEINBASE2(mult, ptoj[l+1]);
+              /* FIXME: precompute bits(ptoj[l+1]) outside the loop? */
               mult = (r << (l + 1)) - mult - 1;
               accu[k-1] = (k == 1) ? mult : accu[k-2] + mult;
               if (accu[k-1] > precy)
@@ -129,7 +127,6 @@ mpfr_atan_aux (mpfr_ptr y, mpz_ptr p, long r, int m, mpz_t *tab)
           we can stop when r*i > precy i.e. i > precy/r */
     {
       n = 1UL << m;
-      MPFR_ASSERTN (n != 0);  /* no overflow */
       for (i = k = 0; (i < n) && (i <= precy / r); i += 2, k ++)
         {
           mpz_set_ui (Q[k + 1], 2 * i + 3);
@@ -166,6 +163,7 @@ mpfr_atan_aux (mpfr_ptr y, mpz_ptr p, long r, int m, mpz_t *tab)
       mpz_add (S[k-1], S[k-1], S[k]);
       mpz_mul (Q[k-1], Q[k-1], Q[k]);
     }
+  (*__gmp_free_func) (accu, (2 * m + 2) * sizeof (mpfr_prec_t));
 
   MPFR_MPZ_SIZEINBASE2 (diff, S[0]);
   diff -= 2 * precy;
@@ -185,9 +183,7 @@ mpfr_atan_aux (mpfr_ptr y, mpz_ptr p, long r, int m, mpz_t *tab)
 
   mpz_tdiv_q (S[0], S[0], Q[0]);
   mpfr_set_z (y, S[0], MPFR_RNDD);
-  /* TODO: Check/prove that the following expression doesn't overflow. */
-  expo = MPFR_GET_EXP (y) + expo - r * (i - 1);
-  MPFR_SET_EXP (y, expo);
+  MPFR_SET_EXP (y, MPFR_EXP(y) + expo - r * (i - 1));
 }
 
 int
@@ -195,7 +191,7 @@ mpfr_atan (mpfr_ptr atan, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
 {
   mpfr_t xp, arctgt, sk, tmp, tmp2;
   mpz_t  ukz;
-  mpz_t tabz[3*(MPFR_PREC_BITS+1)];
+  mpz_t *tabz;
   mpfr_exp_t exptol;
   mpfr_prec_t prec, realprec, est_lost, lost;
   unsigned long twopoweri, log2p, red;
@@ -277,6 +273,7 @@ mpfr_atan (mpfr_ptr atan, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
   mpz_init (ukz);
   MPFR_GROUP_INIT_4 (group, prec, sk, tmp, tmp2, arctgt);
   oldn0 = 0;
+  tabz = (mpz_t *) 0;
 
   MPFR_ZIV_INIT (loop, prec);
   for (;;)
@@ -304,15 +301,17 @@ mpfr_atan (mpfr_ptr atan, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
 
       /* Initialisation */
       MPFR_GROUP_REPREC_4 (group, prec, sk, tmp, tmp2, arctgt);
-      MPFR_ASSERTD (n0 <= MPFR_PREC_BITS);
       if (MPFR_LIKELY (oldn0 == 0))
         {
           oldn0 = 3 * (n0 + 1);
+          tabz = (mpz_t *) (*__gmp_allocate_func) (oldn0 * sizeof (mpz_t));
           for (i = 0; i < oldn0; i++)
             mpz_init (tabz[i]);
         }
-      else if (oldn0 < 3 * (n0 + 1))
+      else if (MPFR_UNLIKELY (oldn0 < 3 * (n0 + 1)))
         {
+          tabz = (mpz_t *) (*__gmp_reallocate_func)
+            (tabz, oldn0 * sizeof (mpz_t), 3 * (n0 + 1)*sizeof (mpz_t));
           for (i = oldn0; i < 3 * (n0 + 1); i++)
             mpz_init (tabz[i]);
           oldn0 = 3 * (n0 + 1);
@@ -335,7 +334,7 @@ mpfr_atan (mpfr_ptr atan, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
       for (red = 0; MPFR_GET_EXP(sk) > - (mpfr_exp_t) log2p; red ++)
         {
           lost = 9 - 2 * MPFR_EXP(sk);
-          mpfr_sqr (tmp, sk, MPFR_RNDN);
+          mpfr_mul (tmp, sk, sk, MPFR_RNDN);
           mpfr_add_ui (tmp, tmp, 1, MPFR_RNDN);
           mpfr_sqrt (tmp, tmp, MPFR_RNDN);
           mpfr_sub_ui (tmp, tmp, 1, MPFR_RNDN);
@@ -346,25 +345,25 @@ mpfr_atan (mpfr_ptr atan, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
             mpfr_div (sk, tmp, sk, MPFR_RNDN);
         }
 
-      /* We started from x0 = 1/|x| if |x| > 1, and |x| otherwise, thus
+      /* we started from x0 = 1/|x| if |x| > 1, and |x| otherwise, thus
          we had x0 = min(|x|, 1/|x|) <= 1, and applied 'red' times the
-         argument reduction x -> (sqrt(1+x^2)-1)/x, which keeps 0 < x <= 1 */
+         argument reduction x -> (sqrt(1+x^2)-1)/x, which keeps 0 < x < 1,
+         thus 0 < sk <= 1, and sk=1 can occur only if red=0 */
 
-      /* We first show that if the for-loop is executed at least once, then
-         sk < 1 after the loop. Indeed for 1/2 <= x <= 1, interval
-         arithmetic with precision 5 shows that (sqrt(1+x^2)-1)/x,
-         when evaluated with rounding to nearest, gives a value <= 0.875.
-         Now assume 2^(-k-1) <= x <= 2^(-k) for k >= 1.
-         Then o(x^2) <= 2^(-2k), o(1+x^2) <= 1+2^(-2k),
-         o(sqrt(1+x^2)) <= 1+2^(-2k-1), o(sqrt(1+x^2)-1) <= 2^(-2k-1),
-         and o((sqrt(1+x^2)-1)/x) <= 2^(-k) <= 1/2.
-
-         Now if sk=1 before the loop, then EXP(sk)=1 and since log2p >= 0,
-         the loop is performed at least once, thus the case sk=1 cannot
-         happen below.
+      /* If sk=1, then if |x| < 1, we have 1 - 2^(-prec-1) <= |x| < 1,
+         or if |x| > 1, we have 1 - 2^(-prec-1) <= 1/|x| < 1, thus in all
+         cases ||x| - 1| <= 2^(-prec), from which it follows
+         |atan|x| - Pi/4| <= 2^(-prec), given the Taylor expansion
+         atan(1+x) = Pi/4 + x/2 - x^2/4 + ...
+         Since Pi/4 = 0.785..., the error is at most one ulp.
       */
-
-      MPFR_ASSERTD(mpfr_cmp_ui (sk, 1) < 0);
+      if (MPFR_UNLIKELY(mpfr_cmp_ui (sk, 1) == 0))
+        {
+          mpfr_const_pi (arctgt, MPFR_RNDN); /* 1/2 ulp extra error */
+          mpfr_div_2ui (arctgt, arctgt, 2, MPFR_RNDN); /* exact */
+          realprec = prec - 2;
+          goto can_round;
+        }
 
       /* Assignation  */
       MPFR_SET_ZERO (arctgt);
@@ -417,6 +416,7 @@ mpfr_atan (mpfr_ptr atan, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
         }
       MPFR_SET_POS (arctgt);
 
+    can_round:
       if (MPFR_LIKELY (MPFR_CAN_ROUND (arctgt, realprec + est_lost - lost,
                                        MPFR_PREC (atan), rnd_mode)))
         break;
@@ -429,6 +429,7 @@ mpfr_atan (mpfr_ptr atan, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
   for (i = 0 ; i < oldn0 ; i++)
     mpz_clear (tabz[i]);
   mpz_clear (ukz);
+  (*__gmp_free_func) (tabz, oldn0 * sizeof (mpz_t));
   MPFR_GROUP_CLEAR (group);
 
   MPFR_SAVE_EXPO_FREE (expo);

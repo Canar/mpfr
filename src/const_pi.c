@@ -28,7 +28,7 @@ MPFR_DECL_INIT_CACHE(__gmpfr_cache_const_pi, mpfr_const_pi_internal);
 #else
 MPFR_DECL_INIT_CACHE(__gmpfr_normal_pi, mpfr_const_pi_internal);
 MPFR_DECL_INIT_CACHE(__gmpfr_logging_pi, mpfr_const_pi_internal);
-MPFR_THREAD_ATTR mpfr_cache_ptr __gmpfr_cache_const_pi = __gmpfr_normal_pi;
+mpfr_cache_ptr MPFR_THREAD_ATTR __gmpfr_cache_const_pi = __gmpfr_normal_pi;
 #endif
 
 /* Set User Interface */
@@ -44,7 +44,6 @@ mpfr_const_pi_internal (mpfr_ptr x, mpfr_rnd_t rnd_mode)
 {
   mpfr_t a, A, B, D, S;
   mpfr_prec_t px, p, cancel, k, kmax;
-  MPFR_GROUP_DECL (group);
   MPFR_ZIV_DECL (loop);
   int inex;
 
@@ -59,7 +58,11 @@ mpfr_const_pi_internal (mpfr_ptr x, mpfr_rnd_t rnd_mode)
 
   p = px + 3 * kmax + 14; /* guarantees no recomputation for px <= 10000 */
 
-  MPFR_GROUP_INIT_5 (group, p, a, A, B, D, S);
+  mpfr_init2 (a, p);
+  mpfr_init2 (A, p);
+  mpfr_init2 (B, p);
+  mpfr_init2 (D, p);
+  mpfr_init2 (S, p);
 
   MPFR_ZIV_INIT (loop, p);
   for (;;) {
@@ -84,13 +87,13 @@ mpfr_const_pi_internal (mpfr_ptr x, mpfr_rnd_t rnd_mode)
         mpfr_sub (Bp, Ap, S, MPFR_RNDN); /* -1/4 <= Bp <= 3/4 */
         mpfr_mul_2ui (Bp, Bp, 1, MPFR_RNDN); /* -1/2 <= Bp <= 3/2 */
         mpfr_sub (S, Ap, Bp, MPFR_RNDN);
-        MPFR_ASSERTD (mpfr_cmp_ui (S, 1) < 0);
-        cancel = MPFR_NOTZERO (S) ? (mpfr_uexp_t) -mpfr_get_exp(S) : p;
+        MPFR_ASSERTN (mpfr_cmp_ui (S, 1) < 0);
+        cancel = mpfr_cmp_ui (S, 0) ? (mpfr_uexp_t) -mpfr_get_exp(S) : p;
         /* MPFR_ASSERTN (cancel >= px || cancel >= 9 * (1 << k) - 4); */
         mpfr_mul_2ui (S, S, k, MPFR_RNDN);
         mpfr_sub (D, D, S, MPFR_RNDN);
         /* stop when |A_k - B_k| <= 2^(k-p) i.e. cancel >= p-k */
-        if (cancel >= p - k)
+        if (cancel + k >= p)
           break;
       }
 #undef b
@@ -106,12 +109,20 @@ mpfr_const_pi_internal (mpfr_ptr x, mpfr_rnd_t rnd_mode)
 
       p += kmax;
       MPFR_ZIV_NEXT (loop, p);
-      MPFR_GROUP_REPREC_5 (group, p, a, A, B, D, S);
+      mpfr_set_prec (a, p);
+      mpfr_set_prec (A, p);
+      mpfr_set_prec (B, p);
+      mpfr_set_prec (D, p);
+      mpfr_set_prec (S, p);
   }
   MPFR_ZIV_FREE (loop);
   inex = mpfr_set (x, A, rnd_mode);
 
-  MPFR_GROUP_CLEAR (group);
+  mpfr_clear (a);
+  mpfr_clear (A);
+  mpfr_clear (B);
+  mpfr_clear (D);
+  mpfr_clear (S);
 
   return inex;
 }

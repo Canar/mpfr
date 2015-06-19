@@ -20,6 +20,8 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <float.h>
 
 #include "mpfr-test.h"
@@ -99,8 +101,6 @@ main (int argc, char *argv[])
   if (mpfr_cmp_ui (x, 0) != 0 || MPFR_IS_POS(x))
     {
       printf ("Error in mpfr_set_d on -0\n");
-      printf ("d = %g, x = ", d);
-      mpfr_dump (x);
       exit (1);
     }
 #endif  /* HAVE_SIGNEDZ */
@@ -123,7 +123,7 @@ main (int argc, char *argv[])
 
   /* checks that subnormals are not flushed to zero */
   d = DBL_MIN; /* 2^(-1022) */
-  for (n = 0; n < 53; n++, d /= 2.0)
+  for (n=0; n<52; n++, d /= 2.0)
     if (d != 0.0) /* should be 2^(-1022-n) */
       {
         mpfr_set_d (x, d, MPFR_RNDN);

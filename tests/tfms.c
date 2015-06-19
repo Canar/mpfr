@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 /* When a * b is exact, the FMS is equivalent to the separate operations. */
@@ -28,7 +31,7 @@ test_exact (void)
 {
   const char *val[] =
     { "@NaN@", "-@Inf@", "-2", "-1", "-0", "0", "1", "2", "@Inf@" };
-  int sv = numberof (val);
+  int sv = sizeof (val) / sizeof (*val);
   int i, j, k;
   int rnd;
   mpfr_t a, b, c, r1, r2;
@@ -156,7 +159,7 @@ test_overflow2 (void)
                     i, mpfr_print_rnd_mode ((mpfr_rnd_t) rnd));
             err = 1;
           }
-        else if (MPFR_IS_POS (r))
+        else if (MPFR_SIGN (r) >= 0)
           {
             printf ("Error in test_overflow2 (i = %d, %s): wrong sign "
                     "(+ instead of -)\n", i,
@@ -305,8 +308,7 @@ test_underflow2 (void)
           if (__gmpfr_flags != MPFR_FLAGS_INEXACT)
             {
               printf (ERRTU2 "flags = %u instead of %u\n", b, i,
-                      (unsigned int) __gmpfr_flags,
-                      (unsigned int) MPFR_FLAGS_INEXACT);
+                      __gmpfr_flags, (unsigned int) MPFR_FLAGS_INEXACT);
               err = 1;
             }
           same = i == 15 || (i == 16 && b == 0);
@@ -358,12 +360,10 @@ main (int argc, char *argv[])
   mpfr_set_str (y, "0.5", 10, MPFR_RNDN);
   mpfr_set_str (z, "-0.375", 10, MPFR_RNDN);
   mpfr_fms (s, x, y, z, MPFR_RNDU); /* result is 0 */
-  if (mpfr_cmp_ui (s, 0))
+  if (mpfr_cmp_ui(s, 0))
     {
-      printf ("Error: -0.75 * 0.5 - -0.375 should be equal to 0 for prec=2\n");
-      printf ("got instead ");
-      mpfr_dump (s);
-      exit (1);
+      printf("Error: -0.75 * 0.5 - -0.375 should be equal to 0 for prec=2\n");
+      exit(1);
     }
 
   mpfr_set_prec (x, 27);
@@ -385,7 +385,7 @@ main (int argc, char *argv[])
   mpfr_fms (s, x, y, z, MPFR_RNDN);
   if (!mpfr_nan_p (s))
     {
-      printf ("evaluation of function in x=NAN does not return NAN\n");
+      printf ("evaluation of function in x=NAN does not return NAN");
       exit (1);
     }
 
@@ -395,7 +395,7 @@ main (int argc, char *argv[])
   mpfr_fms (s, x, y, z, MPFR_RNDN);
   if (!mpfr_nan_p(s))
     {
-      printf ("evaluation of function in y=NAN does not return NAN\n");
+      printf ("evaluation of function in y=NAN does not return NAN");
       exit (1);
     }
 
@@ -405,7 +405,7 @@ main (int argc, char *argv[])
   mpfr_fms (s, x, y, z, MPFR_RNDN);
   if (!mpfr_nan_p (s))
     {
-      printf ("evaluation of function in z=NAN does not return NAN\n");
+      printf ("evaluation of function in z=NAN does not return NAN");
       exit (1);
     }
 
@@ -455,7 +455,7 @@ main (int argc, char *argv[])
   mpfr_fms (s, x, y, z, MPFR_RNDN);
   if (!mpfr_nan_p (s))
     {
-      printf ("evaluation of function in x=INF y=0  does not return NAN\n");
+      printf ("evaluation of function in x=INF y=0  does not return NAN");
       exit (1);
     }
 
@@ -465,7 +465,7 @@ main (int argc, char *argv[])
   mpfr_fms (s, x, y, z, MPFR_RNDN);
   if (!mpfr_nan_p (s))
     {
-      printf ("evaluation of function in x=0 y=INF does not return NAN\n");
+      printf ("evaluation of function in x=0 y=INF does not return NAN");
       exit (1);
     }
 
@@ -475,7 +475,7 @@ main (int argc, char *argv[])
   mpfr_fms (s, x, y, z, MPFR_RNDN);
   if (!mpfr_nan_p (s))
     {
-      printf ("evaluation of function in x=INF y>0 z=INF does not return NAN\n");
+      printf ("evaluation of function in x=INF y>0 z=INF does not return NAN");
       exit (1);
     }
 
@@ -485,27 +485,27 @@ main (int argc, char *argv[])
   mpfr_fms (s, x, y, z, MPFR_RNDN);
   if (!mpfr_nan_p (s))
     {
-      printf ("evaluation of function in x>0 y=INF z=INF does not return NAN\n");
+      printf ("evaluation of function in x>0 y=INF z=INF does not return NAN");
       exit (1);
     }
 
   mpfr_set_inf (x, 1);
-  do mpfr_urandomb (y, RANDS); while (MPFR_IS_ZERO(y));
+  mpfr_urandomb (y, RANDS);
   mpfr_urandomb (z, RANDS);
   mpfr_fms (s, x, y, z, MPFR_RNDN);
   if (!mpfr_inf_p (s) || mpfr_sgn (s) < 0)
     {
-      printf ("evaluation of function at x=INF does not return INF\n");
+      printf ("evaluation of function in x=INF does not return INF");
       exit (1);
     }
 
   mpfr_set_inf (y, 1);
-  do mpfr_urandomb (x, RANDS); while (MPFR_IS_ZERO(x));
+  mpfr_urandomb (x, RANDS);
   mpfr_urandomb (z, RANDS);
   mpfr_fms (s, x, y, z, MPFR_RNDN);
   if (!mpfr_inf_p (s) || mpfr_sgn (s) < 0)
     {
-      printf ("evaluation of function at y=INF does not return INF\n");
+      printf ("evaluation of function in y=INF does not return INF");
       exit (1);
     }
 
@@ -515,7 +515,7 @@ main (int argc, char *argv[])
   mpfr_fms (s, x, y, z, MPFR_RNDN);
   if (!mpfr_inf_p (s) || mpfr_sgn (s) < 0)
     {
-      printf ("evaluation of function in z=-INF does not return INF\n");
+      printf ("evaluation of function in z=-INF does not return INF");
       exit (1);
     }
 

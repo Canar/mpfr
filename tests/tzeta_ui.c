@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 #define TEST_FUNCTION mpfr_zeta_ui
@@ -34,7 +37,7 @@ main (int argc, char *argv[])
   unsigned long n;
   int inex;
   mpfr_exp_t emin, emax;
-  mpfr_flags_t flags, ex_flags;
+  unsigned int flags, ex_flags;
   int i;
 
   tests_start_mpfr ();

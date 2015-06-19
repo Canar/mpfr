@@ -37,7 +37,6 @@ mpfr_sub1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   mp_size_t cancel2, an, bn, cn, cn0;
   mp_limb_t *ap, *bp, *cp;
   mp_limb_t carry, bb, cc;
-  mpfr_prec_t aq, bq;
   int inexact, shift_b, shift_c, add_exp = 0;
   int cmp_low = 0; /* used for rounding to nearest: 0 if low(b) = low(c),
                       negative if low(b) < low(c), positive if low(b)>low(c) */
@@ -47,10 +46,6 @@ mpfr_sub1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   MPFR_TMP_MARK(marker);
   ap = MPFR_MANT(a);
   an = MPFR_LIMB_SIZE(a);
-
-  (void) MPFR_GET_PREC (a);
-  (void) MPFR_GET_PREC (b);
-  (void) MPFR_GET_PREC (c);
 
   sign = mpfr_cmp2 (b, c, &cancel);
   if (MPFR_UNLIKELY(sign == 0))
@@ -67,7 +62,7 @@ mpfr_sub1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
    * If subtraction: sign(a) = sign * sign(b)
    * If addition: sign(a) = sign of the larger argument in absolute value.
    *
-   * Both cases can be simplified in:
+   * Both cases can be simplidied in:
    * if (sign>0)
    *    if addition: sign(a) = sign * sign(b) = sign(b)
    *    if subtraction, b is greater, so sign(a) = sign(b)
@@ -87,17 +82,12 @@ mpfr_sub1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
   else
     MPFR_SET_SAME_SIGN (a,b);
 
-  MPFR_ASSERTD (MPFR_GET_EXP(b) >= MPFR_GET_EXP(c));
-
-  aq = MPFR_GET_PREC (a);
-  bq = MPFR_GET_PREC (b);
-
   /* Check if c is too small.
      A more precise test is to replace 2 by
       (rnd == MPFR_RNDN) + mpfr_power2_raw (b)
       but it is more expensive and not very useful */
   if (MPFR_UNLIKELY (MPFR_GET_EXP (c) <= MPFR_GET_EXP (b)
-                     - (mpfr_exp_t) MAX (aq, bq) - 2))
+                     - (mpfr_exp_t) MAX (MPFR_PREC (a), MPFR_PREC (b)) - 2))
     {
       /* Remember, we can't have an exact result! */
       /*   A.AAAAAAAAAAAAAAAAA
@@ -105,9 +95,9 @@ mpfr_sub1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
           -                     C.CCCCCCCCCCCCC */
       /* A = S*ABS(B) +/- ulp(a) */
       MPFR_SET_EXP (a, MPFR_GET_EXP (b));
-      MPFR_RNDRAW_EVEN (inexact, a, MPFR_MANT (b), bq,
+      MPFR_RNDRAW_EVEN (inexact, a, MPFR_MANT (b), MPFR_PREC (b),
                         rnd_mode, MPFR_SIGN (a),
-                        if (MPFR_UNLIKELY (++ MPFR_EXP (a) > __gmpfr_emax))
+                        if (MPFR_UNLIKELY ( ++MPFR_EXP (a) > __gmpfr_emax))
                         inexact = mpfr_overflow (a, rnd_mode, MPFR_SIGN (a)));
       /* inexact = mpfr_set4 (a, b, rnd_mode, MPFR_SIGN (a));  */
       if (inexact == 0)
@@ -228,7 +218,7 @@ mpfr_sub1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
      by the multiplication code), then the computation of cancel2 could
      be simplified to
        cancel2 = (cancel - (diff_exp - shift_c)) / GMP_NUMB_BITS;
-     because cancel, diff_exp and shift_c are all nonnegative and
+     because cancel, diff_exp and shift_c are all non-negative and
      these variables are signed. */
 
   MPFR_ASSERTD (cancel >= 0);
@@ -331,7 +321,7 @@ mpfr_sub1 (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mpfr_rnd_t rnd_mode)
 #endif
 
   /* now perform rounding */
-  sh = (mpfr_prec_t) an * GMP_NUMB_BITS - aq;
+  sh = (mpfr_prec_t) an * GMP_NUMB_BITS - MPFR_PREC(a);
   /* last unused bits from a */
   carry = ap[0] & MPFR_LIMB_MASK (sh);
   ap[0] -= carry;

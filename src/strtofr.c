@@ -20,6 +20,7 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdlib.h> /* For strtol */
 #include <ctype.h>  /* For isspace */
 
 #define MPFR_NEED_LONGLONG_H
@@ -219,7 +220,7 @@ fast_casecmp (const char *s1, const char *s2)
    It returns:
       -1 if invalid string,
       0 if special string (like nan),
-      1 if the string is OK.
+      1 if the string is ok.
       2 if overflows
    So it doesn't return the ternary value
    BUT if it returns 0 (NAN or INF), the ternary value is also '0'
@@ -817,11 +818,11 @@ mpfr_strtofr (mpfr_t x, const char *string, char **end, int base,
   /* For base <= 36, parsing is case-insensitive. */
   MPFR_ASSERTN (base == 0 || (base >= 2 && base <= 62));
 
-  /* If an error occurred, it must return 0. */
+  /* If an error occured, it must return 0 */
   MPFR_SET_ZERO (x);
   MPFR_SET_POS (x);
 
-  MPFR_STAT_STATIC_ASSERT (MPFR_MAX_BASE >= 62);
+  MPFR_ASSERTN (MPFR_MAX_BASE >= 62);
   res = parse_string (x, &pstr, &string, base);
   /* If res == 0, then it was exact (NAN or INF),
      so it is also the ternary value */

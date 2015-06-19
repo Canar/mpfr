@@ -31,7 +31,6 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #include <cstddef>
 #include <vector>
 #include <string>
-#include <fstream>
 
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -42,7 +41,6 @@ struct option_test {
   unsigned long stat;
   bool verbose;
   std::string export_base;
-  std::string import_base;
   option_test () : prec (53), seed (14528596), stat (100), verbose (false), export_base("") {}
 };
 

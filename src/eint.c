@@ -223,7 +223,7 @@ mpfr_eint (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd)
         {
           MPFR_SET_INF(y);
           MPFR_SET_NEG(y);
-          MPFR_SET_DIVBY0 ();
+          mpfr_set_divby0 ();
           MPFR_RET(0);
         }
     }
@@ -244,7 +244,8 @@ mpfr_eint (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd)
   mpfr_init2 (ump, 64);
   mpfr_log (tmp, x, MPFR_RNDU);
   mpfr_sub (ump, x, tmp, MPFR_RNDD);
-  mpfr_div (ump, ump, __gmpfr_const_log2_RNDU, MPFR_RNDD);
+  mpfr_const_log2 (tmp, MPFR_RNDU);
+  mpfr_div (ump, ump, tmp, MPFR_RNDD);
   /* FIXME: We really need mpfr_set_exp_t and mpfr_cmpfr_exp_t functions. */
   MPFR_ASSERTN (MPFR_EMAX_MAX <= LONG_MAX);
   if (mpfr_cmp_ui (ump, __gmpfr_emax) >= 0)
@@ -272,7 +273,7 @@ mpfr_eint (mpfr_ptr y, mpfr_srcptr x, mpfr_rnd_t rnd)
   mpfr_set_prec (tmp, prec);
   mpfr_set_prec (ump, prec);
 
-  MPFR_ZIV_INIT (loop, prec);            /* Initialize the ZivLoop controller */
+  MPFR_ZIV_INIT (loop, prec);            /* Initialize the ZivLoop controler */
   for (;;)                               /* Infinite loop */
     {
       /* We need that the smallest value of k!/x^k is smaller than 2^(-p).

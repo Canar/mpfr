@@ -20,49 +20,22 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 ##############################################################################
 
-Changes from versions 3.1.* to version 3.2.0:
-- The "dinde aux marrons" release.
-- MPFR now depends on GMP 4.2+ instead of 4.1+.
-- Mini-gmp support via the --enable-mini-gmp configure option (experimental).
-- New functions: mpfr_fpif_export and mpfr_fpif_import to export and import
-  numbers in a floating-point interchange format, independent both on the
-  number of bits per word and on the endianness.
-- New function mpfr_fmodquo to return the low bits of the quotient
-  corresponding to mpfr_fmod.
-- New functions mpfr_flags_clear, mpfr_flags_set, mpfr_flags_test,
-  mpfr_flags_save and mpfr_flags_restore to operate on groups of flags.
-- New functions mpfr_set_float128 and mpfr_get_float128 to convert from/to
-  the __float128 type (requires --enable-float128 and compiler support).
-- New macro mpfr_round_nearest_away to add partial emulation of the
-  rounding to nearest-away (as defined in IEEE 754-2008).
-- New functions mpfr_nrandom and mpfr_erandom to generate random numbers
-  following normal and exponential distributions respectively.
-- The behavior of the mpfr_set_exp function changed, as it could easily
-  yield undefined behavior in some cases (this modifies both the API and
-  the ABI).
-- Function mpfr_grandom is deprecated and will be removed in a future release.
-- Complete rewrite of function mpfr_sum, which now works in all cases (the
-  old one could take all the memory and/or crash with inputs of different
-  magnitudes in case of huge cancellation or table maker's dilemma). The
-  sign of an exact zero result is now specified, and the return value is
-  now the usual ternary value.
-- Internally, improved caching: a minimum of 10% increase of the precision
-  is guaranteed to avoid too many recomputations; added mpz_t caching.
-  [TODO: add shared caches; note that the ABI can be changed.]
-- Added configure option --enable-assert=none to avoid checking any assertion.
-- The --enable-decimal-float configure option no longer requires
-  --with-gmp-build.
-- Updated tuning parameters.
+Changes from version 3.1.2 to version 3.1.3:
 - Better support for Automake 1.13+ (now used to generate the tarball).
-- Dropped K&R C compatibility.
 - Improved MPFR manual.
-- New MPFRbench program (see the tools/bench directory).
-- Speedup in the mpfr_const_euler function (contributed by Fredrik Johansson),
-  in the computation of Bernoulli numbers (used in mpfr_gamma, mpfr_li2,
-  mpfr_digamma, mpfr_lngamma and mpfr_lgamma), and in mpfr_div.
-- Bug fixes. In particular: a speed improvement when the --enable-assert
-  or --enable-assert=full configure option is used with GCC; mpfr_get_str
-  now sets the NaN flag on NaN input.
+- Bug fixes (see <http://www.mpfr.org/mpfr-3.1.2/#fixed> and ChangeLog file).
+
+Changes from version 3.1.1 to version 3.1.2:
+- Bug fixes (see <http://www.mpfr.org/mpfr-3.1.1/#fixed> or ChangeLog file).
+- Updated examples to the MPFR 3.x API.
+- Note: The official tarballs for MPFR up to 3.1.1 were affected by a
+  vulnerability for "make distcheck" due to a bug in old GNU Automake
+  versions: http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-3386
+
+Changes from version 3.1.0 to version 3.1.1:
+- Improved MPFR manual.
+- Test coverage: 96.5% lines of code.
+- Bug fixes (see <http://www.mpfr.org/mpfr-3.1.0/#fixed> or ChangeLog file).
 
 Changes from versions 3.0.* to version 3.1.0:
 - The "canard à l'orange" release.

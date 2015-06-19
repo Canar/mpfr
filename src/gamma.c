@@ -27,8 +27,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #include "lngamma.c"
 #undef IS_GAMMA
 
-/* return a sufficient precision such that 2-x is exact, assuming x < 0
-   and x is not an integer */
+/* return a sufficient precision such that 2-x is exact, assuming x < 0 */
 static mpfr_prec_t
 mpfr_gamma_2_minus_x_exact (mpfr_srcptr x)
 {
@@ -39,16 +38,13 @@ mpfr_gamma_2_minus_x_exact (mpfr_srcptr x)
      carry can occur, or ULP(y) > 2, and we need w >= EXP(y)-1:
      (a) if EXP(y) <= 1, w = PREC(y) + 2 - EXP(y)
      (b) if EXP(y) > 1 and EXP(y)-PREC(y) <= 1, w = PREC(y) + 1
-     (c) if EXP(y) > 1 and EXP(y)-PREC(y) > 1, w = EXP(y) - 1.
-
-     Note: case (c) cannot happen in practice since this would imply that
-     y is integer, thus x is negative integer */
+     (c) if EXP(y) > 1 and EXP(y)-PREC(y) > 1, w = EXP(y) - 1 */
   return (MPFR_GET_EXP(x) <= 1) ? MPFR_PREC(x) + 2 - MPFR_GET_EXP(x)
-    : MPFR_PREC(x) + 1;
+    : ((MPFR_GET_EXP(x) <= MPFR_PREC(x) + 1) ? MPFR_PREC(x) + 1
+       : MPFR_GET_EXP(x) - 1);
 }
 
-/* return a sufficient precision such that 1-x is exact, assuming x < 1
-   and x is not an integer */
+/* return a sufficient precision such that 1-x is exact, assuming x < 1 */
 static mpfr_prec_t
 mpfr_gamma_1_minus_x_exact (mpfr_srcptr x)
 {
@@ -56,9 +52,10 @@ mpfr_gamma_1_minus_x_exact (mpfr_srcptr x)
     return MPFR_PREC(x) - MPFR_GET_EXP(x);
   else if (MPFR_GET_EXP(x) <= 0)
     return MPFR_PREC(x) + 1 - MPFR_GET_EXP(x);
-  else /* necessarily MPFR_PREC(x) > MPFR_GET_EXP(x) since otherwise
-          x would be an integer */
+  else if (MPFR_PREC(x) >= MPFR_GET_EXP(x))
     return MPFR_PREC(x) + 1;
+  else
+    return MPFR_GET_EXP(x);
 }
 
 /* returns a lower bound of the number of significant bits of n!
@@ -141,7 +138,7 @@ mpfr_gamma (mpfr_ptr gamma, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
           MPFR_ASSERTD(MPFR_IS_ZERO(x));
           MPFR_SET_INF(gamma);
           MPFR_SET_SAME_SIGN(gamma, x);
-          MPFR_SET_DIVBY0 ();
+          mpfr_set_divby0 ();
           MPFR_RET (0);  /* exact */
         }
     }
@@ -258,13 +255,6 @@ mpfr_gamma (mpfr_ptr gamma, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
       mpfr_exp_t expxp;
       MPFR_BLOCK_DECL (flags);
 
-      /* quick test for the default exponent range */
-      if (mpfr_get_emax () >= 1073741823UL && MPFR_GET_EXP(x) <= 25)
-        {
-          MPFR_SAVE_EXPO_FREE (expo);
-          return mpfr_gamma_aux (gamma, x, rnd_mode);
-        }
-
       /* 1/e rounded down to 53 bits */
 #define EXPM1_STR "0.010111100010110101011000110110001011001110111100111"
       mpfr_init2 (xp, 53);
@@ -321,8 +311,8 @@ mpfr_gamma (mpfr_ptr gamma, mpfr_srcptr x, mpfr_rnd_t rnd_mode)
       w += 17; /* to get tmp2 small enough */
       mpfr_set_prec (tmp, w);
       mpfr_set_prec (tmp2, w);
-      MPFR_DBGRES (ck = mpfr_ui_sub (tmp, 2, x, MPFR_RNDN));
-      MPFR_ASSERTD (ck == 0); /* tmp = 2-x exactly */
+      ck = mpfr_ui_sub (tmp, 2, x, MPFR_RNDN);
+      MPFR_ASSERTD (ck == 0);  (void) ck; /* use ck to avoid a warning */
       mpfr_const_pi (tmp2, MPFR_RNDN);
       mpfr_mul (tmp2, tmp2, tmp, MPFR_RNDN); /* Pi*(2-x) */
       mpfr_sin (tmp, tmp2, MPFR_RNDN); /* sin(Pi*(2-x)) */

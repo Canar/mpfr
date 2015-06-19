@@ -48,19 +48,16 @@ mpfr_get_z_2exp (mpz_ptr z, mpfr_srcptr f)
   if (MPFR_UNLIKELY (MPFR_IS_SINGULAR (f)))
     {
       if (MPFR_UNLIKELY (MPFR_NOTZERO (f)))
-        MPFR_SET_ERANGEFLAG ();
+        MPFR_SET_ERANGE ();
       mpz_set_ui (z, 0);
       return __gmpfr_emin;
     }
 
   fn = MPFR_LIMB_SIZE(f);
 
-  /* FIXME: temporary assert for security. Too large values should
-     probably be handled like infinities. */
-  MPFR_ASSERTN (fn <= INT_MAX);  /* due to SIZ(z) being an int */
-
   /* check whether allocated space for z is enough */
-  mpz_realloc2 (z, (mp_bitcnt_t) fn * GMP_NUMB_BITS);
+  if (MPFR_UNLIKELY (ALLOC (z) < fn))
+    MPZ_REALLOC (z, fn);
 
   MPFR_UNSIGNED_MINUS_MODULO (sh, MPFR_PREC (f));
   if (MPFR_LIKELY (sh))
@@ -74,7 +71,7 @@ mpfr_get_z_2exp (mpz_ptr z, mpfr_srcptr f)
                      < (mpfr_uexp_t) MPFR_PREC (f)))
     {
       /* The exponent isn't representable in an mpfr_exp_t. */
-      MPFR_SET_ERANGEFLAG ();
+      MPFR_SET_ERANGE ();
       return MPFR_EXP_MIN;
     }
 

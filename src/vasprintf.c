@@ -25,9 +25,8 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #include "config.h"
 #endif
 
-/* The mpfr_printf-like functions are defined only if <stdarg.h> exists.
-   Since they use mpf_t, they cannot be defined with mini-gmp. */
-#if defined(HAVE_STDARG) && !defined(MPFR_USE_MINI_GMP)
+/* The mpfr_printf-like functions are defined only if <stdarg.h> exists */
+#ifdef HAVE_STDARG
 
 #include <stdarg.h>
 
@@ -275,10 +274,14 @@ parse_arg_type (const char *format, struct printf_spec *specinfo)
       break;
     case 'h':
       if (*++format == 'h')
+#ifndef NPRINTF_HH
         {
           ++format;
           specinfo->arg_type = CHAR_ARG;
         }
+#else
+        specinfo->arg_type = UNSUPPORTED;
+#endif
       else
         specinfo->arg_type = SHORT_ARG;
       break;
@@ -286,7 +289,7 @@ parse_arg_type (const char *format, struct printf_spec *specinfo)
       if (*++format == 'l')
         {
           ++format;
-#if defined (HAVE_LONG_LONG)
+#if defined (HAVE_LONG_LONG) && !defined(NPRINTF_LL)
           specinfo->arg_type = LONG_LONG_ARG;
 #else
           specinfo->arg_type = UNSUPPORTED;
@@ -300,7 +303,7 @@ parse_arg_type (const char *format, struct printf_spec *specinfo)
         }
     case 'j':
       ++format;
-#if defined(_MPFR_H_HAVE_INTMAX_T)
+#if defined(_MPFR_H_HAVE_INTMAX_T) && !defined(NPRINTF_J)
       specinfo->arg_type = INTMAX_ARG;
 #else
       specinfo->arg_type = UNSUPPORTED;
@@ -312,11 +315,19 @@ parse_arg_type (const char *format, struct printf_spec *specinfo)
       break;
     case 't':
       ++format;
+#ifndef NPRINTF_T
       specinfo->arg_type = PTRDIFF_ARG;
+#else
+      specinfo->arg_type = UNSUPPORTED;
+#endif
       break;
     case 'L':
       ++format;
+#ifndef NPRINTF_L
       specinfo->arg_type = LONG_DOUBLE_ARG;
+#else
+      specinfo->arg_type = UNSUPPORTED;
+#endif
       break;
     case 'F':
       ++format;
@@ -577,7 +588,7 @@ buffer_pad (struct string_buffer *b, const char c, const size_t n)
 
 /* Form a string by concatenating the first LEN characters of STR to TZ
    zero(s), insert into one character C each 3 characters starting from end
-   to beginning and concatenate the result to the buffer B. */
+   to begining and concatenate the result to the buffer B. */
 static void
 buffer_sandwich (struct string_buffer *b, char *str, size_t len,
                  const size_t tz, const char c)
@@ -663,7 +674,7 @@ struct string_list
   struct string_list *next; /* NULL in last node */
 };
 
-/* initialization */
+/* initialisation */
 static void
 init_string_list (struct string_list *sl)
 {
@@ -1434,7 +1445,7 @@ regular_fg (struct number_parts *np, mpfr_srcptr p,
    partition_number initializes the given structure np, so all previous
    information in that variable is lost.
    return the total number of characters to be written.
-   return -1 if an error occurred, in that case np's fields are in an undefined
+   return -1 if an error occured, in that case np's fields are in an undefined
    state but all string buffers have been freed. */
 static int
 partition_number (struct number_parts *np, mpfr_srcptr p,
@@ -1748,7 +1759,7 @@ sprnt_fp (struct string_buffer *buf, mpfr_srcptr p,
   if (np.exp_ptr)
     buffer_cat (buf, np.exp_ptr, np.exp_size);
 
-  /* left justification padding with right spaces */
+  /* left justication padding with right spaces */
   if (np.pad_type == RIGHT && np.pad_size != 0)
     buffer_pad (buf, ' ', np.pad_size);
 
@@ -1826,12 +1837,10 @@ mpfr_vasprintf (char **ptr, const char *fmt, va_list ap)
 
       fmt = parse_arg_type (fmt, &spec);
       if (spec.arg_type == UNSUPPORTED)
-        /* the current architecture doesn't support the type corresponding to
-           the format specifier; according to the ISO C99 standard, the
-           behavior is undefined. We choose to print the format specifier as a
-           literal string, what may be printed after this string is
-           undefined. */
-        continue;
+        /* the current architecture doesn't support this type */
+        {
+          goto error;
+        }
       else if (spec.arg_type == MPFR_ARG)
         {
           switch (*fmt)
@@ -1867,11 +1876,7 @@ mpfr_vasprintf (char **ptr, const char *fmt, va_list ap)
 
       spec.spec = *fmt;
       if (!specinfo_is_valid (spec))
-        /* the format specifier is invalid; according to the ISO C99 standard,
-           the behavior is undefined. We choose to print the invalid format
-           specifier as a literal string, what may be printed after this
-           string is undefined. */
-        continue;
+        goto error;
 
       if (*fmt)
         fmt++;
@@ -1946,7 +1951,7 @@ mpfr_vasprintf (char **ptr, const char *fmt, va_list ap)
                 while (--n != 0)
                   {
                     q++;
-                    *q = MPFR_LIMB_ZERO;
+                    *q = (mp_limb_t) 0;
                   }
               }
               break;
@@ -2005,16 +2010,6 @@ mpfr_vasprintf (char **ptr, const char *fmt, va_list ap)
         {
           mpfr_srcptr p;
 
-          if (spec.spec != 'a' && spec.spec != 'A'
-              && spec.spec != 'b'
-              && spec.spec != 'e' && spec.spec != 'E'
-              && spec.spec != 'f' && spec.spec != 'F'
-              && spec.spec != 'g' && spec.spec != 'G')
-            /* the format specifier is invalid; skip the invalid format
-           specifier so as to print it as a literal string. What may be
-           printed after this string is undefined. */
-            continue;
-
           p = va_arg (ap, mpfr_srcptr);
 
           FLUSH (xgmp_fmt_flag, start, end, ap2, &buf);
@@ -2022,8 +2017,25 @@ mpfr_vasprintf (char **ptr, const char *fmt, va_list ap)
           va_copy (ap2, ap);
           start = fmt;
 
-          if (sprnt_fp (&buf, p, spec) < 0)
-            goto overflow_error;
+          switch (spec.spec)
+            {
+            case 'a':
+            case 'A':
+            case 'b':
+            case 'e':
+            case 'E':
+            case 'f':
+            case 'F':
+            case 'g':
+            case 'G':
+              if (sprnt_fp (&buf, p, spec) < 0)
+                goto overflow_error;
+              break;
+
+            default:
+              /* unsupported specifier */
+              goto error;
+            }
         }
       else
         /* gmp_printf specification, step forward in the va_list */
@@ -2074,10 +2086,5 @@ mpfr_vasprintf (char **ptr, const char *fmt, va_list ap)
 
   return -1;
 }
-
-#else /* HAVE_STDARG */
-
-/* Avoid an empty translation unit (see ISO C99, 6.9) */
-typedef int foo;
 
 #endif /* HAVE_STDARG */

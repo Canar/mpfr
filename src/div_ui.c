@@ -24,8 +24,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #include "mpfr-impl.h"
 
 /* returns 0 if result exact, non-zero otherwise */
-#undef mpfr_div_ui
-MPFR_HOT_FUNCTION_ATTR int
+int
 mpfr_div_ui (mpfr_ptr y, mpfr_srcptr x, unsigned long int u, mpfr_rnd_t rnd_mode)
 {
   long i;
@@ -78,7 +77,7 @@ mpfr_div_ui (mpfr_ptr y, mpfr_srcptr x, unsigned long int u, mpfr_rnd_t rnd_mode
           /* x/0 is Inf since x != 0*/
           MPFR_SET_INF (y);
           MPFR_SET_SAME_SIGN (y, x);
-          MPFR_SET_DIVBY0 ();
+          mpfr_set_divby0 ();
           MPFR_RET (0);
         }
       else /* y = x/1 = x */
@@ -162,9 +161,9 @@ mpfr_div_ui (mpfr_ptr y, mpfr_srcptr x, unsigned long int u, mpfr_rnd_t rnd_mode
           mpn_lshift (yp, tmp + 1, yn, shlz);
           yp[0] += tmp[0] >> (GMP_NUMB_BITS - shlz);
 
-          if (w > MPFR_LIMB_HIGHBIT)
+          if (w > (MPFR_LIMB_ONE << (GMP_NUMB_BITS - 1)))
             { middle = 1; }
-          else if (w < MPFR_LIMB_HIGHBIT)
+          else if (w < (MPFR_LIMB_ONE << (GMP_NUMB_BITS - 1)))
             { middle = -1; }
           else
             { middle = (c != 0); }
@@ -260,7 +259,6 @@ mpfr_div_ui (mpfr_ptr y, mpfr_srcptr x, unsigned long int u, mpfr_rnd_t rnd_mode
   return mpfr_check_range (y, inexact, rnd_mode);
 }
 
-#undef mpfr_div_si
 int
 mpfr_div_si (mpfr_ptr y, mpfr_srcptr x, long int u, mpfr_rnd_t rnd_mode)
 {

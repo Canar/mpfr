@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 /* tconst_pi [prec] [rnd] [0 = no print] */
@@ -137,7 +140,7 @@ main (int argc, char *argv[])
   if (argc > 1)
     {
       long a = atol (argv[1]);
-      if (MPFR_PREC_COND (a))
+      if (a >= MPFR_PREC_MIN && a <= MPFR_PREC_MAX)
         p = a;
     }
 

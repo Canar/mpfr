@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 /* Generic tests for mpfr_nextabove and mpfr_nextbelow */
@@ -96,7 +99,7 @@ inverse_test (void)
   int i, neg, below;
   mpfr_prec_t prec;
 
-  for (i = 0; i < numberof (tests); i++)
+  for (i = 0; i < (int) (sizeof(tests) / sizeof(tests[0])); i++)
     for (neg = 0; neg <= 1; neg++)
       for (below = 0; below <= 1; below++)
         for (prec = MPFR_PREC_MIN; prec < 200; prec += 3)

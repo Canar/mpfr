@@ -65,7 +65,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #define MAKE_STR(S) STR(S)
 
 /* The (void *) below is needed to avoid a warning with gcc 4.2+ and functions
- * with 2 arguments. See <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=36299>.
+ * with 2 arguments. See <http://gcc.gnu.org/bugzilla/show_bug.cgi?id=36299>.
  */
 #define TGENERIC_FAIL(S, X, U)                                          \
   do                                                                    \
@@ -170,13 +170,13 @@ test_generic (mpfr_prec_t p0, mpfr_prec_t p1, unsigned int nmax)
       for (n = 0; n < (prec == p1 ? nmax + 4 : nmax); n++)
         {
           int infinite_input = 0;
-          mpfr_flags_t flags;
+          unsigned int flags;
           mpfr_exp_t oemin, oemax;
 
           xprec = prec;
           if (randlimb () & 1)
             {
-              xprec *= (double) randlimb () / MPFR_LIMB_MAX;
+              xprec *= (double) randlimb () / MP_LIMB_T_MAX;
               if (xprec < MPFR_PREC_MIN)
                 xprec = MPFR_PREC_MIN;
             }
@@ -227,7 +227,9 @@ test_generic (mpfr_prec_t p0, mpfr_prec_t p1, unsigned int nmax)
                 }
               else  /* 2 <= n <= 3 */
                 {
-                  mpfr_set_si (x, n == 2 ? 1 : -1, MPFR_RNDN);
+                  if (getenv ("MPFR_CHECK_MAX") == NULL)
+                    goto next_n;
+                  mpfr_set_si (x, n == 0 ? 1 : -1, MPFR_RNDN);
                   mpfr_setmax (x, REDUCE_EMAX);
 #if defined(TWO_ARGS) || defined(DOUBLE_ARG1) || defined(DOUBLE_ARG2)
                   mpfr_set_si (u, randlimb () % 2 == 0 ? 1 : -1, MPFR_RNDN);
@@ -284,7 +286,7 @@ test_generic (mpfr_prec_t p0, mpfr_prec_t p1, unsigned int nmax)
 
           /* Tests in a reduced exponent range. */
           {
-            mpfr_flags_t oldflags = flags;
+            unsigned int oldflags = flags;
             mpfr_exp_t e, emin, emax;
 
             /* Determine the smallest exponent range containing the
@@ -315,7 +317,7 @@ test_generic (mpfr_prec_t p0, mpfr_prec_t p1, unsigned int nmax)
                 e = MPFR_GET_EXP (y);
                 if (test_of && e - 1 >= emax)
                   {
-                    mpfr_flags_t ex_flags;
+                    unsigned int ex_flags;
 
                     mpfr_set_emax (e - 1);
                     mpfr_clear_flags ();
@@ -363,7 +365,7 @@ test_generic (mpfr_prec_t p0, mpfr_prec_t p1, unsigned int nmax)
                   }
                 if (test_uf && e + 1 <= emin)
                   {
-                    mpfr_flags_t ex_flags;
+                    unsigned int ex_flags;
 
                     mpfr_set_emin (e + 1);
                     mpfr_clear_flags ();

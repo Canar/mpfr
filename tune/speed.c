@@ -31,7 +31,8 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 static short mulhigh_ktab[MPFR_MULHIGH_TAB_SIZE];
 #else
 static short mulhigh_ktab[] = {MPFR_MULHIGH_TAB};
-#define MPFR_MULHIGH_TAB_SIZE ((mp_size_t) (numberof (mulhigh_ktab)))
+#define MPFR_MULHIGH_TAB_SIZE \
+  ((mp_size_t) (sizeof(mulhigh_ktab) / sizeof(mulhigh_ktab[0])))
 #endif
 
 #undef _PROTO

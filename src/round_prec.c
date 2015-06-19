@@ -45,9 +45,6 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #define use_inexp 0
 #include "round_raw_generic.c"
 
-/* Note: if the new prec is lower than the current one, a reallocation
-   must not be done (see exp_2.c). */
-
 int
 mpfr_prec_round (mpfr_ptr x, mpfr_prec_t prec, mpfr_rnd_t rnd_mode)
 {
@@ -56,7 +53,7 @@ mpfr_prec_round (mpfr_ptr x, mpfr_prec_t prec, mpfr_rnd_t rnd_mode)
   mpfr_prec_t nw, ow;
   MPFR_TMP_DECL(marker);
 
-  MPFR_ASSERTN (MPFR_PREC_COND (prec));
+  MPFR_ASSERTN(prec >= MPFR_PREC_MIN && prec <= MPFR_PREC_MAX);
 
   nw = MPFR_PREC2LIMBS (prec); /* needed allocated limbs */
 
@@ -64,7 +61,7 @@ mpfr_prec_round (mpfr_ptr x, mpfr_prec_t prec, mpfr_rnd_t rnd_mode)
   /* Get the number of limbs from the precision.
      (Compatible with all allocation methods) */
   ow = MPFR_LIMB_SIZE (x);
-  if (MPFR_UNLIKELY (nw > ow))
+  if (nw > ow)
     {
       /* FIXME: Variable can't be created using custom allocation,
          MPFR_DECL_INIT or GROUP_ALLOC: How to detect? */

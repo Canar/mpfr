@@ -20,8 +20,11 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <float.h>
 #include <math.h>
+#include <limits.h>
 
 #include "mpfr-test.h"
 
@@ -130,7 +133,7 @@ check_pow_ui (void)
   /* Check overflow */
   mpfr_set_str_binary (a, "1E10");
   res = mpfr_pow_ui (a, a, ULONG_MAX, MPFR_RNDN);
-  if (!MPFR_IS_INF (a) || MPFR_IS_NEG (a))
+  if (!MPFR_IS_INF (a) || MPFR_SIGN (a) < 0)
     {
       printf ("Error for (1e10)^ULONG_MAX\n");
       exit (1);
@@ -143,7 +146,7 @@ check_pow_ui (void)
   mpfr_set_str_binary (a, "-1E10");
   n = (ULONG_MAX ^ (ULONG_MAX >> 1)) + 1;
   res = mpfr_pow_ui (a, a, n, MPFR_RNDN);
-  if (!MPFR_IS_INF (a) || MPFR_IS_POS (a))
+  if (!MPFR_IS_INF (a) || MPFR_SIGN (a) > 0)
     {
       printf ("Error for (-1e10)^%lu, expected -Inf,\ngot ", n);
       mpfr_dump (a);
@@ -786,8 +789,7 @@ particular_cases (void)
           {
             printf ("Error in mpfr_pow for (%s)^(%s) (%d,%d):\n"
                     "Flags = %u instead of expected %u\n",
-                    name[i], name[j], i, j,
-                    (unsigned int) __gmpfr_flags, f[i][j]);
+                    name[i], name[j], i, j, __gmpfr_flags, f[i][j]);
             mpfr_dump (r);
             error = 1;
           }
@@ -816,8 +818,7 @@ particular_cases (void)
               {
                 printf ("Error in mpfr_pow_z for (%s)^(%s) (%d,%d):\n"
                         "Flags = %u instead of expected %u\n",
-                        name[i], name[j], i, j,
-                        (unsigned int) __gmpfr_flags, f[i][j]);
+                        name[i], name[j], i, j, __gmpfr_flags, f[i][j]);
                 mpfr_dump (r);
                 error = 1;
               }
@@ -842,8 +843,7 @@ particular_cases (void)
               {
                 printf ("Error in mpfr_pow_si for (%s)^(%s) (%d,%d):\n"
                         "Flags = %u instead of expected %u\n",
-                        name[i], name[j], i, j,
-                        (unsigned int) __gmpfr_flags, f[i][j]);
+                        name[i], name[j], i, j, __gmpfr_flags, f[i][j]);
                 mpfr_dump (r);
                 error = 1;
               }
@@ -869,8 +869,7 @@ particular_cases (void)
                   {
                     printf ("Error in mpfr_pow_ui for (%s)^(%s) (%d,%d):\n"
                             "Flags = %u instead of expected %u\n",
-                            name[i], name[j], i, j,
-                            (unsigned int) __gmpfr_flags, f[i][j]);
+                            name[i], name[j], i, j, __gmpfr_flags, f[i][j]);
                     mpfr_dump (r);
                     error = 1;
                   }
@@ -900,8 +899,7 @@ particular_cases (void)
               {
                 printf ("Error in mpfr_ui_pow for (%s)^(%s) (%d,%d):\n"
                         "Flags = %u instead of expected %u\n",
-                        name[i], name[j], i, j,
-                        (unsigned int) __gmpfr_flags, f[i][j]);
+                        name[i], name[j], i, j, __gmpfr_flags, f[i][j]);
                 mpfr_dump (r);
                 error = 1;
               }
@@ -1111,7 +1109,7 @@ overflows2 (void)
       if (__gmpfr_flags != (MPFR_FLAGS_OVERFLOW | MPFR_FLAGS_INEXACT))
         {
           printf ("Error in overflows2 (e = %d): bad flags (%u)\n",
-                  e, (unsigned int) __gmpfr_flags);
+                  e, __gmpfr_flags);
           exit (1);
         }
     }
@@ -1160,7 +1158,7 @@ overflows3 (void)
           if (__gmpfr_flags != (MPFR_FLAGS_OVERFLOW | MPFR_FLAGS_INEXACT))
             {
               printf ("Error in overflows3 (RNDN, i = %d): bad flags (%u)\n",
-                      i, (unsigned int) __gmpfr_flags);
+                      i, __gmpfr_flags);
               exit (1);
             }
 
@@ -1250,7 +1248,7 @@ bug20071103 (void)
   mpfr_set_exp (y, mpfr_get_emax ());
   mpfr_clear_flags ();
   mpfr_pow (z, x, y, MPFR_RNDN);
-  MPFR_ASSERTN (mpfr_zero_p (z) && MPFR_IS_POS (z) &&
+  MPFR_ASSERTN (mpfr_zero_p (z) && MPFR_SIGN (z) > 0 &&
                 __gmpfr_flags == (MPFR_FLAGS_UNDERFLOW | MPFR_FLAGS_INEXACT));
   mpfr_clears (x, y, z, (mpfr_ptr) 0);
 
@@ -1277,7 +1275,7 @@ bug20071104 (void)
   mpfr_set_si (y, -2, MPFR_RNDN);  /* y = -2 */
   mpfr_clear_flags ();
   inex = mpfr_pow (z, x, y, MPFR_RNDN);
-  if (! mpfr_inf_p (z) || MPFR_IS_NEG (z))
+  if (! mpfr_inf_p (z) || MPFR_SIGN (z) < 0)
     {
       printf ("Error in bug20071104: expected +Inf, got ");
       mpfr_dump (z);
@@ -1290,8 +1288,7 @@ bug20071104 (void)
     }
   if (__gmpfr_flags != (MPFR_FLAGS_OVERFLOW | MPFR_FLAGS_INEXACT))
     {
-      printf ("Error in bug20071104: bad flags (%u)\n",
-              (unsigned int) __gmpfr_flags);
+      printf ("Error in bug20071104: bad flags (%u)\n", __gmpfr_flags);
       exit (1);
     }
   mpfr_clears (x, y, z, (mpfr_ptr) 0);
@@ -1373,7 +1370,7 @@ bug20071128 (void)
       mpfr_set_si_2exp (y, -1, i, MPFR_RNDN);
       mpfr_add_si (y, y, 1, MPFR_RNDN);
       tern = mpfr_pow (z, x, y, MPFR_RNDN);
-      MPFR_ASSERTN(mpfr_zero_p (z) && MPFR_IS_NEG (z));
+      MPFR_ASSERTN(mpfr_zero_p (z) && MPFR_SIGN(z) < 0);
     }
 
   mpfr_clear (x);
@@ -1551,36 +1548,6 @@ bug20110320 (void)
   set_emin (emin);
 }
 
-static void
-tst20140422 (void)
-{
-  mpfr_t x, y, z1, z2;
-  int inex, rnd;
-  unsigned int flags;
-
-  mpfr_inits2 (128, x, y, z1, z2, (mpfr_ptr) 0);
-  mpfr_set_ui (x, 1296, MPFR_RNDN);
-  mpfr_set_ui_2exp (y, 3, -2, MPFR_RNDN);
-  mpfr_set_ui (z2, 216, MPFR_RNDN);
-  RND_LOOP (rnd)
-    {
-      mpfr_clear_flags ();
-      inex = mpfr_pow (z1, x, y, (mpfr_rnd_t) rnd);
-      flags = __gmpfr_flags;
-      if (inex != 0 || flags != 0 || ! mpfr_equal_p (z1, z2))
-        {
-          printf ("Error in bug20140422 with %s\n",
-                  mpfr_print_rnd_mode ((mpfr_rnd_t) rnd));
-          printf ("Expected inex = 0, flags = 0, z = ");
-          mpfr_dump (z2);
-          printf ("Got      inex = %d, flags = %u, z = ", inex, flags);
-          mpfr_dump (z1);
-          exit (1);
-        }
-    }
-  mpfr_clears (x, y, z1, z2, (mpfr_ptr) 0);
-}
-
 int
 main (int argc, char **argv)
 {
@@ -1609,7 +1576,6 @@ main (int argc, char **argv)
   bug20080721 ();
   bug20080820 ();
   bug20110320 ();
-  tst20140422 ();
 
   test_generic (2, 100, 100);
   test_generic_ui (2, 100, 100);

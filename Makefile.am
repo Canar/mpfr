@@ -18,7 +18,7 @@ AUTOMAKE_OPTIONS = gnu
 # old Automake version.
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = doc src tests tune tools/bench
+SUBDIRS = doc src tests tune
 
 nobase_dist_doc_DATA = AUTHORS BUGS COPYING COPYING.LESSER NEWS TODO \
   examples/ReadMe examples/divworst.c examples/rndo-add.c examples/sample.c \

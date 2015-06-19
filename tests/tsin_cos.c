@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 static void
@@ -194,7 +197,7 @@ overflowed_sin_cos0 (void)
                       mpfr_print_rnd_mode ((mpfr_rnd_t) rnd));
               err = 1;
             }
-          if (! (mpfr_zero_p (x) && MPFR_IS_NEG (x)))
+          if (! (mpfr_zero_p (x) && MPFR_SIGN (x) < 0))
             {
               printf ("Error in overflowed_sin_cos0 (rnd = %s):\n"
                       "  Got sin = ", mpfr_print_rnd_mode ((mpfr_rnd_t) rnd));
@@ -230,7 +233,7 @@ overflowed_sin_cos0 (void)
                           mpfr_print_rnd_mode ((mpfr_rnd_t) rnd));
                   err = 1;
                 }
-              if (! (mpfr_inf_p (y) && MPFR_IS_POS (y)))
+              if (! (mpfr_inf_p (y) && MPFR_SIGN (y) > 0))
                 {
                   printf ("Error in overflowed_sin_cos0 (rnd = %s):\n"
                           "  Got cos = ",

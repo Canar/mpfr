@@ -20,9 +20,11 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
-#include "mpfr-test.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
 
-#ifndef MPFR_USE_MINI_GMP
+#include "mpfr-test.h"
 
 /* Test that there is no lost of accuracy when converting a mpfr_t number
    into a mpf_t number (test with various precisions and exponents). */
@@ -386,13 +388,3 @@ main (void)
   tests_end_mpfr ();
   return 0;
 }
-
-#else
-
-int
-main (void)
-{
-  return 77;
-}
-
-#endif

@@ -20,9 +20,11 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
-#if defined(HAVE_STDARG) && !defined(MPFR_USE_MINI_GMP)
+#ifdef HAVE_STDARG
 #include <stdarg.h>
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <float.h>
 #include <stddef.h>
 
@@ -147,11 +149,11 @@ check_mixed (FILE *fout)
   unsigned long ulo = 1;
   float f = -1.25;
   double d = -1.25;
-#if defined(PRINTF_T) || defined(PRINTF_L)
+#if !defined(NPRINTF_T) || !defined(NPRINTF_L)
   long double ld = -1.25;
 #endif
 
-#ifdef PRINTF_T
+#ifndef NPRINTF_T
   ptrdiff_t p = 1, saved_p;
 #endif
   size_t sz = 1;
@@ -177,7 +179,7 @@ check_mixed (FILE *fout)
   mpfr_init2 (mpfr, prec);
   mpfr_set_f (mpfr, mpf, MPFR_RNDN);
 
-  limb[0] = limb[1] = limb[2] = MPFR_LIMB_MAX;
+  limb[0] = limb[1] = limb[2] = ~ (mp_limb_t) 0;
 
   check_vfprintf (fout, "a. %Ra, b. %u, c. %lx%n", mpfr, ui, ulo, &j);
   check_length (1, j, 22, d);
@@ -197,7 +199,7 @@ check_mixed (FILE *fout)
                   (void *) &i);
   check_length_with_cmp (7, mpfr, 15, mpfr_cmp_ui (mpfr, 15), Rg);
 
-#ifdef PRINTF_T
+#ifndef NPRINTF_T
   saved_p = p;
   check_vfprintf (fout, "%% a. %RNg, b. %Qx, c. %td%tn", mpfr, mpq, p, &p);
   if (p != 20)
@@ -205,7 +207,7 @@ check_mixed (FILE *fout)
   check_length (8, (long) p, 20, ld); /* no format specifier "%td" in C89 */
 #endif
 
-#ifdef PRINTF_L
+#ifndef NPRINTF_L
   check_vfprintf (fout, "a. %RA, b. %Lf, c. %QX%zn", mpfr, ld, mpq, &sz);
   check_length (9, (unsigned long) sz, 30, lu); /* no format specifier "%zu" in C89 */
 #endif
@@ -218,23 +220,21 @@ check_mixed (FILE *fout)
 #if (__GNU_MP_VERSION * 10 + __GNU_MP_VERSION_MINOR) >= 42
   /* The 'M' specifier was added in gmp 4.2.0 */
   check_vfprintf (fout, "a. %Mx b. %Re%Mn", limb[0], mpfr, &limb[0]);
-  if (limb[0] != 14 + GMP_NUMB_BITS / 4 ||
-      limb[1] != MPFR_LIMB_MAX ||
-      limb[2] != MPFR_LIMB_MAX)
+  if (limb[0] != 14 + GMP_NUMB_BITS / 4 || limb[1] != ~ (mp_limb_t) 0
+      || limb[2] != ~ (mp_limb_t) 0)
     {
       printf ("Error in test #11: mpfr_vfprintf did not print %d characters"
               " as expected\n", 14 + (int) GMP_NUMB_BITS / 4);
       exit (1);
     }
 
-  limb[0] = MPFR_LIMB_MAX;
+  limb[0] = ~ (mp_limb_t) 0;
   /* we tell vfprintf that limb array is 2 cells wide
      and check it doesn't go through */
   check_vfprintf (fout, "a. %Re .b %Nx%Nn", mpfr, limb, limb_size, limb,
                   limb_size - 1);
-  if (limb[0] != 14 + 3 * GMP_NUMB_BITS / 4 ||
-      limb[1] != MPFR_LIMB_ZERO ||
-      limb[2] != MPFR_LIMB_MAX)
+  if (limb[0] != 14 + 3 * GMP_NUMB_BITS / 4 || limb[1] != (mp_limb_t) 0
+      || limb[2] != ~ (mp_limb_t) 0)
     {
       printf ("Error in test #12: mpfr_vfprintf did not print %d characters"
               " as expected\n", 14 + (int) GMP_NUMB_BITS / 4);

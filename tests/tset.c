@@ -20,6 +20,9 @@ along with the GNU MPFR Library; see the file COPYING.LESSER.  If not, see
 http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mpfr-test.h"
 
 int error;
@@ -59,13 +62,7 @@ check_special (void)
 
   mpfr_set_inf (x, 1);
   PRINT_ERROR_IF (!mpfr_inf_p (x) || mpfr_sgn (x) < 0,
-                  "ERROR: mpfr_set_inf failed to set variable to +inf [1].\n");
-  mpfr_set_inf (x, INT_MAX);
-  PRINT_ERROR_IF (!mpfr_inf_p (x) || mpfr_sgn (x) < 0,
-                  "ERROR: mpfr_set_inf failed to set variable to +inf [2].\n");
-  mpfr_set_inf (x, 0);
-  PRINT_ERROR_IF (!mpfr_inf_p (x) || mpfr_sgn (x) < 0,
-                  "ERROR: mpfr_set_inf failed to set variable to +inf [3].\n");
+                  "ERROR: mpfr_set_inf failed to set variable to +infinity.\n");
   inexact = mpfr_set (y, x, MPFR_RNDN);
   PRINT_ERROR_IF (!mpfr_inf_p (y) || mpfr_sgn (y) < 0 || inexact != 0,
                   "ERROR: mpfr_set failed to set variable to +infinity.\n");
@@ -76,33 +73,21 @@ check_special (void)
 
   mpfr_set_inf (x, -1);
   PRINT_ERROR_IF (!mpfr_inf_p (x) || mpfr_sgn (x) > 0,
-                  "ERROR: mpfr_set_inf failed to set variable to -inf [1].\n");
-  mpfr_set_inf (x, INT_MIN);
-  PRINT_ERROR_IF (!mpfr_inf_p (x) || mpfr_sgn (x) > 0,
-                  "ERROR: mpfr_set_inf failed to set variable to -inf [2].\n");
+                  "ERROR: mpfr_set_inf failed to set variable to -infinity.\n");
   inexact = mpfr_set (y, x, MPFR_RNDN);
   PRINT_ERROR_IF (!mpfr_inf_p (y) || mpfr_sgn (y) > 0 || inexact != 0,
                   "ERROR: mpfr_set failed to set variable to -infinity.\n");
 
   mpfr_set_zero (x, 1);
   PRINT_ERROR_IF (!mpfr_zero_p (x) || mpfr_sgn (x) < 0,
-                  "ERROR: mpfr_set_zero failed to set variable to +0 [1].\n");
-  mpfr_set_zero (x, INT_MAX);
-  PRINT_ERROR_IF (!mpfr_zero_p (x) || mpfr_sgn (x) < 0,
-                  "ERROR: mpfr_set_zero failed to set variable to +0 [2].\n");
-  mpfr_set_zero (x, 0);
-  PRINT_ERROR_IF (!mpfr_zero_p (x) || mpfr_sgn (x) < 0,
-                  "ERROR: mpfr_set_zero failed to set variable to +0 [3].\n");
+                  "ERROR: mpfr_set_zero failed to set variable to +0.\n");
   inexact = mpfr_set (y, x, MPFR_RNDN);
   PRINT_ERROR_IF (!mpfr_zero_p (y) || mpfr_sgn (y) < 0 || inexact != 0,
                   "ERROR: mpfr_set failed to set variable to +0.\n");
 
   mpfr_set_zero (x, -1);
   PRINT_ERROR_IF (!mpfr_zero_p (x) || mpfr_sgn (x) > 0,
-                  "ERROR: mpfr_set_zero failed to set variable to -0 [1].\n");
-  mpfr_set_zero (x, INT_MIN);
-  PRINT_ERROR_IF (!mpfr_zero_p (x) || mpfr_sgn (x) < 0,
-                  "ERROR: mpfr_set_zero failed to set variable to -0 [2].\n");
+                  "ERROR: mpfr_set_zero failed to set variable to -0.\n");
   inexact = mpfr_set (y, x, MPFR_RNDN);
   PRINT_ERROR_IF (!mpfr_zero_p (y) || mpfr_sgn (y) > 0 || inexact != 0,
                   "ERROR: mpfr_set failed to set variable to -0.\n");
@@ -148,17 +133,6 @@ check_ternary_value (void)
                           " got %d\n", cmp, inexact);
                   exit (1);
                 }
-              /* Test mpfr_set function too */
-              inexact = (mpfr_set) (y, x, (mpfr_rnd_t) rnd);
-              cmp = mpfr_cmp (y, x);
-              if (((inexact == 0) && (cmp != 0)) ||
-                  ((inexact > 0) && (cmp <= 0)) ||
-                  ((inexact < 0) && (cmp >= 0)))
-                {
-                  printf ("Wrong ternary value in mpfr_set(2): expected %d,"
-                          " got %d\n", cmp, inexact);
-                  exit (1);
-                }
             }
         }
     }
@@ -197,7 +171,7 @@ main (void)
   mpfr_set_str_binary (x, "0.111");
   mpfr_set_prec (y, 2);
   mpfr_set (y, x, MPFR_RNDU);
-  if (!(MPFR_IS_INF (y) && MPFR_IS_POS (y)))
+  if (!(MPFR_IS_INF (y) && MPFR_SIGN (y) > 0))
     {
       printf ("Error for y=x=0.111 with px=3, py=2 and emax=0\nx=");
       mpfr_dump (x);

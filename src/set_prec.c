@@ -22,21 +22,21 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 #include "mpfr-impl.h"
 
-MPFR_HOT_FUNCTION_ATTR void
+void
 mpfr_set_prec (mpfr_ptr x, mpfr_prec_t p)
 {
   mp_size_t xsize, xoldsize;
   mpfr_limb_ptr tmp;
 
   /* first, check if p is correct */
-  MPFR_ASSERTN (MPFR_PREC_COND (p));
+  MPFR_ASSERTN (p >= MPFR_PREC_MIN && p <= MPFR_PREC_MAX);
 
   /* Calculate the new number of limbs */
   xsize = MPFR_PREC2LIMBS (p);
 
   /* Realloc only if the new size is greater than the old */
   xoldsize = MPFR_GET_ALLOC_SIZE (x);
-  if (MPFR_UNLIKELY (xsize > xoldsize))
+  if (xsize > xoldsize)
     {
       tmp = (mpfr_limb_ptr) (*__gmp_reallocate_func)
         (MPFR_GET_REAL_PTR(x), MPFR_MALLOC_SIZE(xoldsize), MPFR_MALLOC_SIZE(xsize));

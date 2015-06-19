@@ -29,7 +29,7 @@ MPFR_DECL_INIT_CACHE(__gmpfr_cache_const_log2, mpfr_const_log2_internal);
 #else
 MPFR_DECL_INIT_CACHE(__gmpfr_normal_log2, mpfr_const_log2_internal);
 MPFR_DECL_INIT_CACHE(__gmpfr_logging_log2, mpfr_const_log2_internal);
-MPFR_THREAD_ATTR mpfr_cache_ptr __gmpfr_cache_const_log2 = __gmpfr_normal_log2;
+mpfr_cache_ptr MPFR_THREAD_ATTR __gmpfr_cache_const_log2 = __gmpfr_normal_log2;
 #endif
 
 /* Set User interface */
@@ -119,13 +119,14 @@ mpfr_const_log2_internal (mpfr_ptr x, mpfr_rnd_t rnd_mode)
   int inexact;
   int ok = 1; /* ensures that the 1st try will give correct rounding */
   unsigned long lgN, i;
-  MPFR_GROUP_DECL(group);
-  MPFR_TMP_DECL(marker);
-  MPFR_ZIV_DECL(loop);
+  MPFR_ZIV_DECL (loop);
 
   MPFR_LOG_FUNC (
     ("rnd_mode=%d", rnd_mode),
     ("x[%Pu]=%.*Rg inex=%d", mpfr_get_prec(x), mpfr_log_prec, x, inexact));
+
+  mpfr_init2 (t, MPFR_PREC_MIN);
+  mpfr_init2 (q, MPFR_PREC_MIN);
 
   if (n < 1253)
     w = n + 10; /* ensures correct rounding for the four rounding modes,
@@ -144,9 +145,6 @@ mpfr_const_log2_internal (mpfr_ptr x, mpfr_rnd_t rnd_mode)
       ok = 0;
     }
 
-  MPFR_TMP_MARK(marker);
-  MPFR_GROUP_INIT_2(group, w, t, q);
-
   MPFR_ZIV_INIT (loop, w);
   for (;;)
     {
@@ -158,7 +156,7 @@ mpfr_const_log2_internal (mpfr_ptr x, mpfr_rnd_t rnd_mode)
       MPFR_ASSERTD(w >= 3 && N >= 2);
 
       lgN = MPFR_INT_CEIL_LOG2 (N) + 1;
-      T  = (mpz_t *) MPFR_TMP_ALLOC (3 * lgN * sizeof (mpz_t));
+      T  = (mpz_t *) (*__gmp_allocate_func) (3 * lgN * sizeof (mpz_t));
       P  = T + lgN;
       Q  = T + 2*lgN;
       for (i = 0; i < lgN; i++)
@@ -170,6 +168,9 @@ mpfr_const_log2_internal (mpfr_ptr x, mpfr_rnd_t rnd_mode)
 
       S (T, P, Q, 0, N, 0);
 
+      mpfr_set_prec (t, w);
+      mpfr_set_prec (q, w);
+
       mpfr_set_z (t, T[0], MPFR_RNDN);
       mpfr_set_z (q, Q[0], MPFR_RNDN);
       mpfr_div (t, t, q, MPFR_RNDN);
@@ -180,20 +181,20 @@ mpfr_const_log2_internal (mpfr_ptr x, mpfr_rnd_t rnd_mode)
           mpz_clear (P[i]);
           mpz_clear (Q[i]);
         }
+      (*__gmp_free_func) (T, 3 * lgN * sizeof (mpz_t));
 
       if (MPFR_LIKELY (ok != 0
                        || mpfr_can_round (t, w - 2, MPFR_RNDN, rnd_mode, n)))
         break;
 
       MPFR_ZIV_NEXT (loop, w);
-      MPFR_GROUP_REPREC_2(group, w, t, q);
     }
   MPFR_ZIV_FREE (loop);
 
   inexact = mpfr_set (x, t, rnd_mode);
 
-  MPFR_GROUP_CLEAR(group);
-  MPFR_TMP_FREE(marker);
+  mpfr_clear (t);
+  mpfr_clear (q);
 
   return inexact;
 }

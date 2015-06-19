@@ -32,7 +32,7 @@ mpfr_fprint_binary (FILE *stream, mpfr_srcptr x)
       return;
     }
 
-  if (MPFR_IS_NEG (x))
+  if (MPFR_SIGN (x) < 0)
     fprintf (stream, "-");
 
   if (MPFR_IS_INF (x))
@@ -91,10 +91,36 @@ mpfr_print_mant_binary(const char *str, const mp_limb_t *p, mpfr_prec_t r)
     {
       for(i = GMP_NUMB_BITS-1 ; i >=0 ; i--)
         {
-          c = (p[n] & (MPFR_LIMB_ONE << i)) ? '1' : '0';
+          c = (p[n] & (((mp_limb_t)1L)<<i)) ? '1' : '0';
           putchar(c);
           count++;
           if (count == r)
+            putchar('[');
+        }
+      putchar('.');
+    }
+  putchar('\n');
+}
+
+void
+mpfr_dump_mant (const mp_limb_t *p, mpfr_prec_t r, mpfr_prec_t precx,
+                mpfr_prec_t error)
+{
+  int i;
+  mpfr_prec_t count = 0;
+  char c;
+  mp_size_t n = MPFR_PREC2LIMBS (r);
+
+  for(n-- ; n>=0 ; n--)
+    {
+      for(i = GMP_NUMB_BITS-1 ; i >=0 ; i--)
+        {
+          c = (p[n] & (((mp_limb_t)1L)<<i)) ? '1' : '0';
+          putchar(c);
+          count++;
+          if (count == precx)
+            putchar (',');
+          if (count == error)
             putchar('[');
         }
       putchar('.');

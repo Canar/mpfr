@@ -157,7 +157,7 @@ mpfr_round_near_x (mpfr_ptr y, mpfr_srcptr v, mpfr_uexp_t err, int dir,
                    mpfr_rnd_t rnd)
 {
   int inexact, sign;
-  mpfr_flags_t old_flags = __gmpfr_flags;
+  unsigned int old_flags = __gmpfr_flags;
 
   MPFR_ASSERTD (!MPFR_IS_SINGULAR (v));
   MPFR_ASSERTD (dir == 0 || dir == 1);
@@ -207,7 +207,7 @@ mpfr_round_near_x (mpfr_ptr y, mpfr_srcptr v, mpfr_uexp_t err, int dir,
               inexact = -sign;
               mpfr_nexttozero (y);
               if (MPFR_UNLIKELY (MPFR_IS_ZERO (y)))
-                MPFR_SET_UNDERFLOW ();
+                mpfr_set_underflow ();
             }
         }
       else /* The error term is positive for v positive */
@@ -221,7 +221,7 @@ mpfr_round_near_x (mpfr_ptr y, mpfr_srcptr v, mpfr_uexp_t err, int dir,
               inexact = sign;
               mpfr_nexttoinf (y);
               if (MPFR_UNLIKELY (MPFR_IS_INF (y)))
-                MPFR_SET_OVERFLOW ();
+                mpfr_set_overflow ();
             }
         }
     }

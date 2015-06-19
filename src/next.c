@@ -26,18 +26,15 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 void
 mpfr_nexttozero (mpfr_ptr x)
 {
-  if (MPFR_UNLIKELY (MPFR_IS_SINGULAR (x)))
+  if (MPFR_UNLIKELY(MPFR_IS_INF(x)))
     {
-      if (MPFR_IS_INF (x))
-        {
-          mpfr_setmax (x, __gmpfr_emax);
-        }
-      else
-        {
-          MPFR_ASSERTN (MPFR_IS_ZERO (x));
-          MPFR_CHANGE_SIGN(x);
-          mpfr_setmin (x, __gmpfr_emin);
-        }
+      mpfr_setmax (x, __gmpfr_emax);
+      return;
+    }
+  else if (MPFR_UNLIKELY( MPFR_IS_ZERO(x) ))
+    {
+      MPFR_CHANGE_SIGN(x);
+      mpfr_setmin (x, __gmpfr_emin);
     }
   else
     {
@@ -49,17 +46,18 @@ mpfr_nexttozero (mpfr_ptr x)
       MPFR_UNSIGNED_MINUS_MODULO (sh, MPFR_PREC(x));
       xp = MPFR_MANT(x);
       mpn_sub_1 (xp, xp, xn, MPFR_LIMB_ONE << sh);
-      if (MPFR_UNLIKELY (MPFR_LIMB_MSB (xp[xn-1]) == 0))
-        { /* was an exact power of two: not normalized any more,
-             thus do not use MPFR_GET_EXP. */
+      if (MPFR_UNLIKELY( MPFR_LIMB_MSB(xp[xn-1]) == 0) )
+        { /* was an exact power of two: not normalized any more */
           mpfr_exp_t exp = MPFR_EXP (x);
-          if (MPFR_UNLIKELY (exp == __gmpfr_emin))
+          if (MPFR_UNLIKELY(exp == __gmpfr_emin))
             MPFR_SET_ZERO(x);
           else
             {
+              mp_size_t i;
               MPFR_SET_EXP (x, exp - 1);
-              /* The following is valid whether xn = 1 or xn > 1. */
-              xp[xn-1] |= MPFR_LIMB_HIGHBIT;
+              xp[0] = MP_LIMB_T_MAX << sh;
+              for (i = 1; i < xn; i++)
+                xp[i] = MP_LIMB_T_MAX;
             }
         }
     }
@@ -68,11 +66,10 @@ mpfr_nexttozero (mpfr_ptr x)
 void
 mpfr_nexttoinf (mpfr_ptr x)
 {
-  if (MPFR_UNLIKELY (MPFR_IS_SINGULAR (x)))
-    {
-      if (MPFR_IS_ZERO (x))
-        mpfr_setmin (x, __gmpfr_emin);
-    }
+  if (MPFR_UNLIKELY(MPFR_IS_INF(x)))
+    return;
+  else if (MPFR_UNLIKELY(MPFR_IS_ZERO(x)))
+    mpfr_setmin (x, __gmpfr_emin);
   else
     {
       mp_size_t xn;
@@ -82,12 +79,12 @@ mpfr_nexttoinf (mpfr_ptr x)
       xn = MPFR_LIMB_SIZE (x);
       MPFR_UNSIGNED_MINUS_MODULO (sh, MPFR_PREC(x));
       xp = MPFR_MANT(x);
-      if (MPFR_UNLIKELY (mpn_add_1 (xp, xp, xn, MPFR_LIMB_ONE << sh)))
+      if (MPFR_UNLIKELY( mpn_add_1 (xp, xp, xn, MPFR_LIMB_ONE << sh)) )
         /* got 1.0000... */
         {
           mpfr_exp_t exp = MPFR_EXP (x);
-          if (MPFR_UNLIKELY (exp == __gmpfr_emax))
-            MPFR_SET_INF (x);
+          if (MPFR_UNLIKELY(exp == __gmpfr_emax))
+            MPFR_SET_INF(x);
           else
             {
               MPFR_SET_EXP (x, exp + 1);

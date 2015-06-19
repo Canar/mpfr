@@ -28,7 +28,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
  *  to measure the # of cycles taken by the call to f(x).
  */
 
-#define TIMP_VERSION 1*100+1*10+0
+#define TIMP_VERSION 1*100+0*10+0
 
 #ifndef __GNUC__
 # error  CC != GCC 
@@ -51,8 +51,6 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 
 #elif defined (__i386__) || defined(__amd64__)
 
-#if !defined(corei7)
-
 #define timp_rdtsc_before(time)           \
         __asm__ __volatile__(             \
                 ".align 64\n\t"           \
@@ -79,33 +77,6 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
                 : /* no output */         \
                 : "S"(&time)              \
                 : "eax", "ebx", "ecx", "edx", "memory")
-#else
-
-/* corei7 offers newer instruction rdtscp, which should be better */
-#define timp_rdtsc_before(time)           \
-        __asm__ __volatile__(             \
-                ".align 64\n\t"           \
-                "xorl %%eax,%%eax\n\t"    \
-                "cpuid\n\t"               \
-                "rdtsc\n\t"               \
-                "movl %%eax,(%0)\n\t"     \
-                "movl %%edx,4(%0)\n\t"    \
-                : /* no output */         \
-                : "S"(&time)              \
-                : "eax", "ebx", "ecx", "edx", "memory")
-
-#define timp_rdtsc_after(time)            \
-        __asm__ __volatile__(             \
-                "rdtscp\n\t"               \
-                "movl %%eax,(%0)\n\t"     \
-                "movl %%edx,4(%0)\n\t"    \
-                "xorl %%eax,%%eax\n\t"    \
-                "cpuid\n\t"               \
-                : /* no output */         \
-                : "S"(&time)              \
-                : "eax", "ebx", "ecx", "edx", "memory")
-
-#endif
 
 #elif defined (__ia64)
 
@@ -133,7 +104,7 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
  * hardware interruption cycles.
  * The filling of the CPU cache is done because we do several loops,
  * and get the minimum.
- * Declaring num_cycle as "volatile" is to avoid optimization when it is
+ * Declaring num_cycle as "volatile" is to avoid optimisation when it is
  * possible (To properly calcul overhead).
  * overhead is calculated outside by a call to:
  *   overhead = MEASURE("overhead", ;)
